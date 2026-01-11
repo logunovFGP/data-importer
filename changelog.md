@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## v2.0.4 - 2026-01-11
+
+This release fixes some issues left in v2.0.0.
+
+### Fixed
+- [PR 1107](https://github.com/firefly-iii/data-importer/pull/1107) (Fix config key inconsistency in MapController) created by @egyptianbman
+
 ## v2.0.3 - 2026-01-10
 
 This release fixes some issues left in v2.0.0.
