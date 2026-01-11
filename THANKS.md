@@ -3,6 +3,9 @@
 Over time, many people have contributed to the Firefly III Data Importer. Their efforts are not always visible, but always remembered and appreciated.
 Please find below all the people who contributed to the Firefly III Data Importer code. Their names are mentioned in the year of their first contribution.
 
+## 2026
+- Beshoy Girgis
+
 ## 2025
 - PinGu
 - Bede Skinner-Vennell
