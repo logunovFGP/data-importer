@@ -64,7 +64,7 @@ class RoutineManager
 
         // FIXME again with the collecting of accounts?
         Log::debug('First collect account information from Firefly III.');
-        $accountInfo = $this->infoCollector->collectAccountTypes();
+        $accountInfo     = $this->infoCollector->collectAccountTypes();
 
         Log::debug('Now starting submission by calling API Submitter');
         // submit transactions to API:
