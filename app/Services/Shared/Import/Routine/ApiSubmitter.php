@@ -26,6 +26,7 @@ namespace App\Services\Shared\Import\Routine;
 
 use App\Exceptions\ImporterErrorException;
 use App\Models\ImportJob;
+use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\Shared\Authentication\SecretManager;
 use App\Services\Shared\Configuration\Configuration;
 use Carbon\Carbon;
@@ -47,25 +48,27 @@ use Illuminate\Support\Facades\Log;
  */
 class ApiSubmitter
 {
-    private array         $accountInfo;
-    private bool          $addTag;
-    private Configuration $configuration;
-    private bool          $createdTag;
-    private array         $mapping;
-    private string        $tag;
-    private string        $tagDate;
-    private string        $vanityURL;
-    private ImportJob     $importJob;
+    private array               $accountInfo;
+    private bool                $addTag;
+    private Configuration       $configuration;
+    private bool                $createdTag;
+    private array               $mapping;
+    private string              $tag;
+    private string              $tagDate;
+    private string              $vanityURL;
+    private ImportJob           $importJob;
+    private ImportJobRepository $repository;
 
     public function setImportJob(ImportJob $importJob): void
     {
         $importJob->refreshInstanceIdentifier();
         $this->configuration = $importJob->getConfiguration();
         $this->mapping       = $this->configuration->getMapping();
+        $this->repository    = new ImportJobRepository();
 
         // FIXME remove this line to crash the submission routine without the user getting an error,
-        $this->addTag        = $this->configuration->isAddImportTag();
-        $this->importJob     = $importJob;
+        $this->addTag    = $this->configuration->isAddImportTag();
+        $this->importJob = $importJob;
     }
 
     public function getImportJob(): ImportJob
@@ -90,12 +93,12 @@ class ApiSubmitter
             $this->importJob->submissionStatus->addWarning(0, 'There are no transactions to be imported. Perhaps all your accounts are empty?');
         }
 
-        $this->vanityURL  = SecretManager::getVanityURL();
+        $this->vanityURL = SecretManager::getVanityURL();
 
         Log::debug(sprintf('Vanity URL : "%s"', $this->vanityURL));
 
         /**
-         * @var int   $index
+         * @var int $index
          * @var array $line
          */
         foreach ($lines as $index => $line) {
@@ -103,9 +106,8 @@ class ApiSubmitter
 
             // Update progress tracking
             $this->importJob->submissionStatus->updateProgress($index + 1, $count);
-
             // first do local duplicate transaction check (the "cell" method):
-            $unique    = $this->uniqueTransaction($index, $line);
+            $unique = $this->uniqueTransaction($index, $line);
             if (null === $unique) {
                 Log::debug(sprintf('Transaction #%d is not checked beforehand on uniqueness.', $index + 1));
                 ++$uniqueCount;
@@ -116,11 +118,13 @@ class ApiSubmitter
             }
             if (false === $unique) {
                 Log::debug(sprintf('Transaction #%d is NOT unique.', $index + 1));
-
+                $this->repository->saveToDisk($this->importJob);
                 continue;
             }
             $groupInfo = $this->processTransaction($index, $line);
             $this->addTagToGroups($groupInfo);
+            $this->repository->saveToDisk($this->importJob);
+
         }
 
         Log::info(sprintf('Done submitting %d transactions to your Firefly III instance.', $count));
@@ -135,7 +139,7 @@ class ApiSubmitter
             // return default tag:
             return sprintf('Data Import on %s', Carbon::now()->format('Y-m-d \@ H:i'));
         }
-        $items     = [
+        $items  = [
             '%year%'        => Carbon::now()->format('Y'),
             '%month%'       => Carbon::now()->format('m'),
             '%month_full%'  => Carbon::now()->format('F'),
@@ -149,7 +153,7 @@ class ApiSubmitter
             '%datetime%'    => Carbon::now()->format('Y-m-d \@ H:i'),
             '%version%'     => config('importer.version'),
         ];
-        $result    = str_replace(
+        $result = str_replace(
             array_keys($items),
             array_values($items),
             $customTag
@@ -177,7 +181,7 @@ class ApiSubmitter
         $field        = 'note' === $field ? 'notes' : $field;
         $value        = '';
         foreach ($transactions as $transactionIndex => $transaction) {
-            $value        = (string)($transaction[$field] ?? '');
+            $value = (string)($transaction[$field] ?? '');
             if ('' === $value) {
                 Log::debug(sprintf('Identifier-based duplicate detection found no value ("") for field "%s" in transaction #%d (index #%d).', $field, $index, $transactionIndex));
 
@@ -219,9 +223,9 @@ class ApiSubmitter
 
         Log::debug(sprintf('Going to search for %s:%s using query %s', $field, $value, $query));
 
-        $url            = SecretManager::getBaseUrl();
-        $token          = SecretManager::getAccessToken();
-        $request        = new GetSearchTransactionsRequest($url, $token);
+        $url     = SecretManager::getBaseUrl();
+        $token   = SecretManager::getAccessToken();
+        $request = new GetSearchTransactionsRequest($url, $token);
         $request->setTimeOut(config('importer.connection.timeout'));
         $request->setVerify(config('importer.connection.verify'));
         $request->setQuery($query);
@@ -237,8 +241,8 @@ class ApiSubmitter
         if (0 === $response->count()) {
             return null;
         }
-        $first          = $response->current();
-        $array          = [
+        $first = $response->current();
+        $array = [
             'id'             => $first->id,
             'description'    => $first->transactions[0]->description ?? '(no description)',
             'currency_code'  => $first->transactions[0]->currencyCode ?? '(no currency)',
@@ -286,7 +290,7 @@ class ApiSubmitter
 
                 return $return;
             }
-            $message   = sprintf('[a116]: Submission HTTP error: %s', e($e->getMessage()));
+            $message = sprintf('[a116]: Submission HTTP error: %s', e($e->getMessage()));
             Log::error(sprintf('[%s]: %s', config('importer.version'), $e->getMessage()));
             $this->importJob->submissionStatus->addError($index, $message);
 
@@ -310,7 +314,7 @@ class ApiSubmitter
 
         if ($response instanceof PostTransactionResponse) {
             /** @var TransactionGroup $group */
-            $group  = $response->getTransactionGroup();
+            $group = $response->getTransactionGroup();
             if (null === $group) {
                 $message = '[a118]: Could not create transaction. Unexpected empty response from Firefly III. Check the logs.';
                 Log::error(sprintf('[%s] %s', config('importer.version'), $message), $response->getRawData());
@@ -330,7 +334,7 @@ class ApiSubmitter
 
             $return = ['group_id' => $group->id, 'journals' => []];
             foreach ($group->transactions as $transaction) {
-                $message                              = sprintf(
+                $message = sprintf(
                     'Created %s <a target="_blank" href="%s">#%d "%s"</a> (%s %s)',
                     $transaction->type,
                     sprintf('%s/transactions/show/%d', $this->vanityURL, $group->id),
@@ -357,7 +361,7 @@ class ApiSubmitter
             Log::debug('Configuration has mapping for opposing account name!');
 
             /**
-             * @var int   $index
+             * @var int $index
              * @var array $transaction
              */
             foreach ($line['transactions'] as $index => $transaction) {
@@ -471,10 +475,10 @@ class ApiSubmitter
 
         $groupId = (int)$groupInfo['group_id'];
         Log::debug(sprintf('Going to add import tag to transaction group #%d', $groupId));
-        $body    = ['transactions' => []];
+        $body = ['transactions' => []];
 
         /**
-         * @var int   $journalId
+         * @var int $journalId
          * @var array $currentTags
          */
         foreach ($groupInfo['journals'] as $journalId => $currentTags) {
@@ -510,7 +514,7 @@ class ApiSubmitter
         $request = new PostTagRequest($url, $token);
         $request->setVerify(config('importer.connection.verify'));
         $request->setTimeOut(config('importer.connection.timeout'));
-        $body    = ['tag' => $this->tag, 'date' => $this->tagDate];
+        $body = ['tag' => $this->tag, 'date' => $this->tagDate];
         $request->setBody($body);
 
         try {
