@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## v2.0.5 - 2026-01-17
+
+### Fixed
+- #11504
+- #11521
+- #11523
+- #11525
+
 ## v2.0.4 - 2026-01-11
 
 This release fixes some issues left in v2.0.0.
