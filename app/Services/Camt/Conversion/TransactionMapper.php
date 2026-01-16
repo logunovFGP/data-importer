@@ -752,7 +752,7 @@ class TransactionMapper
             if (array_key_exists($field, $current)) {
                 // there is a value...
                 // so we check all accounts for a match
-                if (array_any($this->allAccounts, fn ($account) => $current[$field] === $account->{$accountIdentificationSuffix})) {
+                if (array_any($this->allAccounts, static fn ($account) => $current[$field] === $account->{$accountIdentificationSuffix})) {
                     return true;
                 }
             }

@@ -183,7 +183,7 @@ abstract class Request
         ];
     }
 
-    public function setApiKey(string $apiKey): void
+    public function setApiKey(#[\SensitiveParameter] string $apiKey): void
     {
         $this->apiKey = $apiKey;
     }

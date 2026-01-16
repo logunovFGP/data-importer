@@ -40,7 +40,7 @@ class ListCustomersRequest extends Request
     /**
      * ListCustomersRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[\SensitiveParameter] string $secret)
     {
         $this->type = 'all';
         $this->setBase($url);

@@ -196,7 +196,7 @@ abstract class Request
         return $this->secret;
     }
 
-    public function setSecret(string $secret): void
+    public function setSecret(#[\SensitiveParameter] string $secret): void
     {
         $this->secret = $secret;
     }

@@ -39,7 +39,7 @@ class PostNewRequisitionRequest extends Request
     private string $reference;
     private string $identifier;
 
-    public function __construct(string $url, string $token, string $identifier)
+    public function __construct(string $url, #[\SensitiveParameter] string $token, string $identifier)
     {
         $this->setParameters([]);
         $this->setBase($url);

@@ -116,7 +116,7 @@ class RoutineManager implements RoutineManagerInterface
         }
 
         /** @var null|Account $currentSimpleFINAccountData */
-        $currentSimpleFINAccountData = array_find($this->existingServiceAccounts, fn (Account $loopAccount) => $loopAccount->getId() === $importServiceAccountId);
+        $currentSimpleFINAccountData = array_find($this->existingServiceAccounts, static fn (Account $loopAccount) => $loopAccount->getId() === $importServiceAccountId);
 
         if (null === $currentSimpleFINAccountData) {
             Log::warning('Failed to find SimpleFIN account raw data in session for current account ID during transformation. Will redownload.', ['simplefin_account_id_sought' => $importServiceAccountId]);

@@ -38,7 +38,7 @@ class PostAccountRequest extends Request
     /**
      * PostAccountRequest constructor.
      */
-    public function __construct(string $url, string $token)
+    public function __construct(string $url, #[\SensitiveParameter] string $token)
     {
         $this->setBase($url);
         $this->setToken($token);

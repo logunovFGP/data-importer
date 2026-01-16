@@ -37,7 +37,7 @@ class GetAccountInformationRequest extends Request
 {
     private string $identifier;
 
-    public function __construct(string $url, string $token, string $identifier)
+    public function __construct(string $url, #[\SensitiveParameter] string $token, string $identifier)
     {
         $this->setParameters([]);
         $this->setBase($url);

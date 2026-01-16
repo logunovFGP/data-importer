@@ -40,7 +40,7 @@ class ListBanksRequest extends Request
     /**
      * ListCustomersRequest constructor.
      */
-    public function __construct(string $url, string $token)
+    public function __construct(string $url, #[\SensitiveParameter] string $token)
     {
         $this->setParameters([]);
         $this->setBase($url);

@@ -89,7 +89,7 @@ class SecretManager
     /**
      * Store access token in a cookie.
      */
-    public static function saveSecret(string $secret): void
+    public static function saveSecret(#[\SensitiveParameter] string $secret): void
     {
         session()->put(self::SECRET, $secret);
     }

@@ -39,7 +39,7 @@ class GetTransactionsRequest extends Request
 {
     private string $identifier = '';
 
-    public function __construct(string $apiToken, private readonly int $account)
+    public function __construct(#[\SensitiveParameter] string $apiToken, private readonly int $account)
     {
         $this->setApiKey($apiToken);
         $this->setUrl(sprintf('accounts/%d/transactions', $this->account));

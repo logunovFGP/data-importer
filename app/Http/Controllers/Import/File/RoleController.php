@@ -213,7 +213,7 @@ class RoleController extends Controller
     {
         $allFields = config('camt.fields');
 
-        return array_filter($allFields, fn ($field) => $level === $field['level']);
+        return array_filter($allFields, static fn ($field) => $level === $field['level']);
     }
 
     private function mergeLevelsAndRoles(array $levels, array $roles): array

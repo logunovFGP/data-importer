@@ -38,7 +38,7 @@ class PostCustomerRequest extends Request
     /**
      * PostCustomerRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[\SensitiveParameter] string $secret)
     {
         $this->setBase($url);
         $this->setAppId($appId);

@@ -103,7 +103,7 @@ class ConfigurationController extends Controller
                     return view('import.004-configure.gocardless-expired')->with(compact('mainTitle', 'subTitle', 'redirect'));
 
                 }
-                //
+                
                 // if the agreement has expired, show error and exit gracefully.
                 // https://firefly-data.hades.internal/configure-import/2385f86b-0e50-4ba7-8b7c-e663471f2dd6?parse=true
 

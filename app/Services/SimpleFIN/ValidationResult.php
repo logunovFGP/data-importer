@@ -62,12 +62,12 @@ readonly class ValidationResult
 
     public function getErrorMessages(): array
     {
-        return array_map(fn ($error) => $error['message'], $this->errors);
+        return array_map(static fn ($error) => $error['message'], $this->errors);
     }
 
     public function getWarningMessages(): array
     {
-        return array_map(fn ($warning) => $warning['message'], $this->warnings);
+        return array_map(static fn ($warning) => $warning['message'], $this->warnings);
     }
 
     public function toArray(): array

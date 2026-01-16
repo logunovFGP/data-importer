@@ -171,7 +171,7 @@ class MapController extends Controller
         foreach ($result as $index => $set) {
             $values                   = $set['values'];
             $mapped                   = array_keys($set['mapped']);
-            usort($values, function (string $a, string $b) use ($mapped) {
+            usort($values, static function (string $a, string $b) use ($mapped) {
                 if (in_array($a, $mapped, true) && !in_array($b, $mapped, true)) {
                     return 1;
                 }

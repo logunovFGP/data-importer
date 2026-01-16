@@ -62,7 +62,7 @@ trait CreatesAccounts
         $createdAccount  = null;
         // here is a check to see if account to be created is part of the import process.
         // so, existing service accounts contains all the accounts present at the import service with all of their meta-data.
-        $existingAccount = array_find($this->existingServiceAccounts, function (array|object $entry) use ($importServiceId) {
+        $existingAccount = array_find($this->existingServiceAccounts, static function (array|object $entry) use ($importServiceId) {
 
             if (is_array($entry)) {
                 return (string)$entry['id'] === $importServiceId;

@@ -58,7 +58,7 @@ class ProcessImportSubmissionJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(private ImportJob $importJob, private string $accessToken, private string $baseUrl, private ?string $vanityUrl)
+    public function __construct(private ImportJob $importJob, #[\SensitiveParameter] private string $accessToken, private string $baseUrl, private ?string $vanityUrl)
     {
         $this->importJob->refreshInstanceIdentifier();
         $this->repository = new ImportJobRepository();

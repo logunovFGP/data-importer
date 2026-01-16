@@ -37,7 +37,7 @@ class GetAccountsRequest extends Request
     /**
      * ListConnectionsRequest constructor.
      */
-    public function __construct(string $apiKey)
+    public function __construct(#[\SensitiveParameter] string $apiKey)
     {
         $this->setUrl('accounts');
         $this->setApiKey($apiKey);

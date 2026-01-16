@@ -213,7 +213,7 @@ class SecretManager
     /**
      * Store access token.
      */
-    public static function saveAccessToken(string $token): void
+    public static function saveAccessToken(#[\SensitiveParameter] string $token): void
     {
         Log::debug(sprintf('saveAccessToken in session under "%s"', Constants::SESSION_ACCESS_TOKEN));
         session()->put(Constants::SESSION_ACCESS_TOKEN, $token);
@@ -230,7 +230,7 @@ class SecretManager
     /**
      * Store access token.
      */
-    public static function saveRefreshToken(string $token): void
+    public static function saveRefreshToken(#[\SensitiveParameter] string $token): void
     {
         session()->put(Constants::SESSION_REFRESH_TOKEN, $token);
     }

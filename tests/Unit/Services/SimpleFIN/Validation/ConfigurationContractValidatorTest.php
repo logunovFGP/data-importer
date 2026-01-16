@@ -208,8 +208,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $this->assertFalse($result->isValid());
         $errors = $result->getErrors();
-        $this->assertTrue(collect($errors)->contains(fn ($error) => str_contains((string) $error['message'], 'Liability type required')));
-        $this->assertTrue(collect($errors)->contains(fn ($error) => str_contains((string) $error['message'], 'Liability direction required')));
+        $this->assertTrue(collect($errors)->contains(static fn ($error) => str_contains((string) $error['message'], 'Liability type required')));
+        $this->assertTrue(collect($errors)->contains(static fn ($error) => str_contains((string) $error['message'], 'Liability direction required')));
     }
 
     /**
@@ -310,7 +310,7 @@ final class ConfigurationContractValidatorTest extends TestCase
         $result = $this->validator->validateConfigurationContract($config);
 
         $this->assertFalse($result->isValid());
-        $this->assertTrue(collect($result->getErrors())->contains(fn ($error) => str_contains((string) $error['message'], 'Invalid account role')));
+        $this->assertTrue(collect($result->getErrors())->contains(static fn ($error) => str_contains((string) $error['message'], 'Invalid account role')));
     }
 
     /**
@@ -324,7 +324,7 @@ final class ConfigurationContractValidatorTest extends TestCase
         $result = $this->validator->validateConfigurationContract($this->mockConfiguration);
 
         $this->assertFalse($result->isValid());
-        $this->assertTrue(collect($result->getErrors())->contains(fn ($error) => str_contains((string) $error['message'], 'selected for import but not in account mappings')));
+        $this->assertTrue(collect($result->getErrors())->contains(static fn ($error) => str_contains((string) $error['message'], 'selected for import but not in account mappings')));
     }
 
     /**

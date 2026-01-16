@@ -56,7 +56,7 @@ abstract class SimpleFINRequest
         $this->apiUrl = rtrim($apiUrl, '/');
     }
 
-    public function setToken(string $token): void
+    public function setToken(#[\SensitiveParameter] string $token): void
     {
         $this->token = $token;
     }
@@ -158,7 +158,7 @@ abstract class SimpleFINRequest
         return $this->timeOut;
     }
 
-    public function setAccessToken(string $accessToken): void
+    public function setAccessToken(#[\SensitiveParameter] string $accessToken): void
     {
         Log::debug(sprintf('Access token is now: %s', $accessToken));
         $this->accessToken = $accessToken;

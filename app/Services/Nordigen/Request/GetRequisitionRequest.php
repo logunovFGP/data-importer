@@ -39,7 +39,7 @@ class GetRequisitionRequest extends Request
 {
     private readonly string $requisitionId;
 
-    public function __construct(string $url, string $token, string $requisitionId)
+    public function __construct(string $url, #[\SensitiveParameter] string $token, string $requisitionId)
     {
         $this->setParameters([]);
         $this->setBase($url);

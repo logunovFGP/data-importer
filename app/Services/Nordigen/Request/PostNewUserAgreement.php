@@ -38,7 +38,7 @@ class PostNewUserAgreement extends Request
     private string $bank;
     private string $maxHistoricalDays;
 
-    public function __construct(string $url, string $token)
+    public function __construct(string $url, #[\SensitiveParameter] string $token)
     {
         $this->setParameters([]);
         $this->setBase($url);

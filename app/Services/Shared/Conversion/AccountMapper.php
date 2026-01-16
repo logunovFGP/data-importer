@@ -61,7 +61,7 @@ class AccountMapper
         $this->loadFireflyIIIAccounts();
 
         // Try to find by name first
-        $matchingAccounts = array_filter($this->fireflyIIIAccounts, fn (Account $current) => strtolower((string)$current->name) === strtolower($account->name));
+        $matchingAccounts = array_filter($this->fireflyIIIAccounts, static fn (Account $current) => strtolower((string)$current->name) === strtolower($account->name));
 
         if (0 === count($matchingAccounts)) {
             return null;
@@ -321,7 +321,7 @@ class AccountMapper
             'Temporary failure in name resolution',
         ];
 
-        return array_any($retryableErrors, fn ($retryableError) => false !== stripos($errorMessage, $retryableError));
+        return array_any($retryableErrors, static fn ($retryableError) => false !== stripos($errorMessage, $retryableError));
 
     }
 }

@@ -212,7 +212,7 @@ class SimpleFINService
     /**
      * Check if a token is a base64-encoded claim URL
      */
-    private function isBase64ClaimUrl(string $token): bool
+    private function isBase64ClaimUrl(#[\SensitiveParameter] string $token): bool
     {
         // Try to decode as base64
         $decoded = base64_decode($token, true);
@@ -302,7 +302,7 @@ class SimpleFINService
     /**
      * Validate SimpleFIN credentials format
      */
-    public function validateCredentials(string $token, string $apiUrl): array
+    public function validateCredentials(#[\SensitiveParameter] string $token, string $apiUrl): array
     {
         $errors = [];
 
@@ -333,7 +333,7 @@ class SimpleFINService
         return $this->accessToken;
     }
 
-    public function setSetupToken(string $setupToken): void
+    public function setSetupToken(#[\SensitiveParameter] string $setupToken): void
     {
         $this->setupToken = $setupToken;
     }
@@ -344,7 +344,7 @@ class SimpleFINService
         $this->accessToken   = $configuration->getAccessToken();
     }
 
-    public function setAccessToken(string $accessToken): void
+    public function setAccessToken(#[\SensitiveParameter] string $accessToken): void
     {
         $this->accessToken = $accessToken;
     }

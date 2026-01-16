@@ -1091,7 +1091,7 @@ class Configuration
         return $this->accessToken;
     }
 
-    public function setAccessToken(string $accessToken): void
+    public function setAccessToken(#[\SensitiveParameter] string $accessToken): void
     {
         $this->accessToken = $accessToken;
     }

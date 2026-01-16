@@ -156,7 +156,7 @@ abstract class Request
         return $this->token;
     }
 
-    public function setToken(string $token): void
+    public function setToken(#[\SensitiveParameter] string $token): void
     {
         $this->token = $token;
     }

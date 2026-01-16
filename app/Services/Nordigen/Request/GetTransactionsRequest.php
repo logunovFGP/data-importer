@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Log;
  */
 class GetTransactionsRequest extends Request
 {
-    public function __construct(string $url, string $token, private readonly string $identifier, string $dateFrom, string $dateTo)
+    public function __construct(string $url, #[\SensitiveParameter] string $token, private readonly string $identifier, string $dateFrom, string $dateTo)
     {
         $params  = [];
         $pattern = '/^(19|20)\d\d-(0[1-9]|1[012])-(0[1-9]|[12][\d]|3[01])$/';
@@ -80,7 +80,7 @@ class GetTransactionsRequest extends Request
         foreach ($keys as $key) {
             if (array_key_exists($key, $transactions)) {
                 $set    = $transactions[$key];
-                $set    = array_map(function (array $value) use ($key) {
+                $set    = array_map(static function (array $value) use ($key) {
                     $value['key'] = $key;
 
                     return $value;
