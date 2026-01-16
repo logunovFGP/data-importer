@@ -26,6 +26,7 @@ namespace App\Services\Shared\Import\Routine;
 
 use App\Exceptions\ImporterErrorException;
 use App\Models\ImportJob;
+use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\Shared\Authentication\SecretManager;
 use App\Services\Shared\Configuration\Configuration;
 use Carbon\Carbon;
@@ -47,25 +48,32 @@ use Illuminate\Support\Facades\Log;
  */
 class ApiSubmitter
 {
-    private array         $accountInfo;
-    private bool          $addTag;
-    private Configuration $configuration;
-    private bool          $createdTag;
-    private array         $mapping;
-    private string        $tag;
-    private string        $tagDate;
-    private string        $vanityURL;
-    private ImportJob     $importJob;
+    private array               $accountInfo;
+    private bool                $addTag;
+    private Configuration       $configuration;
+    private bool                $createdTag;
+    private array               $mapping;
+    private string              $tag;
+    private string              $tagDate;
+    private string              $vanityURL;
+    private ImportJob           $importJob;
+    private ImportJobRepository $repository;
 
     public function setImportJob(ImportJob $importJob): void
     {
         $importJob->refreshInstanceIdentifier();
         $this->configuration = $importJob->getConfiguration();
         $this->mapping       = $this->configuration->getMapping();
+        $this->repository    = new ImportJobRepository();
 
         // FIXME remove this line to crash the submission routine without the user getting an error,
         $this->addTag        = $this->configuration->isAddImportTag();
         $this->importJob     = $importJob;
+    }
+
+    public function getImportJob(): ImportJob
+    {
+        return $this->importJob;
     }
 
     /**
@@ -98,7 +106,6 @@ class ApiSubmitter
 
             // Update progress tracking
             $this->importJob->submissionStatus->updateProgress($index + 1, $count);
-
             // first do local duplicate transaction check (the "cell" method):
             $unique    = $this->uniqueTransaction($index, $line);
             if (null === $unique) {
@@ -111,11 +118,14 @@ class ApiSubmitter
             }
             if (false === $unique) {
                 Log::debug(sprintf('Transaction #%d is NOT unique.', $index + 1));
+                $this->repository->saveToDisk($this->importJob);
 
                 continue;
             }
             $groupInfo = $this->processTransaction($index, $line);
             $this->addTagToGroups($groupInfo);
+            $this->repository->saveToDisk($this->importJob);
+
         }
 
         Log::info(sprintf('Done submitting %d transactions to your Firefly III instance.', $count));

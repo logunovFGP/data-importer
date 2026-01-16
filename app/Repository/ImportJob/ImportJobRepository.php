@@ -96,7 +96,7 @@ class ImportJobRepository
                     $oldInstanceCounter = $json['instance_counter'];
                     $newInstanceCounter = $importJob->getInstanceCounter();
                     if ($oldInstanceCounter > $newInstanceCounter) {
-                        throw new ImporterErrorException(sprintf('Cowardly refuse to overwrite older (#%d) import job file with newer (#%d).', $oldInstanceCounter, $newInstanceCounter));
+                        throw new ImporterErrorException(sprintf('Cowardly refuse to overwrite current (#%d) import job file with given (#%d).', $oldInstanceCounter, $newInstanceCounter));
                     }
                 }
             }

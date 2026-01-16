@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## v2.0.5 - 2026-01-17
+
+> [!WARNING]
+> This will be one of the last Firefly III data importer releases that supports PHP 8.4. 
+
+### Fixed
+- [Issue 11504](https://github.com/firefly-iii/firefly-iii/issues/11504) (Date conversion error when importing a range from SimpleFIN) reported by @anarion80
+- [Issue 11521](https://github.com/firefly-iii/firefly-iii/issues/11521) (Importer CAMT file import fails server error 500) reported by @rmu1987
+- [Issue 11523](https://github.com/firefly-iii/firefly-iii/issues/11523) (Importer no longer outputs progress updates for submission) reported by @grgar
+- [Issue 11525](https://github.com/firefly-iii/firefly-iii/issues/11525) (SimpleFIN cannot convert account types and fails to import) reported by @tmkowalewski
+
 ## v2.0.4 - 2026-01-11
 
 This release fixes some issues left in v2.0.0.

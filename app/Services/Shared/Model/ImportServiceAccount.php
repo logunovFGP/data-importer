@@ -72,6 +72,29 @@ class ImportServiceAccount
                 ]
             );
         }
+        if ($account instanceof SimpleFinAccount) {
+            $dateString = '';
+            if ($account->balanceDate > 100) {
+                $carbon     = Carbon::createFromTimestamp($account->balanceDate);
+                $dateString = $carbon->format('Y-m-d H:i:s');
+            }
+
+            return self::fromArray(
+                [
+                    'id'            => (string)$account->id,
+                    'name'          => $account->name,
+                    'currency_code' => (string)$account->currency,
+                    'iban'          => '',
+                    'bban'          => '',
+                    'status'        => 'active',
+                    'extra'         => [
+                        'Balance'      => $account->balance,
+                        'Balance date' => $dateString, // SimpleFIN balance timestamp
+                        'Organization' => (string)$account->getOrganizationName(),
+                    ],
+                ]
+            );
+        }
         if ($account instanceof LunchFlowAccount) {
             return self::fromArray(
                 [

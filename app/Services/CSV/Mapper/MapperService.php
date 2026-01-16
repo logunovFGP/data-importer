@@ -25,9 +25,11 @@ declare(strict_types=1);
 namespace App\Services\CSV\Mapper;
 
 use App\Exceptions\ImporterErrorException;
-use App\Services\Camt\TransactionCamt052 as Transaction;
+use App\Services\Camt\TransactionCamt052 as Transaction052;
+use App\Services\Camt\TransactionCamt053 as Transaction053;
 use App\Services\Shared\Configuration\Configuration;
 use Genkgo\Camt\Camt053\DTO\Statement as CamtStatement;
+use Genkgo\Camt\Camt052\DTO\Report as CamtReport;
 use Genkgo\Camt\Config;
 use Genkgo\Camt\Reader as CamtReader;
 use Illuminate\Support\Facades\Log;
@@ -139,16 +141,35 @@ class MapperService
             $entries = $statement->getEntries();
             foreach ($entries as $entry) {                       // -> Level C
                 $count = count($entry->getTransactionDetails()); // count level D entries.
-                if (0 === $count) {
-                    // FIXME Create a single transaction, I guess?
-                    $transactions[] = new Transaction($camtMessage, $statement, $entry, []);
-                }
-                if (0 !== $count) {
-                    // create separate transactions, no matter user pref.
-                    foreach ($entry->getTransactionDetails() as $detail) {
-                        $transactions[] = new Transaction($camtMessage, $statement, $entry, [$detail]);
+                // report is a 052 thing
+                if ($statement instanceof CamtReport) {
+                    if (0 === $count) {
+                        // FIXME Create a single transaction, I guess?
+                        $transactions[] = new Transaction052($camtMessage, $statement, $entry, []);
+                    }
+                    if (0 !== $count) {
+                        // create separate transactions, no matter user pref.
+                        foreach ($entry->getTransactionDetails() as $detail) {
+                            $transactions[] = new Transaction052($camtMessage, $statement, $entry, [$detail]);
+                        }
                     }
                 }
+
+                // statement is a 053 thing.
+                if ($statement instanceof CamtStatement) {
+                    if (0 === $count) {
+                        // FIXME Create a single transaction, I guess?
+                        $transactions[] = new Transaction053($camtMessage, $statement, $entry, []);
+                    }
+                    if (0 !== $count) {
+                        // create separate transactions, no matter user pref.
+                        foreach ($entry->getTransactionDetails() as $detail) {
+                            $transactions[] = new Transaction053($camtMessage, $statement, $entry, [$detail]);
+                        }
+                    }
+                }
+
+
             }
         }
         $mappableFields = self::getMappableFieldsForCamt();

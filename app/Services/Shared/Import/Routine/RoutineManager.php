@@ -64,12 +64,13 @@ class RoutineManager
 
         // FIXME again with the collecting of accounts?
         Log::debug('First collect account information from Firefly III.');
-        $accountInfo = $this->infoCollector->collectAccountTypes();
+        $accountInfo     = $this->infoCollector->collectAccountTypes();
 
         Log::debug('Now starting submission by calling API Submitter');
         // submit transactions to API:
         $this->apiSubmitter->setAccountInfo($accountInfo);
         $this->apiSubmitter->processTransactions();
+        $this->importJob = $this->apiSubmitter->getImportJob();
         Log::debug(sprintf('Routine manager: messages: %d, warnings: %d, errors: %d', count($this->importJob->submissionStatus->messages), count($this->importJob->submissionStatus->warnings), count($this->importJob->submissionStatus->errors)));
     }
 }
