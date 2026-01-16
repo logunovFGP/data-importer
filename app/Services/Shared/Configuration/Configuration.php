@@ -1143,10 +1143,10 @@ class Configuration
         $this->dateRangeNotAfterNumber     = $request['date_range_not_after_number'];
         $this->dateRangeNotAfterUnit       = $request['date_range_not_after_unit'];
 
-        if($request['date_not_before'] instanceof Carbon) {
+        if ($request['date_not_before'] instanceof Carbon) {
             $request['date_not_before'] = $request['date_not_before']->format('Y-m-d');
         }
-        if($request['date_not_after'] instanceof Carbon) {
+        if ($request['date_not_after'] instanceof Carbon) {
             $request['date_not_after'] = $request['date_not_after']->format('Y-m-d');
         }
 

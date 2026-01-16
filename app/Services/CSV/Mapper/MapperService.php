@@ -142,7 +142,7 @@ class MapperService
             foreach ($entries as $entry) {                       // -> Level C
                 $count = count($entry->getTransactionDetails()); // count level D entries.
                 // report is a 052 thing
-                if($statement instanceof CamtReport) {
+                if ($statement instanceof CamtReport) {
                     if (0 === $count) {
                         // FIXME Create a single transaction, I guess?
                         $transactions[] = new Transaction052($camtMessage, $statement, $entry, []);
@@ -156,7 +156,7 @@ class MapperService
                 }
 
                 // statement is a 053 thing.
-                if($statement instanceof CamtStatement) {
+                if ($statement instanceof CamtStatement) {
                     if (0 === $count) {
                         // FIXME Create a single transaction, I guess?
                         $transactions[] = new Transaction053($camtMessage, $statement, $entry, []);
