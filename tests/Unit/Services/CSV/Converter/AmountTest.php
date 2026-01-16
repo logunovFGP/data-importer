@@ -41,41 +41,41 @@ final class AmountTest extends TestCase
     {
         $amount = new Amount();
 
-        $this->assertSame('0', $amount->convert('0'));
-        $this->assertSame('0.0', $amount->convert('0.0'));
-        $this->assertSame('0.1', $amount->convert('0.1'));
-        $this->assertSame('0.1', $amount->convert(0.1));
-        $this->assertSame('1', $amount->convert(1));
-        $this->assertSame('1', $amount->convert('1'));
-        $this->assertSame('1.0', $amount->convert('1.0'));
-        $this->assertSame('1000', $amount->convert('1000,-'));
-        $this->assertSame('1000', $amount->convert('EUR 1000,-'));
-        $this->assertSame('1000', $amount->convert('€ 1000,-'));
-        $this->assertSame('1000', $amount->convert('1.000,-'));
-        $this->assertSame('1000', $amount->convert('EUR 1.000,-'));
-        $this->assertSame('1000', $amount->convert('€ 1.000,-'));
-        $this->assertSame('1000.00', $amount->convert('1000,00'));
-        $this->assertSame('1000.00', $amount->convert('1.000,00'));
-        $this->assertSame('1000', $amount->convert('1.000,'));
-        $this->assertSame('1000', $amount->convert('1.000'));
-        $this->assertSame('1.00', $amount->convert('1.00'));
+        static::assertSame('0', $amount->convert('0'));
+        static::assertSame('0.0', $amount->convert('0.0'));
+        static::assertSame('0.1', $amount->convert('0.1'));
+        static::assertSame('0.1', $amount->convert(0.1));
+        static::assertSame('1', $amount->convert(1));
+        static::assertSame('1', $amount->convert('1'));
+        static::assertSame('1.0', $amount->convert('1.0'));
+        static::assertSame('1000', $amount->convert('1000,-'));
+        static::assertSame('1000', $amount->convert('EUR 1000,-'));
+        static::assertSame('1000', $amount->convert('€ 1000,-'));
+        static::assertSame('1000', $amount->convert('1.000,-'));
+        static::assertSame('1000', $amount->convert('EUR 1.000,-'));
+        static::assertSame('1000', $amount->convert('€ 1.000,-'));
+        static::assertSame('1000.00', $amount->convert('1000,00'));
+        static::assertSame('1000.00', $amount->convert('1.000,00'));
+        static::assertSame('1000', $amount->convert('1.000,'));
+        static::assertSame('1000', $amount->convert('1.000'));
+        static::assertSame('1.00', $amount->convert('1.00'));
 
         // new tests
-        $this->assertSame('25.00000', $amount->convert('25.00000'));
-        $this->assertSame('251.000000', $amount->convert('251.000000'));
-        $this->assertSame('2502.0000000', $amount->convert('2502.0000000'));
+        static::assertSame('25.00000', $amount->convert('25.00000'));
+        static::assertSame('251.000000', $amount->convert('251.000000'));
+        static::assertSame('2502.0000000', $amount->convert('2502.0000000'));
 
-        $this->assertSame('2530000000', $amount->convert('2.530.000.000,'));
-        $this->assertSame('254.0000000', $amount->convert('254.0000000'));
-        $this->assertSame('255.000000000', $amount->convert('255.000000000'));
+        static::assertSame('2530000000', $amount->convert('2.530.000.000,'));
+        static::assertSame('254.0000000', $amount->convert('254.0000000'));
+        static::assertSame('255.000000000', $amount->convert('255.000000000'));
 
-        $this->assertSame('1256.0000000', $amount->convert('1,256.0000000'));
-        $this->assertSame('1001257.0000000', $amount->convert('1,001,257.0000000'));
+        static::assertSame('1256.0000000', $amount->convert('1,256.0000000'));
+        static::assertSame('1001257.0000000', $amount->convert('1,001,257.0000000'));
 
         // the original problem from issue #8482
-        $this->assertSame('25.00000', $amount->convert('25.00000'));
+        static::assertSame('25.00000', $amount->convert('25.00000'));
 
         // the original problem from issue #8404
-        $this->assertSame('1000', $amount->convert('1.000'));
+        static::assertSame('1000', $amount->convert('1.000'));
     }
 }

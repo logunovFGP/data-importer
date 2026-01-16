@@ -61,16 +61,16 @@ final class DemoModeTest extends TestCase
         ;
 
         // Check that we don't redirect back to upload (which indicates validation failure)
-        $this->assertNotSame(route('003-upload.index'), $response->getTargetUrl());
+        static::assertNotSame(route('003-upload.index'), $response->getTargetUrl());
 
         // If demo mode works correctly, we should redirect to configuration
         $response->assertRedirect(route('004-configure.index'));
 
         // Verify session data was set correctly
-        $this->assertSame('demo_token_123', session(Constants::SIMPLEFIN_TOKEN));
-        $this->assertSame('https://demo:demo@beta-bridge.simplefin.org/simplefin', session(Constants::SIMPLEFIN_BRIDGE_URL));
-        $this->assertTrue(session(Constants::SIMPLEFIN_IS_DEMO));
-        $this->assertTrue(session(Constants::HAS_UPLOAD));
+        static::assertSame('demo_token_123', session(Constants::SIMPLEFIN_TOKEN));
+        static::assertSame('https://demo:demo@beta-bridge.simplefin.org/simplefin', session(Constants::SIMPLEFIN_BRIDGE_URL));
+        static::assertTrue(session(Constants::SIMPLEFIN_IS_DEMO));
+        static::assertTrue(session(Constants::HAS_UPLOAD));
     }
 
     public function testDemoModeCheckboxValueInterpretation(): void
@@ -88,7 +88,7 @@ final class DemoModeTest extends TestCase
                 ->post(route('003-upload.upload'), $case)
             ;
 
-            $this->assertNotSame(route('003-upload.index'), $response->getTargetUrl(), 'Failed for case: '.json_encode($case));
+            static::assertNotSame(route('003-upload.index'), $response->getTargetUrl(), 'Failed for case: '.json_encode($case));
         }
     }
 
@@ -117,7 +117,7 @@ final class DemoModeTest extends TestCase
 
         // Should attempt to connect (may fail due to invalid credentials, but shouldn't fail validation)
         // The exact behavior depends on whether SimpleFINService is mocked
-        $this->assertNotSame(route('003-upload.index'), $response->getTargetUrl());
+        static::assertNotSame(route('003-upload.index'), $response->getTargetUrl());
     }
 
     public function testRequestDataLogging(): void

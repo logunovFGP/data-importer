@@ -38,6 +38,6 @@ final class ExampleTest extends TestCase
      */
     public function testBasicTest(): void
     {
-        $this->assertTrue(true);
+        static::assertTrue(true);
     }
 }

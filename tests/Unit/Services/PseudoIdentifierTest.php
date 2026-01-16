@@ -87,16 +87,16 @@ final class PseudoIdentifierTest extends TestCase
         $config    = Configuration::fromArray($oldConfig);
 
         // Should auto-migrate to pseudo identifier
-        $this->assertTrue($config->hasPseudoIdentifier());
+        static::assertTrue($config->hasPseudoIdentifier());
 
         $pseudo    = $config->getPseudoIdentifier();
-        $this->assertNotNull($pseudo);
-        $this->assertSame([2], $pseudo['source_columns']);
-        $this->assertSame('|', $pseudo['separator']);
-        $this->assertSame('external-id', $pseudo['role']);
+        static::assertNotNull($pseudo);
+        static::assertSame([2], $pseudo['source_columns']);
+        static::assertSame('|', $pseudo['separator']);
+        static::assertSame('external-id', $pseudo['role']);
 
         // Display value should show original index
-        $this->assertSame('2', $config->getUniqueColumnIndexDisplay());
+        static::assertSame('2', $config->getUniqueColumnIndexDisplay());
     }
 
     /**
@@ -133,16 +133,16 @@ final class PseudoIdentifierTest extends TestCase
 
         $config    = Configuration::fromArray($newConfig);
 
-        $this->assertTrue($config->hasPseudoIdentifier());
+        static::assertTrue($config->hasPseudoIdentifier());
 
         $pseudo    = $config->getPseudoIdentifier();
-        $this->assertNotNull($pseudo);
+        static::assertNotNull($pseudo);
 
         // Multi-column configuration should be preserved
-        $this->assertSame([0, 3, 5], $pseudo['source_columns']);
+        static::assertSame([0, 3, 5], $pseudo['source_columns']);
 
         // Display value should show comma-separated indices
-        $this->assertSame('0,3,5', $config->getUniqueColumnIndexDisplay());
+        static::assertSame('0,3,5', $config->getUniqueColumnIndexDisplay());
     }
 
     /**
@@ -174,8 +174,8 @@ final class PseudoIdentifierTest extends TestCase
         $config        = Configuration::fromArray($classicConfig);
 
         // Should NOT create pseudo identifier for classic detection
-        $this->assertFalse($config->hasPseudoIdentifier());
-        $this->assertNull($config->getPseudoIdentifier());
+        static::assertFalse($config->hasPseudoIdentifier());
+        static::assertNull($config->getPseudoIdentifier());
     }
 
     /**
@@ -206,8 +206,8 @@ final class PseudoIdentifierTest extends TestCase
 
         $config     = Configuration::fromArray($noneConfig);
 
-        $this->assertFalse($config->hasPseudoIdentifier());
-        $this->assertNull($config->getPseudoIdentifier());
+        static::assertFalse($config->hasPseudoIdentifier());
+        static::assertNull($config->getPseudoIdentifier());
     }
 
     /**
@@ -236,10 +236,10 @@ final class PseudoIdentifierTest extends TestCase
         $savedConfig    = $config->toArray();
 
         // Verify pseudo identifier is preserved in save
-        $this->assertArrayHasKey('pseudo_identifier', $savedConfig);
+        static::assertArrayHasKey('pseudo_identifier', $savedConfig);
 
         $pseudo         = $savedConfig['pseudo_identifier'];
-        $this->assertSame([1, 4], $pseudo['source_columns']);
-        $this->assertSame('|', $pseudo['separator']);
+        static::assertSame([1, 4], $pseudo['source_columns']);
+        static::assertSame('|', $pseudo['separator']);
     }
 }

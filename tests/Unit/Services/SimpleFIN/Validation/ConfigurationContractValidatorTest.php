@@ -73,8 +73,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($this->mockConfiguration);
 
-        $this->assertTrue($result->isValid());
-        $this->assertEmpty($result->getErrors());
+        static::assertTrue($result->isValid());
+        static::assertEmpty($result->getErrors());
     }
 
     /**
@@ -86,9 +86,9 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result        = $this->validator->validateConfigurationContract($invalidConfig);
 
-        $this->assertFalse($result->isValid());
-        $this->assertNotEmpty($result->getErrors());
-        $this->assertStringContainsString('SimpleFIN flow', (string) $result->getErrorMessages()[0]);
+        static::assertFalse($result->isValid());
+        static::assertNotEmpty($result->getErrors());
+        static::assertStringContainsString('SimpleFIN flow', (string) $result->getErrorMessages()[0]);
     }
 
     /**
@@ -100,8 +100,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($this->mockConfiguration);
 
-        $this->assertFalse($result->isValid());
-        $this->assertStringContainsString('SimpleFIN accounts data missing', (string) $result->getErrorMessages()[0]);
+        static::assertFalse($result->isValid());
+        static::assertStringContainsString('SimpleFIN accounts data missing', (string) $result->getErrorMessages()[0]);
     }
 
     /**
@@ -119,8 +119,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($this->mockConfiguration);
 
-        $this->assertFalse($result->isValid());
-        $this->assertGreaterThanOrEqual(4, count($result->getErrors())); // Missing 4 required fields
+        static::assertFalse($result->isValid());
+        static::assertGreaterThanOrEqual(4, count($result->getErrors())); // Missing 4 required fields
     }
 
     /**
@@ -139,8 +139,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($config);
 
-        $this->assertFalse($result->isValid());
-        $this->assertNotEmpty($result->getErrors());
+        static::assertFalse($result->isValid());
+        static::assertNotEmpty($result->getErrors());
     }
 
     /**
@@ -157,8 +157,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($config);
 
-        $this->assertFalse($result->isValid());
-        $this->assertStringContainsString('New account configuration missing', (string) $result->getErrorMessages()[0]);
+        static::assertFalse($result->isValid());
+        static::assertStringContainsString('New account configuration missing', (string) $result->getErrorMessages()[0]);
     }
 
     /**
@@ -181,8 +181,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($config);
 
-        $this->assertFalse($result->isValid());
-        $this->assertGreaterThanOrEqual(4, count($result->getErrors()));
+        static::assertFalse($result->isValid());
+        static::assertGreaterThanOrEqual(4, count($result->getErrors()));
     }
 
     /**
@@ -206,10 +206,10 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($config);
 
-        $this->assertFalse($result->isValid());
+        static::assertFalse($result->isValid());
         $errors = $result->getErrors();
-        $this->assertTrue(collect($errors)->contains(static fn ($error) => str_contains((string) $error['message'], 'Liability type required')));
-        $this->assertTrue(collect($errors)->contains(static fn ($error) => str_contains((string) $error['message'], 'Liability direction required')));
+        static::assertTrue(collect($errors)->contains(static fn ($error) => str_contains((string) $error['message'], 'Liability type required')));
+        static::assertTrue(collect($errors)->contains(static fn ($error) => str_contains((string) $error['message'], 'Liability direction required')));
     }
 
     /**
@@ -232,8 +232,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result        = $this->validator->validateFormFieldStructure($validFormData);
 
-        $this->assertTrue($result->isValid());
-        $this->assertEmpty($result->getErrors());
+        static::assertTrue($result->isValid());
+        static::assertEmpty($result->getErrors());
     }
 
     /**
@@ -248,8 +248,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result          = $this->validator->validateFormFieldStructure($invalidFormData);
 
-        $this->assertFalse($result->isValid());
-        $this->assertGreaterThanOrEqual(3, count($result->getErrors())); // Missing/invalid fields
+        static::assertFalse($result->isValid());
+        static::assertGreaterThanOrEqual(3, count($result->getErrors())); // Missing/invalid fields
     }
 
     /**
@@ -266,26 +266,26 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         // Test invalid result
         $invalidResult = new ValidationResult(false, $errors, $warnings);
-        $this->assertFalse($invalidResult->isValid());
-        $this->assertTrue($invalidResult->hasErrors());
-        $this->assertTrue($invalidResult->hasWarnings());
-        $this->assertSame(['Test error'], $invalidResult->getErrorMessages());
-        $this->assertSame(['Test warning'], $invalidResult->getWarningMessages());
+        static::assertFalse($invalidResult->isValid());
+        static::assertTrue($invalidResult->hasErrors());
+        static::assertTrue($invalidResult->hasWarnings());
+        static::assertSame(['Test error'], $invalidResult->getErrorMessages());
+        static::assertSame(['Test warning'], $invalidResult->getWarningMessages());
 
         // Test valid result
         $validResult   = new ValidationResult(true);
-        $this->assertTrue($validResult->isValid());
-        $this->assertFalse($validResult->hasErrors());
-        $this->assertFalse($validResult->hasWarnings());
-        $this->assertEmpty($validResult->getErrors());
-        $this->assertEmpty($validResult->getWarnings());
+        static::assertTrue($validResult->isValid());
+        static::assertFalse($validResult->hasErrors());
+        static::assertFalse($validResult->hasWarnings());
+        static::assertEmpty($validResult->getErrors());
+        static::assertEmpty($validResult->getWarnings());
 
         // Test toArray
         $array         = $invalidResult->toArray();
-        $this->assertArrayHasKey('valid', $array);
-        $this->assertArrayHasKey('errors', $array);
-        $this->assertArrayHasKey('warnings', $array);
-        $this->assertFalse($array['valid']);
+        static::assertArrayHasKey('valid', $array);
+        static::assertArrayHasKey('errors', $array);
+        static::assertArrayHasKey('warnings', $array);
+        static::assertFalse($array['valid']);
     }
 
     /**
@@ -309,8 +309,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($config);
 
-        $this->assertFalse($result->isValid());
-        $this->assertTrue(collect($result->getErrors())->contains(static fn ($error) => str_contains((string) $error['message'], 'Invalid account role')));
+        static::assertFalse($result->isValid());
+        static::assertTrue(collect($result->getErrors())->contains(static fn ($error) => str_contains((string) $error['message'], 'Invalid account role')));
     }
 
     /**
@@ -323,8 +323,8 @@ final class ConfigurationContractValidatorTest extends TestCase
 
         $result = $this->validator->validateConfigurationContract($this->mockConfiguration);
 
-        $this->assertFalse($result->isValid());
-        $this->assertTrue(collect($result->getErrors())->contains(static fn ($error) => str_contains((string) $error['message'], 'selected for import but not in account mappings')));
+        static::assertFalse($result->isValid());
+        static::assertTrue(collect($result->getErrors())->contains(static fn ($error) => str_contains((string) $error['message'], 'selected for import but not in account mappings')));
     }
 
     /**
