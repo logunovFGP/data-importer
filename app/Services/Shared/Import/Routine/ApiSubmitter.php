@@ -116,13 +116,18 @@ class ApiSubmitter
                 Log::debug(sprintf('Transaction #%d is unique.', $index + 1));
                 ++$uniqueCount;
             }
+
+            // if this is the last transaction, make sure recalculate running balance is set to true.
+            $lastTransaction = $index === count($lines) - 1;
+
+
             if (false === $unique) {
                 Log::debug(sprintf('Transaction #%d is NOT unique.', $index + 1));
                 $this->repository->saveToDisk($this->importJob);
 
                 continue;
             }
-            $groupInfo = $this->processTransaction($index, $line);
+            $groupInfo = $this->processTransaction($index, $line, $lastTransaction);
             $this->addTagToGroups($groupInfo);
             $this->repository->saveToDisk($this->importJob);
         }
@@ -263,7 +268,7 @@ class ApiSubmitter
         return $array;
     }
 
-    private function processTransaction(int $index, array $line): array
+    private function processTransaction(int $index, array $line, bool $lastTransaction): array
     {
         ++$index;
         $line    = $this->cleanupLine($line);
@@ -273,6 +278,10 @@ class ApiSubmitter
         $request = new PostTransactionRequest($url, $token);
         $request->setVerify(config('importer.connection.verify'));
         $request->setTimeOut(config('importer.connection.timeout'));
+
+        // add line so the last transaction is no longer a batch and triggers some stuff.
+        $line['batch_submission'] = !$lastTransaction;
+
         Log::debug(sprintf('Submitting to Firefly III: %s', json_encode($line)));
         $request->setBody($line);
 
