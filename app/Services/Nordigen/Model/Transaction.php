@@ -137,7 +137,9 @@ class Transaction
         $object->transactionId                          = trim($array['transactionId'] ?? '');
         $object->ultimateCreditor                       = trim($array['ultimateCreditor'] ?? '');
         $object->ultimateDebtor                         = trim($array['ultimateDebtor'] ?? '');
-        $object->valueDate                              = array_key_exists('valueDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['valueDate'], config('app.timezone')) : null;
+        $object->valueDate                              = array_key_exists('valueDate', $array)
+            ? Carbon::createFromFormat('!Y-m-d', $array['valueDate'], config('app.timezone'))
+            : null;
 
         // undocumented values
         $object->endToEndId                             = trim($array['endToEndId'] ?? ''); // from Rabobank NL

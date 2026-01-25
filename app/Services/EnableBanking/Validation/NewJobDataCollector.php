@@ -54,9 +54,9 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
         Log::debug(sprintf('[%s] Now in %s', config('importer.version'), __METHOD__));
 
         $this->importJob->refreshInstanceIdentifier();
-        $messageBag = new MessageBag();
-        $configuration = $this->importJob->getConfiguration();
-        $sessions = $configuration->getEnableBankingSessions();
+        $messageBag       = new MessageBag();
+        $configuration    = $this->importJob->getConfiguration();
+        $sessions         = $configuration->getEnableBankingSessions();
 
         if (0 === count($sessions)) {
             Log::debug('No Enable Banking sessions for import.');
@@ -76,12 +76,12 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
         }
 
         // No accounts saved yet, try to fetch from API (fallback for older sessions)
-        $return = [];
-        $cache = [];
+        $return           = [];
+        $cache            = [];
 
         foreach ($sessions as $sessionId) {
             $cacheKey = sprintf('eb_session_%s', $sessionId);
-            $inCache = Cache::has($cacheKey) && config('importer.use_cache');
+            $inCache  = Cache::has($cacheKey) && config('importer.use_cache');
 
             if ($inCache) {
                 Log::debug('Have accounts in cache.');
@@ -95,7 +95,7 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
             if (!$inCache) {
                 Log::debug('Have NO accounts in cache.');
 
-                $url = config('enablebanking.url');
+                $url     = config('enablebanking.url');
                 $request = new GetAccountsRequest($url, $sessionId);
                 $request->setTimeOut(config('importer.connection.timeout'));
 
@@ -106,19 +106,30 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
                     throw new ImporterErrorException($e->getMessage(), 0, $e);
                 }
 
-                $total = count($response);
+                $total   = count($response);
                 Log::debug(sprintf('Found %d Enable Banking accounts.', $total));
 
                 if (0 === $total) {
-                    Log::warning('No accounts returned from Enable Banking. For restricted clients, accounts must be pre-authorized in the Enable Banking dashboard.');
-                    $messageBag->add('no_accounts', 'No accounts were returned from Enable Banking. If you are using a restricted client, please ensure accounts are pre-authorized in your Enable Banking dashboard.');
+                    Log::warning(
+                        'No accounts returned from Enable Banking. For restricted clients, accounts must be pre-authorized in the Enable Banking dashboard.'
+                    );
+                    $messageBag->add(
+                        'no_accounts',
+                        'No accounts were returned from Enable Banking. If you are using a restricted client, please ensure accounts are pre-authorized in your Enable Banking dashboard.'
+                    );
                 }
 
                 foreach ($response as $index => $account) {
-                    Log::debug(sprintf('[%s] [%d/%d] Now collecting information for account %s', config('importer.version'), $index + 1, $total, $account->getUid()));
+                    Log::debug(sprintf(
+                        '[%s] [%d/%d] Now collecting information for account %s',
+                        config('importer.version'),
+                        $index + 1,
+                        $total,
+                        $account->getUid()
+                    ));
 
                     $return[] = $account;
-                    $cache[] = $account->toLocalArray();
+                    $cache[]  = $account->toLocalArray();
                 }
             }
 

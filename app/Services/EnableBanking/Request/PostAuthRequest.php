@@ -35,11 +35,11 @@ use App\Services\Shared\Response\Response;
 class PostAuthRequest extends Request
 {
     private string $aspsp;
-    private string $country = '';
-    private string $state = '';
+    private string $country    = '';
+    private string $state      = '';
     private string $redirectUrl;
-    private string $psuType = 'personal';
-    private ?int $validUntil = null;
+    private string $psuType    = 'personal';
+    private ?int   $validUntil = null;
 
     public function __construct(string $url)
     {
@@ -88,20 +88,9 @@ class PostAuthRequest extends Request
     public function post(): Response
     {
         $validUntilTimestamp = $this->validUntil ?? strtotime('+90 days');
-        $data = [
-            'access' => [
-                'valid_until' => date('c', $validUntilTimestamp), // RFC3339 format
-            ],
-            'aspsp' => [
-                'name' => $this->aspsp,
-                'country' => $this->country,
-            ],
-            'state' => $this->state,
-            'redirect_url' => $this->redirectUrl,
-            'psu_type' => $this->psuType,
-        ];
+        $data                = ['access'       => ['valid_until'       => date('c', $validUntilTimestamp)], 'aspsp'        => ['name'    => $this->aspsp, 'country' => $this->country], 'state'        => $this->state, 'redirect_url' => $this->redirectUrl, 'psu_type'     => $this->psuType]; // RFC3339 format
 
-        $json = $this->authenticatedPost($data);
+        $json                = $this->authenticatedPost($data);
 
         return AuthResponse::fromArray($json);
     }

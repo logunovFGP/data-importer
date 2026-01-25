@@ -46,8 +46,9 @@ class TransactionMapper
     /**
      * @throws ImporterErrorException
      */
-    public function __construct(private Configuration $configuration)
-    {
+    public function __construct(
+        private Configuration $configuration
+    ) {
         bcscale(12);
         Log::debug('Constructed TransactionMapper.');
         $this->allAccounts                   = $this->getAllAccounts();
@@ -96,7 +97,6 @@ class TransactionMapper
             if (null !== $polishedJournal) {
                 $result['transactions'][] = $polishedJournal;
             }
-
         }
         Log::debug('Firefly III transaction is: ', $result);
 
@@ -331,25 +331,37 @@ class TransactionMapper
         // no amount?
         if (!array_key_exists('amount', $current)) {
             Log::error('Array has no amount information, cannot fix.', $current);
-            $this->importJob->conversionStatus->addError(0, 'Encountered transaction with no amount details. This transaction cannot be imported. Please see the logs for more details.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                'Encountered transaction with no amount details. This transaction cannot be imported. Please see the logs for more details.'
+            );
 
             return null;
         }
         if ('' === $current['amount']) {
             Log::error('Array has empty amount information, cannot fix.', $current);
-            $this->importJob->conversionStatus->addError(0, 'Encountered transaction with amount "" (empty). This transaction cannot be imported. Please see the logs for more details.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                'Encountered transaction with amount "" (empty). This transaction cannot be imported. Please see the logs for more details.'
+            );
 
             return null;
         }
         if (null === $current['amount']) {
             Log::error('Array has NULL amount information, cannot fix.', $current);
-            $this->importJob->conversionStatus->addError(0, 'Encountered transaction with amount NULL. This transaction cannot be imported. Please see the logs for more details.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                'Encountered transaction with amount NULL. This transaction cannot be imported. Please see the logs for more details.'
+            );
 
             return null;
         }
         if (0 === bccomp('0', $current['amount'])) {
             Log::error(sprintf('Array has "%s" as amount, cannot fix.', $current['amount']), $current);
-            $this->importJob->conversionStatus->addError(0, sprintf('Encountered transaction with amount "%s". This transaction cannot be imported. Please see the logs for more details.', $current['amount']));
+            $this->importJob->conversionStatus->addError(0, sprintf(
+                'Encountered transaction with amount "%s". This transaction cannot be imported. Please see the logs for more details.',
+                $current['amount']
+            ));
 
             return null;
         }

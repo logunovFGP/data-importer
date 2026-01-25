@@ -371,25 +371,23 @@ class ImportServiceAccount
                 $iban = '';
             }
 
-            $current  = self::fromArray(
-                [
-                    'id'            => $account->getIdentifier(),
-                    'name'          => $account->getFullName(),
-                    'currency_code' => $account->getCurrency(),
-                    'iban'          => $iban,
-                    'bban'          => $account->getBban(),
-                    'status'        => '',
-                    'extra'         => [
-                        'Owner name'   => $account->getOwnerName(),
-                        'Display name' => $account->getDisplayName(),
-                        'Product'      => $account->getProduct(),
-                        'Account type' => $account->getAccountType(),
-                        'Currency'     => $account->getCurrency(),
-                        'IBAN'         => $iban,
-                        'BBAN'         => $account->getBban(),
-                    ],
-                ]
-            );
+            $current  = self::fromArray([
+                'id'            => $account->getIdentifier(),
+                'name'          => $account->getFullName(),
+                'currency_code' => $account->getCurrency(),
+                'iban'          => $iban,
+                'bban'          => $account->getBban(),
+                'status'        => '',
+                'extra'         => [
+                    'Owner name'   => $account->getOwnerName(),
+                    'Display name' => $account->getDisplayName(),
+                    'Product'      => $account->getProduct(),
+                    'Account type' => $account->getAccountType(),
+                    'Currency'     => $account->getCurrency(),
+                    'IBAN'         => $iban,
+                    'BBAN'         => $account->getBban(),
+                ],
+            ]);
 
             foreach ($account->getBalances() as $balance) {
                 $key                  = sprintf('Balance (%s) (%s)', $balance['balance_type'] ?? 'unknown', $balance['currency'] ?? '');

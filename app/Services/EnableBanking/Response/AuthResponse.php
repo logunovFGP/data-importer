@@ -32,15 +32,15 @@ use App\Services\Shared\Response\Response;
  */
 class AuthResponse extends Response
 {
-    public string $url = '';
-    public string $authId = '';
+    public string $url       = '';
+    public string $authId    = '';
     public string $psuIdHash = '';
 
     public function __construct(array $data = [])
     {
-        $this->url = $data['url'] ?? '';
+        $this->url       = $data['url'] ?? '';
         // API returns authorization_id per spec
-        $this->authId = $data['authorization_id'] ?? $data['auth_id'] ?? $data['id'] ?? '';
+        $this->authId    = $data['authorization_id'] ?? $data['auth_id'] ?? $data['id'] ?? '';
         $this->psuIdHash = $data['psu_id_hash'] ?? '';
     }
 

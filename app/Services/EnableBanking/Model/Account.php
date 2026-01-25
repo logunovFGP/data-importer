@@ -31,44 +31,42 @@ use Illuminate\Support\Facades\Log;
  */
 class Account
 {
-    private string $uid = '';
-    private string $iban = '';
-    private string $bban = '';
+    private string $uid                 = '';
+    private string $iban                = '';
+    private string $bban                = '';
     private string $otherIdentification = '';
-    private string $otherScheme = '';
-    private string $currency = '';
-    private string $ownerName = '';
-    private string $displayName = '';
-    private string $product = '';
-    private string $accountType = '';  // API: cash_account_type (CACC, CARD, CASH, LOAN, OTHR, SVGS)
-    private string $usage = '';
-    private string $details = '';
-    private array $balances = [];
+    private string $otherScheme         = '';
+    private string $currency            = '';
+    private string $ownerName           = '';
+    private string $displayName         = '';
+    private string $product             = '';
+    private string $accountType         = ''; // API: cash_account_type (CACC, CARD, CASH, LOAN, OTHR, SVGS)
+    private string $usage               = '';
+    private string $details             = '';
+    private array  $balances            = [];
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public static function fromArray(array $array): self
     {
-        $account = new self();
-        $account->uid = $array['uid'] ?? $array['account_uid'] ?? '';
+        $account              = new self();
+        $account->uid         = $array['uid'] ?? $array['account_uid'] ?? '';
 
         // Handle account_id structure per API spec
         // account_id can have: iban, other (with identification and scheme_name)
-        $accountId = $array['account_id'] ?? [];
-        $account->iban = $accountId['iban'] ?? $array['iban'] ?? '';
+        $accountId            = $array['account_id'] ?? [];
+        $account->iban        = $accountId['iban'] ?? $array['iban'] ?? '';
 
         // Handle non-IBAN identification via "other" field
         if (isset($accountId['other'])) {
             $account->otherIdentification = $accountId['other']['identification'] ?? '';
-            $account->otherScheme = $accountId['other']['scheme_name'] ?? '';
+            $account->otherScheme         = $accountId['other']['scheme_name'] ?? '';
         }
 
         // Parse all_account_ids array for BBAN and other identifications
-        $allAccountIds = $array['all_account_ids'] ?? [];
+        $allAccountIds        = $array['all_account_ids'] ?? [];
         foreach ($allAccountIds as $accountIdEntry) {
-            $schemeName = $accountIdEntry['scheme_name'] ?? '';
+            $schemeName     = $accountIdEntry['scheme_name'] ?? '';
             $identification = $accountIdEntry['identification'] ?? '';
 
             if ('BBAN' === $schemeName && '' === $account->bban) {
@@ -79,34 +77,34 @@ class Account
             }
         }
 
-        $account->currency = $array['currency'] ?? '';
-        $account->ownerName = $array['owner_name'] ?? $array['account_holder_name'] ?? '';
+        $account->currency    = $array['currency'] ?? '';
+        $account->ownerName   = $array['owner_name'] ?? $array['account_holder_name'] ?? '';
         $account->displayName = $array['display_name'] ?? $array['name'] ?? '';
-        $account->product = $array['product'] ?? '';
+        $account->product     = $array['product'] ?? '';
         // API uses cash_account_type (CACC, CARD, CASH, LOAN, OTHR, SVGS)
         $account->accountType = $array['cash_account_type'] ?? $array['account_type'] ?? '';
-        $account->usage = $array['usage'] ?? '';
-        $account->details = $array['details'] ?? '';
+        $account->usage       = $array['usage'] ?? '';
+        $account->details     = $array['details'] ?? '';
 
         return $account;
     }
 
     public static function fromLocalArray(array $array): self
     {
-        $account = new self();
-        $account->uid = $array['uid'] ?? '';
-        $account->iban = $array['iban'] ?? '';
-        $account->bban = $array['bban'] ?? '';
+        $account                      = new self();
+        $account->uid                 = $array['uid'] ?? '';
+        $account->iban                = $array['iban'] ?? '';
+        $account->bban                = $array['bban'] ?? '';
         $account->otherIdentification = $array['other_identification'] ?? '';
-        $account->otherScheme = $array['other_scheme'] ?? '';
-        $account->currency = $array['currency'] ?? '';
-        $account->ownerName = $array['owner_name'] ?? '';
-        $account->displayName = $array['display_name'] ?? '';
-        $account->product = $array['product'] ?? '';
-        $account->accountType = $array['account_type'] ?? '';
-        $account->usage = $array['usage'] ?? '';
-        $account->details = $array['details'] ?? '';
-        $account->balances = $array['balances'] ?? [];
+        $account->otherScheme         = $array['other_scheme'] ?? '';
+        $account->currency            = $array['currency'] ?? '';
+        $account->ownerName           = $array['owner_name'] ?? '';
+        $account->displayName         = $array['display_name'] ?? '';
+        $account->product             = $array['product'] ?? '';
+        $account->accountType         = $array['account_type'] ?? '';
+        $account->usage               = $array['usage'] ?? '';
+        $account->details             = $array['details'] ?? '';
+        $account->balances            = $array['balances'] ?? [];
 
         return $account;
     }
@@ -271,20 +269,20 @@ class Account
     public function toLocalArray(): array
     {
         return [
-            'class' => self::class,
-            'uid' => $this->uid,
-            'iban' => $this->iban,
-            'bban' => $this->bban,
+            'class'                => self::class,
+            'uid'                  => $this->uid,
+            'iban'                 => $this->iban,
+            'bban'                 => $this->bban,
             'other_identification' => $this->otherIdentification,
-            'other_scheme' => $this->otherScheme,
-            'currency' => $this->currency,
-            'owner_name' => $this->ownerName,
-            'display_name' => $this->displayName,
-            'product' => $this->product,
-            'account_type' => $this->accountType,
-            'usage' => $this->usage,
-            'details' => $this->details,
-            'balances' => $this->balances,
+            'other_scheme'         => $this->otherScheme,
+            'currency'             => $this->currency,
+            'owner_name'           => $this->ownerName,
+            'display_name'         => $this->displayName,
+            'product'              => $this->product,
+            'account_type'         => $this->accountType,
+            'usage'                => $this->usage,
+            'details'              => $this->details,
+            'balances'             => $this->balances,
         ];
     }
 

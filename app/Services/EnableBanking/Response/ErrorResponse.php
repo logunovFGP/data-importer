@@ -32,13 +32,13 @@ use App\Services\Shared\Response\Response;
 class ErrorResponse extends Response
 {
     public string $message = '';
-    public string $code = '';
-    public array $details = [];
+    public string $code    = '';
+    public array  $details = [];
 
     public function __construct(array $data = [])
     {
         $this->message = $data['message'] ?? $data['error'] ?? 'Unknown error';
-        $this->code = $data['code'] ?? $data['error_code'] ?? '';
+        $this->code    = $data['code'] ?? $data['error_code'] ?? '';
         $this->details = $data['details'] ?? [];
     }
 

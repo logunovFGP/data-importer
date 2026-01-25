@@ -36,17 +36,17 @@ class GetTransactionsRequest extends Request
 {
     private string $accountUid;
     private ?string $dateFrom = null;
-    private ?string $dateTo = null;
+    private ?string $dateTo   = null;
 
     public function __construct(string $url, string $accountUid, ?string $dateFrom = null, ?string $dateTo = null)
     {
         $this->setBase($url);
         $this->accountUid = $accountUid;
-        $this->dateFrom = $dateFrom;
-        $this->dateTo = $dateTo;
+        $this->dateFrom   = $dateFrom;
+        $this->dateTo     = $dateTo;
 
-        $urlPath = sprintf('accounts/%s/transactions', $accountUid);
-        $params = [];
+        $urlPath          = sprintf('accounts/%s/transactions', $accountUid);
+        $params           = [];
         if (null !== $dateFrom) {
             $params['date_from'] = $dateFrom;
         }
@@ -54,7 +54,7 @@ class GetTransactionsRequest extends Request
             $params['date_to'] = $dateTo;
         }
         if (count($params) > 0) {
-            $urlPath .= '?' . http_build_query($params);
+            $urlPath .= '?'.http_build_query($params);
         }
 
         $this->setUrl($urlPath);

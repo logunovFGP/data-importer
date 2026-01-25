@@ -28,25 +28,25 @@ use App\Exceptions\ImporterErrorException;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Support\Facades\Log;
-use UnexpectedValueException;
 use SensitiveParameter;
+use UnexpectedValueException;
 
 /**
  * Class Configuration
  */
 class Configuration
 {
-    public const int VERSION        = 3;
+    public const int VERSION              = 3;
 
-    private array  $accounts        = [];
-    private array  $newAccounts     = [];
-    private bool   $addImportTag    = true;
-    private string $connection      = '0';
-    private string $contentType     = 'csv';
-    private string $camtType        = '';
+    private array  $accounts              = [];
+    private array  $newAccounts           = [];
+    private bool   $addImportTag          = true;
+    private string $connection            = '0';
+    private string $contentType           = 'csv';
+    private string $camtType              = '';
     private bool $conversion;
-    private string $customTag       = '';
-    private string $date            = 'Y-m-d';
+    private string $customTag             = '';
+    private string $date                  = 'Y-m-d';
     private string $dateNotAfter;
     private string $dateNotBefore;
     private string $dateRange;
@@ -57,21 +57,21 @@ class Configuration
     private int $dateRangeNotAfterNumber;
     private string $dateRangeNotAfterUnit;
 
-    private int $defaultAccount     = 1;
+    private int $defaultAccount           = 1;
 
     // nordigen configuration
-    private string $delimiter       = 'comma';
-    private array  $doMapping       = [];
+    private string $delimiter             = 'comma';
+    private array  $doMapping             = [];
 
     // flow and file type
     private string $duplicateDetectionMethod;
-    private string $flow            = 'file';
+    private string $flow                  = 'file';
 
     // csv config
     private string $groupedTransactionHandling;
 
     // spectre + nordigen configuration
-    private bool $headers           = false;
+    private bool $headers                 = false;
 
     // spectre configuration
     private string $identifier;
@@ -87,34 +87,34 @@ class Configuration
     private string $accessToken;
 
     // date range settings
-    private array $mapping          = [];
+    private array $mapping                = [];
     private string $nordigenBank;
     private string $nordigenCountry;
     private string $nordigenMaxDays;
     private array $nordigenRequisitions;
 
-    private string $lunchFlowApiKey = '';
+    private string $lunchFlowApiKey       = '';
 
     // enable banking configuration
-    private string $enableBankingCountry = '';
-    private string $enableBankingBank = '';
-    private string $enableBankingAuthId = '';
-    private array $enableBankingSessions = [];
+    private string $enableBankingCountry  = '';
+    private string $enableBankingBank     = '';
+    private string $enableBankingAuthId   = '';
+    private array  $enableBankingSessions = [];
 
     // what type of import?
-    private array $roles            = [];
+    private array $roles                  = [];
 
-    private bool $rules             = true;
+    private bool $rules                   = true;
 
     // configuration for "classic" method:
-    private bool $skipForm          = false;
+    private bool $skipForm                = false;
 
     // configuration for "cell" method:
     private int $uniqueColumnIndex;
     private string $uniqueColumnType;
 
     // configuration for pseudo identifier (composite identifiers):
-    private array $pseudoIdentifier = [];
+    private array $pseudoIdentifier       = [];
 
     private bool $useEntireOpposingAddress;
 

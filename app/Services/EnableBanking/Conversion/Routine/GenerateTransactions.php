@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace App\Services\EnableBanking\Conversion\Routine;
 
-use App\Exceptions\ImporterErrorException;
 use App\Models\ImportJob;
 use App\Services\EnableBanking\Model\Transaction;
 use App\Services\Shared\Configuration\Configuration;
@@ -50,8 +49,8 @@ class GenerateTransactions
     public function __construct()
     {
         $this->targetAccounts = [];
-        $this->targetTypes = [];
-        $this->userAccounts = [];
+        $this->targetTypes    = [];
+        $this->userAccounts   = [];
         bcscale(12);
     }
 
@@ -65,8 +64,8 @@ class GenerateTransactions
         $array = $this->collectAllTargetAccounts();
         foreach ($array as $number => $info) {
             $this->targetAccounts[$number] = $info['id'];
-            $this->targetTypes[$number] = $info['type'];
-            $this->userAccounts[$number] = $info;
+            $this->targetTypes[$number]    = $info['type'];
+            $this->userAccounts[$number]   = $info;
         }
 
         Log::debug(sprintf('Enable Banking: Collected %d target accounts.', count($this->targetAccounts)));
@@ -97,27 +96,27 @@ class GenerateTransactions
     {
         Log::debug(sprintf('Enable Banking transaction: "%s" with amount %s %s', $entry->getDescription(), $entry->currencyCode, $entry->transactionAmount));
 
-        $return = [
-            'apply_rules' => $this->configuration->isRules(),
+        $return                   = [
+            'apply_rules'             => $this->configuration->isRules(),
             'error_if_duplicate_hash' => $this->configuration->isIgnoreDuplicateTransactions(),
-            'transactions' => [],
+            'transactions'            => [],
         ];
 
-        $valueDate = $entry->getValueDate();
-        $transaction = [
-            'type' => 'withdrawal',
-            'date' => $entry->getDate()->toW3cString(),
-            'datetime' => $entry->getDate()->toW3cString(),
-            'amount' => $entry->transactionAmount,
-            'description' => $entry->getCleanDescription(),
-            'payment_date' => $valueDate instanceof Carbon ? $valueDate->format('Y-m-d') : '',
-            'order' => 0,
-            'currency_code' => $entry->currencyCode,
-            'tags' => $entry->tags,
-            'category_name' => null,
-            'category_id' => null,
-            'notes' => $entry->getNotes(),
-            'external_id' => $entry->getTransactionId(),
+        $valueDate                = $entry->getValueDate();
+        $transaction              = [
+            'type'               => 'withdrawal',
+            'date'               => $entry->getDate()->toW3cString(),
+            'datetime'           => $entry->getDate()->toW3cString(),
+            'amount'             => $entry->transactionAmount,
+            'description'        => $entry->getCleanDescription(),
+            'payment_date'       => $valueDate instanceof Carbon ? $valueDate->format('Y-m-d') : '',
+            'order'              => 0,
+            'currency_code'      => $entry->currencyCode,
+            'tags'               => $entry->tags,
+            'category_name'      => null,
+            'category_id'        => null,
+            'notes'              => $entry->getNotes(),
+            'external_id'        => $entry->getTransactionId(),
             'internal_reference' => $entry->accountUid,
         ];
 
@@ -139,13 +138,13 @@ class GenerateTransactions
 
     private function appendPositiveAmountInfo(string $accountUid, array $transaction, Transaction $entry): array
     {
-        $transaction['type'] = 'deposit';
-        $transaction['amount'] = $entry->transactionAmount;
+        $transaction['type']           = 'deposit';
+        $transaction['amount']         = $entry->transactionAmount;
         $transaction['destination_id'] = (int) $this->accounts[$accountUid];
 
         // Set source info
-        $sourceName = $entry->getSourceName();
-        $sourceIban = $entry->getSourceIban();
+        $sourceName                    = $entry->getSourceName();
+        $sourceIban                    = $entry->getSourceIban();
 
         if (null !== $sourceIban && '' !== $sourceIban) {
             $transaction['source_iban'] = $sourceIban;
@@ -153,7 +152,7 @@ class GenerateTransactions
             // Check if IBAN is a known asset account
             if (array_key_exists($sourceIban, $this->targetAccounts)) {
                 $transaction['source_id'] = $this->targetAccounts[$sourceIban];
-                $transaction['type'] = 'transfer';
+                $transaction['type']      = 'transfer';
             }
         }
 
@@ -169,12 +168,12 @@ class GenerateTransactions
 
     private function appendNegativeAmountInfo(string $accountUid, array $transaction, Transaction $entry): array
     {
-        $transaction['amount'] = bcmul($entry->transactionAmount, '-1');
+        $transaction['amount']    = bcmul($entry->transactionAmount, '-1');
         $transaction['source_id'] = (int) $this->accounts[$accountUid];
 
         // Set destination info
-        $destName = $entry->getDestinationName();
-        $destIban = $entry->getDestinationIban();
+        $destName                 = $entry->getDestinationName();
+        $destIban                 = $entry->getDestinationIban();
 
         if (null !== $destIban && '' !== $destIban) {
             $transaction['destination_iban'] = $destIban;
@@ -182,7 +181,7 @@ class GenerateTransactions
             // Check if IBAN is a known asset account
             if (array_key_exists($destIban, $this->targetAccounts)) {
                 $transaction['destination_id'] = $this->targetAccounts[$destIban];
-                $transaction['type'] = 'transfer';
+                $transaction['type']           = 'transfer';
             }
         }
 
@@ -199,9 +198,9 @@ class GenerateTransactions
     public function setImportJob(ImportJob $importJob): void
     {
         $importJob->refreshInstanceIdentifier();
-        $this->importJob = $importJob;
+        $this->importJob     = $importJob;
         $this->configuration = $importJob->getConfiguration();
-        $this->accounts = $this->configuration->getAccounts();
+        $this->accounts      = $this->configuration->getAccounts();
     }
 
     public function getUserAccounts(): array

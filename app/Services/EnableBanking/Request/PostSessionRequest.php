@@ -54,9 +54,7 @@ class PostSessionRequest extends Request
      */
     public function post(): Response
     {
-        $data = [
-            'code' => $this->code,
-        ];
+        $data = ['code' => $this->code];
 
         $json = $this->authenticatedPost($data);
 

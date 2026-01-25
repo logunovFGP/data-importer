@@ -90,7 +90,7 @@ class ConfigurationController extends Controller
 
                     return redirect()->route('select-bank.index', [$identifier]);
                 }
-                if ($messages->has('missing_sessions') && 'true' === (string)$messages->get('missing_sessions')[0]) {
+                if ($messages->has('missing_sessions') && 'true' === (string) $messages->get('missing_sessions')[0]) {
                     $importJob->setState('needs_connection_details');
                     $this->repository->saveToDisk($importJob);
 

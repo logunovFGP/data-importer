@@ -53,10 +53,7 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
 
     public function getData(): array
     {
-        return [
-            'app_id' => SecretManager::getAppId(),
-            'private_key' => SecretManager::getPrivateKey(),
-        ];
+        return ['app_id'      => SecretManager::getAppId(), 'private_key' => SecretManager::getPrivateKey()];
     }
 
     public function setData(array $data): void

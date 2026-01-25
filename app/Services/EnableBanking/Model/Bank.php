@@ -30,28 +30,28 @@ namespace App\Services\EnableBanking\Model;
  */
 class Bank
 {
-    public string $name = '';
-    public string $country = '';
-    public string $logo = '';
-    public string $bic = '';
-    public int $maximumConsentValidity = 7776000;  // API: maximum_consent_validity in seconds
-    public bool $beta = false;                      // API: beta flag
-    public array $psuTypes = [];                    // API: psu_types (personal, business)
-    public array $authMethods = [];                 // API: auth_methods
-    public array $requiredPsuHeaders = [];          // API: required_psu_headers
+    public string $name                   = '';
+    public string $country                = '';
+    public string $logo                   = '';
+    public string $bic                    = '';
+    public int    $maximumConsentValidity = 7776000; // API: maximum_consent_validity in seconds
+    public bool $beta                     = false; // API: beta flag
+    public array $psuTypes                = []; // API: psu_types (personal, business)
+    public array $authMethods             = []; // API: auth_methods
+    public array $requiredPsuHeaders      = []; // API: required_psu_headers
 
     public static function fromArray(array $array): self
     {
-        $bank = new self();
-        $bank->name = $array['name'] ?? '';
-        $bank->country = $array['country'] ?? '';
-        $bank->logo = $array['logo'] ?? '';
-        $bank->bic = $array['bic'] ?? '';
+        $bank                         = new self();
+        $bank->name                   = $array['name'] ?? '';
+        $bank->country                = $array['country'] ?? '';
+        $bank->logo                   = $array['logo'] ?? '';
+        $bank->bic                    = $array['bic'] ?? '';
         $bank->maximumConsentValidity = (int) ($array['maximum_consent_validity'] ?? 7776000); // default 90 days in seconds
-        $bank->beta = (bool) ($array['beta'] ?? false);
-        $bank->psuTypes = $array['psu_types'] ?? [];
-        $bank->authMethods = $array['auth_methods'] ?? [];
-        $bank->requiredPsuHeaders = $array['required_psu_headers'] ?? [];
+        $bank->beta                   = (bool) ($array['beta'] ?? false);
+        $bank->psuTypes               = $array['psu_types'] ?? [];
+        $bank->authMethods            = $array['auth_methods'] ?? [];
+        $bank->requiredPsuHeaders     = $array['required_psu_headers'] ?? [];
 
         return $bank;
     }
@@ -59,15 +59,15 @@ class Bank
     public function toArray(): array
     {
         return [
-            'name' => $this->name,
-            'country' => $this->country,
-            'logo' => $this->logo,
-            'bic' => $this->bic,
+            'name'                     => $this->name,
+            'country'                  => $this->country,
+            'logo'                     => $this->logo,
+            'bic'                      => $this->bic,
             'maximum_consent_validity' => $this->maximumConsentValidity,
-            'beta' => $this->beta,
-            'psu_types' => $this->psuTypes,
-            'auth_methods' => $this->authMethods,
-            'required_psu_headers' => $this->requiredPsuHeaders,
+            'beta'                     => $this->beta,
+            'psu_types'                => $this->psuTypes,
+            'auth_methods'             => $this->authMethods,
+            'required_psu_headers'     => $this->requiredPsuHeaders,
         ];
     }
 }

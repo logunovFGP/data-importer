@@ -37,7 +37,7 @@ use Traversable;
 class AccountsResponse extends Response implements Countable, IteratorAggregate
 {
     /** @var Account[] */
-    private array $accounts = [];
+    private array  $accounts  = [];
     private string $sessionId = '';
 
     public function __construct(array $data = [])
@@ -58,7 +58,7 @@ class AccountsResponse extends Response implements Countable, IteratorAggregate
 
     public static function fromArray(array $array, string $sessionId = ''): self
     {
-        $response = new self($array);
+        $response            = new self($array);
         $response->sessionId = $sessionId;
 
         return $response;

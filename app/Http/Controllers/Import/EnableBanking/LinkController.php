@@ -24,7 +24,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Import\EnableBanking;
 
-use App\Exceptions\ImporterErrorException;
 use App\Exceptions\ImporterHttpException;
 use App\Http\Controllers\Controller;
 use App\Repository\ImportJob\ImportJobRepository;
@@ -61,7 +60,7 @@ class LinkController extends Controller
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
 
-        $importJob = $this->repository->find($identifier);
+        $importJob     = $this->repository->find($identifier);
         $configuration = $importJob->getConfiguration();
 
         if ('' === $configuration->getEnableBankingBank()) {
@@ -70,12 +69,12 @@ class LinkController extends Controller
             return redirect()->route('eb-select-bank.index', [$identifier]);
         }
 
-        $url = config('enablebanking.url');
-        $callbackUrl = route('eb-connect.callback');
+        $url           = config('enablebanking.url');
+        $callbackUrl   = route('eb-connect.callback');
 
         Log::debug(sprintf('Enable Banking redirect URL: %s', $callbackUrl));
 
-        $request = new PostAuthRequest($url);
+        $request       = new PostAuthRequest($url);
         $request->setTimeOut(config('importer.connection.timeout'));
         $request->setAspsp($configuration->getEnableBankingBank());
         $request->setCountry($configuration->getEnableBankingCountry());
@@ -83,7 +82,7 @@ class LinkController extends Controller
         $request->setRedirectUrl($callbackUrl);
 
         /** @var AuthResponse $response */
-        $response = $request->post();
+        $response      = $request->post();
 
         Log::debug(sprintf('Got auth URL: %s', $response->url));
         Log::debug(sprintf('Auth ID: %s', $response->authId));
@@ -105,13 +104,14 @@ class LinkController extends Controller
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
 
-        $code = trim((string) $request->get('code'));
-        $identifier = trim((string) $request->get('state'));
+        $code             = trim((string) $request->get('code'));
+        $identifier       = trim((string) $request->get('state'));
         Log::debug(sprintf('Authorization code: %s', $code));
         Log::debug(sprintf('State (identifier): %s', $identifier));
 
         if ('' === $code) {
             $error = $request->get('error', 'Unknown error');
+
             throw new ImporterHttpException(sprintf('Enable Banking authorization failed: %s', $error));
         }
 
@@ -119,8 +119,8 @@ class LinkController extends Controller
             throw new ImporterHttpException('Enable Banking callback missing state parameter');
         }
 
-        $importJob = $this->repository->find($identifier);
-        $configuration = $importJob->getConfiguration();
+        $importJob        = $this->repository->find($identifier);
+        $configuration    = $importJob->getConfiguration();
 
         // Check if we already have a session and accounts (e.g., user refreshed the callback page)
         $existingSessions = $configuration->getEnableBankingSessions();
@@ -132,8 +132,8 @@ class LinkController extends Controller
         }
 
         // Exchange the code for a session
-        $url = config('enablebanking.url');
-        $sessionRequest = new PostSessionRequest($url, $code);
+        $url              = config('enablebanking.url');
+        $sessionRequest   = new PostSessionRequest($url, $code);
         $sessionRequest->setTimeOut(config('importer.connection.timeout'));
 
         try {
@@ -150,9 +150,11 @@ class LinkController extends Controller
                 }
 
                 // Otherwise, redirect back to bank selection to start fresh
-                return redirect(route('eb-select-bank.index', [$identifier]))
-                    ->withErrors(['The authorization code has already been used. Please try connecting again.']);
+                return redirect(route('eb-select-bank.index', [$identifier]))->withErrors([
+                    'The authorization code has already been used. Please try connecting again.',
+                ]);
             }
+
             throw $e;
         }
 
@@ -164,7 +166,7 @@ class LinkController extends Controller
         $importJob->setConfiguration($configuration);
 
         // Parse and save accounts from the session response
-        $accounts = [];
+        $accounts         = [];
         foreach ($sessionResponse->accounts as $accountData) {
             $accounts[] = Account::fromArray($accountData);
         }

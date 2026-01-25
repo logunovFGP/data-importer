@@ -31,7 +31,7 @@ use App\Services\Shared\Response\Response;
  */
 class BalancesResponse extends Response
 {
-    private array $balances = [];
+    private array  $balances   = [];
     private string $accountUid = '';
 
     public function __construct(array $data = [])
@@ -41,7 +41,7 @@ class BalancesResponse extends Response
 
     public static function fromArray(array $array, string $accountUid = ''): self
     {
-        $response = new self($array);
+        $response             = new self($array);
         $response->accountUid = $accountUid;
 
         return $response;

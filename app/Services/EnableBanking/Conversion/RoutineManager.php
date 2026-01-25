@@ -49,11 +49,11 @@ class RoutineManager implements RoutineManagerInterface
 
     public function __construct(ImportJob $importJob)
     {
-        $this->downloaded = [];
+        $this->downloaded           = [];
         $this->transactionProcessor = new TransactionProcessor();
         $this->transactionGenerator = new GenerateTransactions();
-        $this->repository = new ImportJobRepository();
-        $this->importJob = $importJob;
+        $this->repository           = new ImportJobRepository();
+        $this->importJob            = $importJob;
         $this->importJob->refreshInstanceIdentifier();
         $this->setConfiguration($this->importJob->getConfiguration());
     }

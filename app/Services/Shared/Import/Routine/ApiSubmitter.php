@@ -107,7 +107,7 @@ class ApiSubmitter
             // Update progress tracking
             $this->importJob->submissionStatus->updateProgress($index + 1, $count);
             // first do local duplicate transaction check (the "cell" method):
-            $unique    = $this->uniqueTransaction($index, $line);
+            $unique          = $this->uniqueTransaction($index, $line);
             if (null === $unique) {
                 Log::debug(sprintf('Transaction #%d is not checked beforehand on uniqueness.', $index + 1));
                 ++$uniqueCount;
@@ -118,8 +118,7 @@ class ApiSubmitter
             }
 
             // if this is the last transaction, make sure recalculate running balance is set to true.
-            $lastTransaction = $index === count($lines) - 1;
-
+            $lastTransaction = $index === (count($lines) - 1);
 
             if (false === $unique) {
                 Log::debug(sprintf('Transaction #%d is NOT unique.', $index + 1));
@@ -127,7 +126,7 @@ class ApiSubmitter
 
                 continue;
             }
-            $groupInfo = $this->processTransaction($index, $line, $lastTransaction);
+            $groupInfo       = $this->processTransaction($index, $line, $lastTransaction);
             $this->addTagToGroups($groupInfo);
             $this->repository->saveToDisk($this->importJob);
         }
@@ -271,11 +270,11 @@ class ApiSubmitter
     private function processTransaction(int $index, array $line, bool $lastTransaction): array
     {
         ++$index;
-        $line    = $this->cleanupLine($line);
-        $return  = [];
-        $url     = SecretManager::getBaseUrl();
-        $token   = SecretManager::getAccessToken();
-        $request = new PostTransactionRequest($url, $token);
+        $line                     = $this->cleanupLine($line);
+        $return                   = [];
+        $url                      = SecretManager::getBaseUrl();
+        $token                    = SecretManager::getAccessToken();
+        $request                  = new PostTransactionRequest($url, $token);
         $request->setVerify(config('importer.connection.verify'));
         $request->setTimeOut(config('importer.connection.timeout'));
 

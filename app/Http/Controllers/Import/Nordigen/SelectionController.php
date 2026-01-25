@@ -102,9 +102,18 @@ class SelectionController extends Controller
             throw new ImporterErrorException($response->message);
         }
 
-        $flow = 'nordigen';
+        $flow          = 'nordigen';
 
-        return view('import.009-selection.index', compact('mainTitle', 'identifier', 'pageTitle', 'subTitle', 'response', 'countries', 'configuration', 'flow'));
+        return view('import.009-selection.index', compact(
+            'mainTitle',
+            'identifier',
+            'pageTitle',
+            'subTitle',
+            'response',
+            'countries',
+            'configuration',
+            'flow'
+        ));
     }
 
     /**

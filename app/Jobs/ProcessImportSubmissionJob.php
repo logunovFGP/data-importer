@@ -35,8 +35,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 use SensitiveParameter;
+use Throwable;
 
 class ProcessImportSubmissionJob implements ShouldQueue
 {

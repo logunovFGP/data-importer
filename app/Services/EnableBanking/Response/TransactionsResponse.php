@@ -38,8 +38,8 @@ use Traversable;
 class TransactionsResponse extends Response implements Countable, IteratorAggregate
 {
     /** @var Transaction[] */
-    private array $transactions = [];
-    private string $accountUid = '';
+    private array  $transactions = [];
+    private string $accountUid   = '';
 
     public function __construct(array $data = [])
     {
@@ -49,7 +49,7 @@ class TransactionsResponse extends Response implements Countable, IteratorAggreg
 
     public static function fromArray(array $array, string $accountUid = ''): self
     {
-        $response = new self($array);
+        $response             = new self($array);
         $response->accountUid = $accountUid;
 
         Log::debug(sprintf('TransactionsResponse::fromArray received keys: %s', implode(', ', array_keys($array))));
@@ -57,24 +57,24 @@ class TransactionsResponse extends Response implements Countable, IteratorAggreg
         // Enable Banking API returns transactions in one of two formats:
         // 1. Flat array: {"transactions": [{...}, {...}]} with status field on each transaction
         // 2. Nested arrays: {"transactions": {"booked": [...], "pending": [...]}}
-        $transactions = $array['transactions'] ?? [];
+        $transactions         = $array['transactions'] ?? [];
 
         // Check if it's the nested format (has 'booked' or 'pending' keys)
         if (isset($transactions['booked']) || isset($transactions['pending'])) {
-            $booked = $transactions['booked'] ?? [];
+            $booked  = $transactions['booked'] ?? [];
             $pending = $transactions['pending'] ?? [];
 
             Log::debug(sprintf('TransactionsResponse: nested format with %d booked, %d pending transactions', count($booked), count($pending)));
 
             foreach ($booked as $tx) {
-                $tx['account_uid'] = $accountUid;
-                $tx['status'] = 'booked';
+                $tx['account_uid']        = $accountUid;
+                $tx['status']             = 'booked';
                 $response->transactions[] = Transaction::fromArray($tx);
             }
 
             foreach ($pending as $tx) {
-                $tx['account_uid'] = $accountUid;
-                $tx['status'] = 'pending';
+                $tx['account_uid']        = $accountUid;
+                $tx['status']             = 'pending';
                 $response->transactions[] = Transaction::fromArray($tx);
             }
         } else {
@@ -82,10 +82,10 @@ class TransactionsResponse extends Response implements Countable, IteratorAggreg
             Log::debug(sprintf('TransactionsResponse: flat format with %d transactions', count($transactions)));
 
             foreach ($transactions as $tx) {
-                $tx['account_uid'] = $accountUid;
+                $tx['account_uid']        = $accountUid;
                 // Map Enable Banking status values: BOOK -> booked, PDNG -> pending
-                $status = $tx['status'] ?? 'BOOK';
-                $tx['status'] = ('BOOK' === $status) ? 'booked' : 'pending';
+                $status                   = $tx['status'] ?? 'BOOK';
+                $tx['status']             = 'BOOK' === $status ? 'booked' : 'pending';
                 $response->transactions[] = Transaction::fromArray($tx);
             }
         }

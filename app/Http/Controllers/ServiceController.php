@@ -55,7 +55,7 @@ class ServiceController extends Controller
             'simplefin' => $this->validateSimpleFIN(),
             'spectre'   => $this->validateSpectre(request()),
             'lunchflow' => $this->validateLunchFlow(),
-            'eb'                     => $this->validateEnableBanking(),
+            'eb'        => $this->validateEnableBanking(),
             'file'      => response()->json(['result' => 'OK']),
             default     => response()->json(['result'  => 'NOK', 'message' => 'Unknown provider'])
         };
