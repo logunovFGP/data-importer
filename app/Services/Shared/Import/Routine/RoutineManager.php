@@ -73,7 +73,6 @@ class RoutineManager
         $this->apiSubmitter->processTransactions();
         $this->apiSubmitter->finishBatch();
 
-
         $this->importJob = $this->apiSubmitter->getImportJob();
         Log::debug(sprintf(
             'Routine manager: messages: %d, warnings: %d, errors: %d',

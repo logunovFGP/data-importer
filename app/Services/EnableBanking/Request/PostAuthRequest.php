@@ -88,7 +88,13 @@ class PostAuthRequest extends Request
     public function post(): Response
     {
         $validUntilTimestamp = $this->validUntil ?? strtotime('+90 days');
-        $data                = ['access'       => ['valid_until'       => date('c', $validUntilTimestamp)], 'aspsp'        => ['name'    => $this->aspsp, 'country' => $this->country], 'state'        => $this->state, 'redirect_url' => $this->redirectUrl, 'psu_type'     => $this->psuType]; // RFC3339 format
+        $data                = [
+            'access'       => ['valid_until'       => date('c', $validUntilTimestamp)],
+            'aspsp'        => ['name'    => $this->aspsp, 'country' => $this->country],
+            'state'        => $this->state,
+            'redirect_url' => $this->redirectUrl,
+            'psu_type'     => $this->psuType,
+        ]; // RFC3339 format
 
         $json                = $this->authenticatedPost($data);
 
