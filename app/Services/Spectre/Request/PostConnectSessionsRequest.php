@@ -67,7 +67,7 @@ class PostConnectSessionsRequest extends Request
                 'show_consent_confirmation' => true,
                 'credentials_strategy'      => 'ask',
             ],
-            'attempt'     => ['return_to'     => $this->url],
+            'attempt'     => ['return_to' => $this->url],
         ]];
 
         $response = $this->sendUnsignedSpectrePost($body);

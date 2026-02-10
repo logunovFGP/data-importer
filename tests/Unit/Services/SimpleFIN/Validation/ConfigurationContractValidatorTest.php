@@ -212,8 +212,8 @@ final class ConfigurationContractValidatorTest extends TestCase
     public function testValidateFormFieldStructureSuccess(): void
     {
         $validFormData = [
-            'do_import'   => ['acc1'   => '1'],
-            'accounts'    => ['acc1'    => 0],
+            'do_import'   => ['acc1' => '1'],
+            'accounts'    => ['acc1' => 0],
             'new_account' => ['acc1' => [
                 'name'            => 'Test Account',
                 'type'            => 'asset',
@@ -346,7 +346,7 @@ final class ConfigurationContractValidatorTest extends TestCase
                 'currency'     => 'USD',
                 'balance'      => '1000.00',
                 'balance-date' => Carbon::now()->getTimestamp(),
-                'org'          => ['name'          => 'Test Bank'],
+                'org'          => ['name' => 'Test Bank'],
                 'extra'        => [],
             ],
             [
@@ -355,7 +355,7 @@ final class ConfigurationContractValidatorTest extends TestCase
                 'currency'     => 'USD',
                 'balance'      => '2000.00',
                 'balance-date' => Carbon::now()->getTimestamp(),
-                'org'          => ['name'          => 'Test Bank'],
+                'org'          => ['name' => 'Test Bank'],
                 'extra'        => [],
             ],
         ]);

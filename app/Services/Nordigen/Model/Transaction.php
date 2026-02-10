@@ -361,7 +361,7 @@ class Transaction
     {
         Log::debug(__METHOD__);
         if ('' !== $this->creditorAccountIban) {
-            $data      = ['iban'      => $this->creditorAccountIban];
+            $data      = ['iban' => $this->creditorAccountIban];
             $rules     = ['iban'     => ['required', new Iban()]];
             $validator = Validator::make($data, $rules);
             if ($validator->fails()) {
@@ -468,7 +468,7 @@ class Transaction
     {
         Log::debug(__METHOD__);
         if ('' !== $this->debtorAccountIban) {
-            $data      = ['iban'      => $this->debtorAccountIban];
+            $data      = ['iban' => $this->debtorAccountIban];
             $rules     = ['iban'     => ['required', new Iban()]];
             $validator = Validator::make($data, $rules);
             if ($validator->fails()) {
