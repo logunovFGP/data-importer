@@ -299,10 +299,10 @@ class UploadController extends Controller
     private function detectEOL(string $string): string
     {
         $eols     = [
-            '\n\r'     => "\n\r", // 0x0A - 0x0D - acorn BBC
-            '\r\n'     => "\r\n", // 0x0D - 0x0A - Windows, DOS OS/2
-            '\n'       => "\n", // 0x0A -      - Unix, OSX
-            '\r'       => "\r", // 0x0D -      - Apple ][, TRS80
+            '\n\r' => "\n\r", // 0x0A - 0x0D - acorn BBC
+            '\r\n' => "\r\n", // 0x0D - 0x0A - Windows, DOS OS/2
+            '\n'   => "\n", // 0x0A -      - Unix, OSX
+            '\r'   => "\r", // 0x0D -      - Apple ][, TRS80
         ];
         $curCount = 0;
         $curEol   = '';

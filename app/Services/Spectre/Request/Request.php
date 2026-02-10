@@ -264,7 +264,7 @@ abstract class Request
         }
         $fullUrl                    = sprintf('%s/%s', $this->getBase(), $this->getUrl());
         $headers                    = $this->getDefaultHeaders();
-        $opts                       = ['headers'    => $headers];
+        $opts                       = ['headers' => $headers];
         $body                       = null;
 
         try {
@@ -319,7 +319,7 @@ abstract class Request
         }
         $fullUrl                    = sprintf('%s/%s', $this->getBase(), $this->getUrl());
         $headers                    = $this->getDefaultHeaders();
-        $opts                       = ['headers'    => $headers];
+        $opts                       = ['headers' => $headers];
         $body                       = null;
 
         try {
