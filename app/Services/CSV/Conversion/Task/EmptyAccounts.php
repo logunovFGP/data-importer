@@ -55,7 +55,7 @@ class EmptyAccounts extends AbstractTask
             $destId     = (int) ($transaction['destination_id'] ?? 0);
             $destIban   = $transaction['destination_iban'] ?? '';
             $destNumber = $transaction['destination_number'] ?? '';
-            if ('' === $destName && 0 === $destId && '' === $destIban && 0 === $destNumber) {
+            if ('' === $destName && 0 === $destId && '' === $destIban && '' === $destNumber) {
                 Log::debug('Destination name + ID + IBAN + number of withdrawal are empty, set to "(no name)".');
                 $transaction['destination_name'] = '(no name)';
             }
