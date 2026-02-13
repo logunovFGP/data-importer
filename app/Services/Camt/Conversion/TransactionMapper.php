@@ -786,7 +786,7 @@ class TransactionMapper
         }
         Log::debug(sprintf('Final amount is "%s"', $return));
 
-        return $return;
+        return (string) $return;
     }
 
     private function validAccountInfo(string $direction, array $current): bool

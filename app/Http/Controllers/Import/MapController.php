@@ -254,12 +254,14 @@ class MapController extends Controller
          * To map Nordigen and SimpleFIN, pretend the file has one "column" (this is based on the CSV importer after all)
          * that contains:
          * - opposing account names (this is preordained).
+         * FIXME bad way of checking the flow
          */
         if (
             'nordigen' === $importJob->getFlow()
             || 'sophtron' === $importJob->getFlow()
             || 'spectre' === $importJob->getFlow()
             || 'lunchflow' === $importJob->getFlow()
+            || 'eb' === $importJob->getFlow()
         ) {
             // FIXME should be in a helper or something generic.
             // index 0, opposing account name:
