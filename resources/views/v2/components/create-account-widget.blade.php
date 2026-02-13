@@ -59,7 +59,7 @@
                             @endphp
 
                             <option value="asset" @if($inferredType === 'asset') selected @endif>Asset Account</option>
-                            <option value="liability" @if($inferredType === 'liability') selected @endif>Liability Account</option>
+                            <option value="liabilities" @if($inferredType === 'liabilities') selected @endif>Liability Account</option>
                             <option value="expense" @if($inferredType === 'expense') selected @endif>Expense Account</option>
                             <option value="revenue" @if($inferredType === 'revenue') selected @endif>Revenue Account</option>
                         </select>
@@ -350,7 +350,7 @@
             return;
         }
 
-        if (typeSelect.value === 'liability') {
+        if (typeSelect.value === 'liabilities') {
             liabilitySection.style.display = 'block';
             console.log('Showed liability fields for account:', accountId);
         } else {

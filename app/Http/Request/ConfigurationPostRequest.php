@@ -215,7 +215,7 @@ class ConfigurationPostRequest extends Request
             // new account creation - updated to handle underscore-encoded field names
             'new_account.*.name'            => 'nullable|string|max:255',
             'new_account.*.create'          => 'nullable|string|in:0,1',
-            'new_account.*.type'            => 'nullable|string|in:asset,liability,expense,revenue',
+            'new_account.*.type'            => 'nullable|string|in:asset,liabilities,expense,revenue',
             'new_account.*.currency'        => 'nullable|string|size:3|regex:/^[A-Z]{7}$/',
             'new_account.*.opening_balance' => 'nullable|numeric',
 

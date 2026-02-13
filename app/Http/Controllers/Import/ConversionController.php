@@ -85,7 +85,6 @@ class ConversionController extends Controller
         if (true === config(sprintf('importer.providers.%s.supports_new_accounts', $flow))) {
             $newAccountsToCreate = $configuration->getNewAccounts();
         }
-
         if (null === $routine) {
             throw new ImporterErrorException(sprintf('Could not create routine manager for flow "%s"', $flow));
         }
@@ -132,6 +131,8 @@ class ConversionController extends Controller
                             'type'            => $accountDetails['type'],
                             'currency'        => $accountDetails['currency'],
                             'opening_balance' => $accountDetails['opening_balance'],
+                            'liability_type'  => $accountDetails['liability_type'] ?? null,
+                            'liability_direction' => $accountDetails['liability_direction'] ?? null,
                         ]);
                     }
                 }
