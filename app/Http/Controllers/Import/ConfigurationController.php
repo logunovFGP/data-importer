@@ -119,7 +119,6 @@ class ConfigurationController extends Controller
                 }
 
                 // if the agreement has expired, show error and exit gracefully.
-                // https://firefly-data.hades.internal/configure-import/2385f86b-0e50-4ba7-8b7c-e663471f2dd6?parse=true
 
                 // if there is any state for the job here forget about it, just remove it.
                 $this->repository->deleteImportJob($importJob);
@@ -132,7 +131,7 @@ class ConfigurationController extends Controller
 
         // if configuration says to skip this configuration step, skip it:
         $configuration       = $importJob->getConfiguration();
-        $doNotSkip           = 'true' === $request->get('do_not_skip');
+        $doNotSkip           = 'true' === $request->input('do_not_skip');
         if (true === $configuration->isSkipForm() && false === $doNotSkip) {
             // FIXME must also skip roles and mapping.
             $redirect = $this->redirectToNextstep($importJob);
@@ -216,6 +215,7 @@ class ConfigurationController extends Controller
         // at this moment the config should be valid and saved.
         // file import ONLY needs roles before it is complete. After completion, can go to overview.
         if ('file' === $importJob->getFlow()) {
+            Log::debug('Redirect to roles because flow is file.');
             return route('configure-roles.index', [$importJob->identifier]);
         }
 
@@ -224,6 +224,7 @@ class ConfigurationController extends Controller
         $this->repository->saveToDisk($importJob);
 
         // can now redirect to conversion, because that will be the next step.
+        Log::debug('Redirect to conversion because flow is not file.');
         return route('data-conversion.index', [$importJob->identifier]);
     }
 }

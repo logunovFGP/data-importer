@@ -67,10 +67,10 @@ class ConversionController extends Controller
         // default back to mapping
         $jobBackUrl          = $this->getJobBackUrl($flow, $identifier);
         $flow                = $importJob->getFlow();
-
         $nextUrl             = route('submit-data.index', [$identifier]);
         // next URL is different when it's not a file flow (in ALL those cases, its mapping)
-        if ('file' !== $flow && $configuration->getDoMapping()) {
+        if ('file' !== $flow && $configuration->isMapAllData()) {
+            Log::debug('Will send user to mapping next.');
             $nextUrl = route('data-mapping.index', [$identifier]);
         }
 

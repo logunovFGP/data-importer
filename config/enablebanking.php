@@ -7,4 +7,7 @@ return [
     'private_key'     => env('ENABLE_BANKING_PRIVATE_KEY', ''),
     'url'             => env('ENABLE_BANKING_URL', 'https://api.enablebanking.com'),
     'countries'       => require __DIR__.'/shared/countries.php',
+    'unique_column_options' => [
+        'external-id' => 'External identifier',
+    ],
 ];

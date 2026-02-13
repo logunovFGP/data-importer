@@ -14,6 +14,13 @@
                     </div>
                     <div class="card-body">
                         <p>In order to import using {{ config('importer.providers.' . $flow . '.title') }} you must enter the authentication data you received from this provider. You can read how to get the necessary codes in the <a target="_blank" href="https://docs.firefly-iii.org/how-to/data-importer/import/third-party-providers/">documentation</a></p>
+
+                        @if('eb' === $flow)
+                            <p>
+                                Your callback URL is:<br>
+                                <code>{{route('eb-connect.callback')}}</code>
+                            </p>
+                        @endif
                     </div>
                 </div>
             </div>
