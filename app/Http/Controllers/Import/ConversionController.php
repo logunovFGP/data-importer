@@ -127,11 +127,11 @@ class ConversionController extends Controller
                     if (array_key_exists($accountId, $existingNewAccounts) && null !== $existingNewAccounts[$accountId]) {
                         // Merge the detailed data with existing data
                         $existingNewAccounts[$accountId] = array_merge($existingNewAccounts[$accountId], [
-                            'name'            => $accountDetails['name'],
-                            'type'            => $accountDetails['type'],
-                            'currency'        => $accountDetails['currency'],
-                            'opening_balance' => $accountDetails['opening_balance'],
-                            'liability_type'  => $accountDetails['liability_type'] ?? null,
+                            'name'                => $accountDetails['name'],
+                            'type'                => $accountDetails['type'],
+                            'currency'            => $accountDetails['currency'],
+                            'opening_balance'     => $accountDetails['opening_balance'],
+                            'liability_type'      => $accountDetails['liability_type'] ?? null,
                             'liability_direction' => $accountDetails['liability_direction'] ?? null,
                         ]);
                     }

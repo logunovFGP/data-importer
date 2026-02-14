@@ -72,7 +72,7 @@ class DuplicateCheckController extends Controller
 
             return response()->json(['isDuplicate' => false, 'message'     => null]);
         }
-        $arrayToCheck        = ['asset'     => Constants::ASSET_ACCOUNTS, 'liabilities' => Constants::LIABILITIES];
+        $arrayToCheck        = ['asset'       => Constants::ASSET_ACCOUNTS, 'liabilities' => Constants::LIABILITIES];
         $array               = $applicationAccounts[$arrayToCheck[$type]] ?? [];
         $isDuplicate         = false;
 
