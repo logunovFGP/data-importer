@@ -37,14 +37,14 @@ class ImportReportMail extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public array  $errors;
-    public array  $messages;
+    public array $errors;
+    public array $messages;
     public string $time;
     public string $url;
     public string $version;
-    public array  $warnings;
+    public array $warnings;
     public string $configFile = '';
-    public array  $rateLimits;
+    public array $rateLimits;
 
     /**
      * Create a new message instance.

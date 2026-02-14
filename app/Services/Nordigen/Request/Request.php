@@ -34,8 +34,9 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\TransferException;
 use Illuminate\Support\Facades\Log;
-use Psr\Http\Message\ResponseInterface;
 use JsonException;
+use Psr\Http\Message\ResponseInterface;
+use SensitiveParameter;
 
 /**
  * Class Request
@@ -43,14 +44,14 @@ use JsonException;
 abstract class Request
 {
     private string $base;
-    private array  $parameters;
-    private float  $timeOut = 3.14;
+    private array $parameters;
+    private float $timeOut = 3.14;
 
     private string $token;
     private string $url;
 
-    private int $remaining  = -1;
-    private int $reset      = -1;
+    private int $remaining = -1;
+    private int $reset     = -1;
 
     /**
      * @throws ImporterHttpException
@@ -96,18 +97,12 @@ abstract class Request
         $body    = null;
 
         try {
-            $res = $client->request(
-                'GET',
-                $fullUrl,
-                [
-                    'headers' => [
-                        'Accept'        => 'application/json',
-                        'Content-Type'  => 'application/json',
-                        'Authorization' => sprintf('Bearer %s', $this->getToken()),
-                        'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_a')),
-                    ],
-                ]
-            );
+            $res = $client->request('GET', $fullUrl, ['headers' => [
+                'Accept'        => 'application/json',
+                'Content-Type'  => 'application/json',
+                'Authorization' => sprintf('Bearer %s', $this->getToken()),
+                'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_a')),
+            ]]);
         } catch (ClientException|GuzzleException|TransferException $e) {
             $statusCode      = $e->getCode();
             if (429 === $statusCode) {
@@ -166,15 +161,13 @@ abstract class Request
         try {
             $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw new ImporterHttpException(
-                sprintf(
-                    'Could not decode JSON (%s). Error[%d] is: %s. Response: %s',
-                    $fullUrl,
-                    $res->getStatusCode(),
-                    $e->getMessage(),
-                    $body
-                )
-            );
+            throw new ImporterHttpException(sprintf(
+                'Could not decode JSON (%s). Error[%d] is: %s. Response: %s',
+                $fullUrl,
+                $res->getStatusCode(),
+                $e->getMessage(),
+                $body
+            ));
         }
 
         if (null === $json) {
@@ -211,11 +204,7 @@ abstract class Request
     {
         // config here
 
-        return new Client(
-            [
-                'connect_timeout' => $this->timeOut,
-            ]
-        );
+        return new Client(['connect_timeout' => $this->timeOut]);
     }
 
     public function getToken(): string
@@ -223,7 +212,7 @@ abstract class Request
         return $this->token;
     }
 
-    public function setToken(string $token): void
+    public function setToken(#[SensitiveParameter] string $token): void
     {
         $this->token = $token;
     }
@@ -244,19 +233,15 @@ abstract class Request
         $client  = $this->getClient();
 
         try {
-            $res = $client->request(
-                'POST',
-                $fullUrl,
-                [
-                    'json'    => $json,
-                    'headers' => [
-                        'Accept'        => 'application/json',
-                        'Content-Type'  => 'application/json',
-                        'Authorization' => sprintf('Bearer %s', $this->getToken()),
-                        'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_e')),
-                    ],
-                ]
-            );
+            $res = $client->request('POST', $fullUrl, [
+                'json'    => $json,
+                'headers' => [
+                    'Accept'        => 'application/json',
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => sprintf('Bearer %s', $this->getToken()),
+                    'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_e')),
+                ],
+            ]);
         } catch (ClientException $e) {
             // FIXME error response, not an exception.
             throw new ImporterHttpException(sprintf('AuthenticatedJsonPost: %s', $e->getMessage()), 0, $e);
@@ -330,7 +315,7 @@ abstract class Request
             Log::{$method}('Save the account success limits? YES');
             $this->remaining = $remaining;
         }
-        if ($remaining < 0) {  // less than zero.
+        if ($remaining < 0) { // less than zero.
             Log::{$method}('Save the account success limits? NO');
         }
 
@@ -351,18 +336,18 @@ abstract class Request
         if ($days > 0) {
             $return .= sprintf('%dd', $days);
         }
-        $reset   -= ($days * 86400);
+        $reset -= $days * 86400;
 
         $hours   = floor($reset / 3600);
         if ($hours > 0) {
             $return .= sprintf('%dh', $hours);
         }
-        $reset   -= ($hours * 3600);
+        $reset   -= $hours * 3600;
         $minutes = floor($reset / 60);
         if ($minutes > 0) {
             $return .= sprintf('%dm', $minutes);
         }
-        $reset   -= ($minutes * 60);
+        $reset   -= $minutes * 60;
         $seconds = $reset % 60;
         if ($seconds > 0) {
             $return .= sprintf('%ds', $seconds);

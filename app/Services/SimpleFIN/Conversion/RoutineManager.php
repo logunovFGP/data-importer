@@ -41,12 +41,12 @@ class RoutineManager implements RoutineManagerInterface
 {
     use CreatesAccounts;
 
-    private readonly AccountMapper          $accountMapper;
-    private readonly string                 $identifier;
-    private readonly SimpleFINService       $simpleFINService;
+    private readonly AccountMapper $accountMapper;
+    private readonly string $identifier;
+    private readonly SimpleFINService $simpleFINService;
     private readonly TransactionTransformer $transformer;
-    private ImportJob                       $importJob;
-    private ImportJobRepository             $repository;
+    private ImportJob $importJob;
+    private ImportJobRepository $repository;
 
     /**
      * RoutineManager constructor.
@@ -87,7 +87,6 @@ class RoutineManager implements RoutineManagerInterface
             Log::debug('Do not have service accounts from SimpleFIN, redownload.');
         }
 
-
         Log::debug(sprintf('[%s] Now in %s', config('importer.version'), __METHOD__));
         $transactions                  = [];
         $configuration                 = $this->importJob->getConfiguration();
@@ -116,10 +115,15 @@ class RoutineManager implements RoutineManagerInterface
         }
 
         /** @var null|Account $currentSimpleFINAccountData */
-        $currentSimpleFINAccountData = array_find($this->existingServiceAccounts, fn (Account $loopAccount) => $loopAccount->getId() === $importServiceAccountId);
+        $currentSimpleFINAccountData = array_find(
+            $this->existingServiceAccounts,
+            static fn (Account $loopAccount) => $loopAccount->getId() === $importServiceAccountId
+        );
 
         if (null === $currentSimpleFINAccountData) {
-            Log::warning('Failed to find SimpleFIN account raw data in session for current account ID during transformation. Will redownload.', ['simplefin_account_id_sought' => $importServiceAccountId]);
+            Log::warning('Failed to find SimpleFIN account raw data in session for current account ID during transformation. Will redownload.', [
+                'simplefin_account_id_sought' => $importServiceAccountId,
+            ]);
 
             // If the account data for this ID isn't found, we can't process its transactions.
             // This might indicate an inconsistency in session data or configuration.
@@ -165,7 +169,8 @@ class RoutineManager implements RoutineManagerInterface
             $transactionGroup       = [
                 'error_if_duplicate_hash' => $this->importJob->getConfiguration()->isIgnoreDuplicateTransactions(),
                 'group_title'             => null,
-                'transactions'            => [$transformedTransaction]];
+                'transactions'            => [$transformedTransaction],
+            ];
 
             $transactions[]         = $transactionGroup;
         }

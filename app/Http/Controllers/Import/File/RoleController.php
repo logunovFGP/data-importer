@@ -116,7 +116,20 @@ class RoleController extends Controller
             $configuredRoles = $old;
         }
 
-        return view('import.005-roles.index-csv', compact('mainTitle', 'warning', 'ignoreWarnings', 'identifier', 'configuration', 'subTitle', 'columns', 'examples', 'pseudoExamples', 'roles', 'configuredRoles', 'configuredDoMapping'));
+        return view('import.005-roles.index-csv', compact(
+            'mainTitle',
+            'warning',
+            'ignoreWarnings',
+            'identifier',
+            'configuration',
+            'subTitle',
+            'columns',
+            'examples',
+            'pseudoExamples',
+            'roles',
+            'configuredRoles',
+            'configuredDoMapping'
+        ));
     }
 
     private function camtIndex(ImportJob $importJob, string $warning): View
@@ -135,16 +148,8 @@ class RoleController extends Controller
         // four levels in a CAMT file, level A B C D. Each level has a pre-defined set of
         // available fields and information.
         $levels         = [];
-        $levels['A']    = [
-            'title'       => trans('camt.level_A'),
-            'explanation' => trans('camt.explain_A'),
-            'fields'      => $this->getFieldsForLevel('A'),
-        ];
-        $levels['B']    = [
-            'title'       => trans('camt.level_B'),
-            'explanation' => trans('camt.explain_B'),
-            'fields'      => $this->getFieldsForLevel('B'),
-        ];
+        $levels['A']    = ['title'       => trans('camt.level_A'), 'explanation' => trans('camt.explain_A'), 'fields'      => $this->getFieldsForLevel('A')];
+        $levels['B']    = ['title'       => trans('camt.level_B'), 'explanation' => trans('camt.explain_B'), 'fields'      => $this->getFieldsForLevel('B')];
         //        var_dump($levels['B']);
         //        var_dump($roles);
         //        exit;
@@ -156,12 +161,12 @@ class RoleController extends Controller
                 'entryAccountServicerReference' => config('camt.fields.entryAccountServicerReference'),
                 'entryReference'                => config('camt.fields.entryReference'),
                 'entryAdditionalInfo'           => config('camt.fields.entryAdditionalInfo'),
-                'section_transaction'           => ['section' => true, 'title' => 'transaction'],
+                'section_transaction'           => ['section' => true, 'title'   => 'transaction'],
                 'entryAmount'                   => config('camt.fields.entryAmount'),
                 'entryAmountCurrency'           => config('camt.fields.entryAmountCurrency'),
                 'entryValueDate'                => config('camt.fields.entryValueDate'),
                 'entryBookingDate'              => config('camt.fields.entryBookingDate'),
-                'section_btc'                   => ['section' => true, 'title' => 'Btc'],
+                'section_btc'                   => ['section' => true, 'title'   => 'Btc'],
                 'entryBtcDomainCode'            => config('camt.fields.entryBtcDomainCode'),
                 'entryBtcFamilyCode'            => config('camt.fields.entryBtcFamilyCode'),
                 'entryBtcSubFamilyCode'         => config('camt.fields.entryBtcSubFamilyCode'),
@@ -169,10 +174,7 @@ class RoleController extends Controller
         ];
         $group_handling = $configuration->getGroupedTransactionHandling();
         if ('group' === $group_handling) {
-            $levels['D'] = [
-                'title'       => trans('camt.level_D'),
-                'explanation' => trans('camt.explain_D_dropped'),
-            ];
+            $levels['D'] = ['title'       => trans('camt.level_D'), 'explanation' => trans('camt.explain_D_dropped')];
         }
         if ('group' !== $group_handling) {
             $levels['D'] = [
@@ -180,18 +182,24 @@ class RoleController extends Controller
                 'explanation' => trans('camt.explain_D'),
                 'fields'      => [
                     // have to collect D by hand because of intermediate sections
-                    'entryDetailAccountServicerReference'                                            => config('camt.fields.entryDetailAccountServicerReference'),
+                    'entryDetailAccountServicerReference'                                            => config(
+                        'camt.fields.entryDetailAccountServicerReference'
+                    ),
                     'entryDetailEndToEndId'                                                          => config('camt.fields.entryDetailEndToEndId'),
-                    'entryDetailRemittanceInformationUnstructuredBlockMessage'                       => config('camt.fields.entryDetailRemittanceInformationUnstructuredBlockMessage'),
-                    'entryDetailRemittanceInformationStructuredBlockAdditionalRemittanceInformation' => config('camt.fields.entryDetailRemittanceInformationStructuredBlockAdditionalRemittanceInformation'),
-                    'section_tr'                                                                     => ['section' => true, 'title' => 'transaction'],
+                    'entryDetailRemittanceInformationUnstructuredBlockMessage'                       => config(
+                        'camt.fields.entryDetailRemittanceInformationUnstructuredBlockMessage'
+                    ),
+                    'entryDetailRemittanceInformationStructuredBlockAdditionalRemittanceInformation' => config(
+                        'camt.fields.entryDetailRemittanceInformationStructuredBlockAdditionalRemittanceInformation'
+                    ),
+                    'section_tr'                                                                     => ['section' => true, 'title'   => 'transaction'],
                     'entryDetailAmount'                                                              => config('camt.fields.entryDetailAmount'),
                     'entryDetailAmountCurrency'                                                      => config('camt.fields.entryDetailAmountCurrency'),
-                    'section_btc'                                                                    => ['section' => true, 'title' => 'Btc'],
+                    'section_btc'                                                                    => ['section' => true, 'title'   => 'Btc'],
                     'entryDetailBtcDomainCode'                                                       => config('camt.fields.entryDetailBtcDomainCode'),
                     'entryDetailBtcFamilyCode'                                                       => config('camt.fields.entryDetailBtcFamilyCode'),
                     'entryDetailBtcSubFamilyCode'                                                    => config('camt.fields.entryDetailBtcSubFamilyCode'),
-                    'section_opposing'                                                               => ['section' => true, 'title' => 'opposingPart'],
+                    'section_opposing'                                                               => ['section' => true, 'title'   => 'opposingPart'],
                     'entryDetailOpposingAccountIban'                                                 => config('camt.fields.entryDetailOpposingAccountIban'),
                     'entryDetailOpposingAccountNumber'                                               => config('camt.fields.entryDetailOpposingAccountNumber'),
                     'entryDetailOpposingName'                                                        => config('camt.fields.entryDetailOpposingName'),
@@ -206,14 +214,24 @@ class RoleController extends Controller
 
         $levels         = $this->mergeLevelsAndRoles($levels, $roles);
 
-        return view('import.005-roles.index-camt', compact('mainTitle', 'warning', 'identifier', 'configuration', 'subTitle', 'levels', 'doMapping', 'examples', 'roles'));
+        return view('import.005-roles.index-camt', compact(
+            'mainTitle',
+            'warning',
+            'identifier',
+            'configuration',
+            'subTitle',
+            'levels',
+            'doMapping',
+            'examples',
+            'roles'
+        ));
     }
 
     private function getFieldsForLevel(string $level): array
     {
         $allFields = config('camt.fields');
 
-        return array_filter($allFields, fn ($field) => $level === $field['level']);
+        return array_filter($allFields, static fn ($field) => $level === $field['level']);
     }
 
     private function mergeLevelsAndRoles(array $levels, array $roles): array
@@ -236,6 +254,7 @@ class RoleController extends Controller
                         $selected = '_ignore';
                         Log::debug('User selected impossible role, will be ignored.');
                     }
+
                     //                    if ('_ignore' === $roles[$title]) {
                     //                        $selected = '_ignore';
                     //                        Log::debug(sprintf('Make default role "_ignore" for level %s field "%s"', $letter, $title));

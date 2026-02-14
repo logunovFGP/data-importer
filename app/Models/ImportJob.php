@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * ImportJob.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -54,27 +55,27 @@ use Ramsey\Uuid\Uuid;
 class ImportJob implements Arrayable
 {
     // job meta-data:
-    public string           $identifier;
-    private string          $instanceIdentifier    = '';
-    private int             $instanceCounter       = 0;
-    private Carbon          $createdAt;
-    private string          $state;
-    private string          $flow                  = '';
-    private string          $configurationString   = '';
-    private string          $importableFileString  = '';
-    private ?Configuration  $configuration         = null;
+    public string $identifier;
+    private string $instanceIdentifier           = '';
+    private int    $instanceCounter              = 0;
+    private Carbon $createdAt;
+    private string $state;
+    private string         $flow                 = '';
+    private string         $configurationString  = '';
+    private string         $importableFileString = '';
+    private ?Configuration $configuration        = null;
     public ConversionStatus $conversionStatus;
     public SubmissionStatus $submissionStatus;
-    private array           $convertedTransactions = [];
-    private bool            $initialized           = false;
+    private array $convertedTransactions         = [];
+    private bool  $initialized                   = false;
 
-    private array $sophtronInstitutions            = [];
+    private array $sophtronInstitutions          = [];
 
     // collected Firefly III data.
-    private array $applicationAccounts             = [];
-    private array $currencies                      = [];
-    private array $serviceAccounts                 = [];
-    private array $authenticationDetails           = [];
+    private array $applicationAccounts           = [];
+    private array $currencies                    = [];
+    private array $serviceAccounts               = [];
+    private array $authenticationDetails         = [];
 
     public static function createNew(): self
     {
@@ -176,27 +177,26 @@ class ImportJob implements Arrayable
             }
         }
 
-        return
-            [
-                'identifier'             => $this->identifier,
-                'instance_identifier'    => $this->instanceIdentifier,
-                'instance_counter'       => $this->instanceCounter,
-                'initialized'            => $this->initialized,
-                'created_at'             => $this->createdAt->toW3cString(),
-                'state'                  => $this->state,
-                'flow'                   => $this->flow,
-                'configuration_string'   => $this->configurationString,
-                'sophtron_institutions'  => $this->sophtronInstitutions,
-                'authentication_details' => $this->authenticationDetails,
-                'importable_file_string' => $this->importableFileString,
-                'configuration'          => null === $this->configuration ? [] : $this->configuration->toArray(),
-                'conversion_status'      => $this->conversionStatus->toArray(),
-                'submission_status'      => $this->submissionStatus->toArray(),
-                'converted_transactions' => $this->convertedTransactions,
-                'application_accounts'   => $applicationAccounts,
-                'service_accounts'       => $serviceAccounts,
-                'currencies'             => $this->currencies,
-            ];
+        return [
+            'identifier'             => $this->identifier,
+            'instance_identifier'    => $this->instanceIdentifier,
+            'instance_counter'       => $this->instanceCounter,
+            'initialized'            => $this->initialized,
+            'created_at'             => $this->createdAt->toW3cString(),
+            'state'                  => $this->state,
+            'flow'                   => $this->flow,
+            'configuration_string'   => $this->configurationString,
+            'sophtron_institutions'  => $this->sophtronInstitutions,
+            'authentication_details' => $this->authenticationDetails,
+            'importable_file_string' => $this->importableFileString,
+            'configuration'          => null === $this->configuration ? [] : $this->configuration->toArray(),
+            'conversion_status'      => $this->conversionStatus->toArray(),
+            'submission_status'      => $this->submissionStatus->toArray(),
+            'converted_transactions' => $this->convertedTransactions,
+            'application_accounts'   => $applicationAccounts,
+            'service_accounts'       => $serviceAccounts,
+            'currencies'             => $this->currencies,
+        ];
     }
 
     public function toString(): string
@@ -229,7 +229,6 @@ class ImportJob implements Arrayable
     {
         $configuration->updateDateRange();
         $this->configuration = $configuration;
-
     }
 
     public function setImportableFileString(string $importableFileString): void

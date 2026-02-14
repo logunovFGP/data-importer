@@ -34,9 +34,5 @@ class TrimStrings extends Middleware
     /**
      * The names of the attributes that should not be trimmed.
      */
-    protected $except
-        = [
-            'password',
-            'password_confirmation',
-        ];
+    protected $except = ['password', 'password_confirmation'];
 }

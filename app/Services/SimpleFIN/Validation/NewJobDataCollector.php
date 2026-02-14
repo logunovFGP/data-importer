@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * NewJobValidator.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -33,9 +34,9 @@ use Illuminate\Support\MessageBag;
 
 class NewJobDataCollector implements NewJobDataCollectorInterface
 {
-    public bool                 $useDemo    = false;
-    public string               $setupToken = '';
-    private ImportJob           $importJob;
+    public bool   $useDemo    = false;
+    public string $setupToken = '';
+    private ImportJob $importJob;
     private ImportJobRepository $repository;
 
     public function __construct()
@@ -53,7 +54,7 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
 
         if ($this->useDemo) {
             Log::debug('Overrule info with demo info.');
-            $this->setupToken = (string)config('simplefin.demo_token');
+            $this->setupToken = (string) config('simplefin.demo_token');
         }
 
         if ('' === $this->setupToken && '' === $accessToken) {

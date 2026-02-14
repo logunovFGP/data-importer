@@ -39,14 +39,15 @@ use UnexpectedValueException;
  */
 class ColumnValueConverter
 {
-    private array         $roleToTransaction;
+    private array $roleToTransaction;
     private Configuration $configuration;
 
     /**
      * ColumnValueConverter constructor.
      */
-    public function __construct(private ImportJob $importJob)
-    {
+    public function __construct(
+        private ImportJob $importJob
+    ) {
         $this->roleToTransaction = config('csv.role_to_transaction');
         $this->configuration     = $this->importJob->getConfiguration();
     }
@@ -93,28 +94,26 @@ class ColumnValueConverter
             // 'user'          => 1, // ??
             'group_title'             => null,
             'error_if_duplicate_hash' => $this->configuration->isIgnoreDuplicateTransactions(),
-            'transactions'            => [
-                [
-                    'type'             => 'withdrawal',
-                    'date'             => '',
-                    'currency_id'      => null,
-                    'currency_code'    => null,
-                    'amount'           => null,
-                    'amount_modifier'  => '1', // 1 or -1
-                    'description'      => null,
-                    'source_id'        => null,
-                    'source_name'      => null,
-                    'destination_id'   => null,
-                    'destination_name' => null,
-                    'tags_comma'       => [],
-                    'tags_space'       => [],
+            'transactions'            => [[
+                'type'             => 'withdrawal',
+                'date'             => '',
+                'currency_id'      => null,
+                'currency_code'    => null,
+                'amount'           => null,
+                'amount_modifier'  => '1', // 1 or -1
+                'description'      => null,
+                'source_id'        => null,
+                'source_name'      => null,
+                'destination_id'   => null,
+                'destination_name' => null,
+                'tags_comma'       => [],
+                'tags_space'       => [],
 
-                    // extra fields for amounts:
-                    'amount_debit'     => null,
-                    'amount_credit'    => null,
-                    'amount_negated'   => null,
-                ],
-            ],
+                // extra fields for amounts:
+                'amount_debit'     => null,
+                'amount_credit'    => null,
+                'amount_negated'   => null,
+            ]],
         ];
 
         /**
@@ -133,15 +132,13 @@ class ColumnValueConverter
 
                 continue;
             }
-            Log::debug(
-                sprintf(
-                    'Stored column #%d with value "%s" and role "%s" in field "%s"',
-                    $columnIndex + 1,
-                    $this->toString($parsedValue),
-                    $role,
-                    $transactionField
-                )
-            );
+            Log::debug(sprintf(
+                'Stored column #%d with value "%s" and role "%s" in field "%s"',
+                $columnIndex + 1,
+                $this->toString($parsedValue),
+                $role,
+                $transactionField
+            ));
 
             // if append, append.
             if (true === $value->isAppendValue()) {
@@ -152,36 +149,36 @@ class ColumnValueConverter
                 if (is_array($parsedValue)) {
                     $transaction['transactions'][0][$transactionField] ??= [];
                     $transaction['transactions'][0][$transactionField] = array_merge($transaction['transactions'][0][$transactionField], $parsedValue);
-                    Log::debug(
-                        sprintf('Value for [transactions][#0][%s] is now ', $transactionField),
-                        $transaction['transactions'][0][$transactionField]
-                    );
+                    Log::debug(sprintf('Value for [transactions][#0][%s] is now ', $transactionField), $transaction['transactions'][0][$transactionField]);
                 }
                 if (!is_array($parsedValue)) {
                     $transaction['transactions'][0][$transactionField] ??= '';
-                    $transaction['transactions'][0][$transactionField] = trim(
-                        sprintf('%s %s', $transaction['transactions'][0][$transactionField], $parsedValue)
-                    );
+                    $transaction['transactions'][0][$transactionField] = trim(sprintf(
+                        '%s %s',
+                        $transaction['transactions'][0][$transactionField],
+                        $parsedValue
+                    ));
                 }
             }
             // if not, not.
             if (false === $value->isAppendValue()) {
-                Log::debug(
-                    sprintf('Column #%d with role "%s" (in field "%s") must NOT be appended to the previous value.', $columnIndex + 1, $role, $transactionField)
-                );
+                Log::debug(sprintf(
+                    'Column #%d with role "%s" (in field "%s") must NOT be appended to the previous value.',
+                    $columnIndex + 1,
+                    $role,
+                    $transactionField
+                ));
                 $transaction['transactions'][0][$transactionField] = $parsedValue;
             }
             // if this is an account field, AND the column is mapped, store the original value just in case.
             $saveRoles        = ['account-name', 'opposing-name', 'account-iban', 'opposing-iban', 'account-number', 'opposing-number'];
             if (0 !== $value->getMappedValue() && in_array($value->getOriginalRole(), $saveRoles, true)) {
-                Log::debug(
-                    sprintf(
-                        'The original value ("%s") in column "%s" (originally stored in "%s") was saved just in case.',
-                        $value->getValue(),
-                        $value->getRole(),
-                        $value->getOriginalRole()
-                    )
-                );
+                Log::debug(sprintf(
+                    'The original value ("%s") in column "%s" (originally stored in "%s") was saved just in case.',
+                    $value->getValue(),
+                    $value->getRole(),
+                    $value->getOriginalRole()
+                ));
                 $transaction['transactions'][0][sprintf('original-%s', $value->getOriginalRole())] = $value->getValue();
             }
         }
@@ -205,6 +202,6 @@ class ColumnValueConverter
             }
         }
 
-        return (string)$value;
+        return (string) $value;
     }
 }

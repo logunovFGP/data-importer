@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * ImportJobRepository.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -26,6 +27,7 @@ namespace App\Repository\ImportJob;
 use App\Exceptions\ImporterErrorException;
 use App\Models\ImportJob;
 use App\Services\CSV\Mapper\TransactionCurrencies;
+use App\Services\EnableBanking\Validation\NewJobDataCollector as EnableBankingNewJobDataCollector;
 use App\Services\LunchFlow\Validation\NewJobDataCollector as LunchFlowNewJobDataCollector;
 use App\Services\Nordigen\Validation\NewJobDataCollector as NordigenNewJobDataCollector;
 use App\Services\Session\Constants;
@@ -88,7 +90,7 @@ class ImportJobRepository
         $disk = $this->getDisk();
         $path = sprintf('%s.json', $importJob->identifier);
         if ($disk->exists($path)) {
-            $content = trim((string)$disk->get($path));
+            $content = trim((string) $disk->get($path));
             if ('' !== $content) {
                 $valid = json_validate($content);
                 if ($valid) {
@@ -96,7 +98,11 @@ class ImportJobRepository
                     $oldInstanceCounter = $json['instance_counter'];
                     $newInstanceCounter = $importJob->getInstanceCounter();
                     if ($oldInstanceCounter > $newInstanceCounter) {
-                        throw new ImporterErrorException(sprintf('Cowardly refuse to overwrite current (#%d) import job file with given (#%d).', $oldInstanceCounter, $newInstanceCounter));
+                        throw new ImporterErrorException(sprintf(
+                            'Cowardly refuse to overwrite current (#%d) import job file with given (#%d).',
+                            $oldInstanceCounter,
+                            $newInstanceCounter
+                        ));
                     }
                 }
             }
@@ -143,7 +149,6 @@ class ImportJobRepository
             $currencies = $this->getCurrencies();
             $importJob->setCurrencies($currencies);
         }
-
 
         Log::debug(sprintf('Now in flow("%s")', $importJob->getFlow()));
 
@@ -200,6 +205,16 @@ class ImportJobRepository
 
             case 'sophtron':
                 // get import job + configuration back:
+                $configuration = $importJob->getConfiguration();
+                $configuration->setDuplicateDetectionMethod('cell');
+
+                break;
+
+            case 'eb':
+                $validator     = new EnableBankingNewJobDataCollector();
+                $validator->setImportJob($importJob);
+                $messageBag    = $validator->collectAccounts();
+                $importJob     = $validator->getImportJob();
                 $configuration = $importJob->getConfiguration();
                 $configuration->setDuplicateDetectionMethod('cell');
 
@@ -281,10 +296,7 @@ class ImportJobRepository
     private function getApplicationAccounts(): array
     {
         Log::debug(sprintf('Now in %s', __METHOD__));
-        $accounts = [
-            Constants::ASSET_ACCOUNTS => [],
-            Constants::LIABILITIES    => [],
-        ];
+        $accounts = [Constants::ASSET_ACCOUNTS => [], Constants::LIABILITIES    => []];
         $url      = null;
 
         try {
@@ -292,7 +304,7 @@ class ImportJobRepository
             $token         = SecretManager::getAccessToken();
 
             if ('' === $url || '' === $token) {
-                Log::error('Base URL or Access Token is empty. Cannot fetch accounts.', ['url_empty' => '' === $url, 'token_empty' => '' === $token]);
+                Log::error('Base URL or Access Token is empty. Cannot fetch accounts.', ['url_empty'   => '' === $url, 'token_empty' => '' === $token]);
 
                 return $accounts; // Return empty accounts if auth details are missing
             }
@@ -318,7 +330,6 @@ class ImportJobRepository
                 'url'     => $url, // Log URL that might have caused issue
                 'trace'   => $e->getTraceAsString(),
             ]);
-
         }
 
         try {
@@ -334,7 +345,6 @@ class ImportJobRepository
                 $accounts[Constants::LIABILITIES][$account->id] = $account;
             }
             Log::debug(sprintf('Fetched %d liability accounts.', count($accounts[Constants::LIABILITIES])));
-
         } catch (ApiHttpException|Exception $e) {
             Log::error(sprintf('%s while fetching Firefly III liability accounts.', get_class($e)), [
                 'message' => $e->getMessage(),

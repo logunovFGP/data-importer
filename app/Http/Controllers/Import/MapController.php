@@ -44,6 +44,7 @@ use InvalidArgumentException;
 class MapController extends Controller
 {
     protected const string DISK_NAME = 'jobs';
+
     private ImportJobRepository $repository;
 
     /**
@@ -164,14 +165,14 @@ class MapController extends Controller
 
         // get columns from file
         $content         = $importJob->getImportableFileString($configuration->isConversion());
-        $delimiter       = (string)config(sprintf('csv.delimiters.%s', $configuration->getDelimiter()));
+        $delimiter       = (string) config(sprintf('csv.delimiters.%s', $configuration->getDelimiter()));
         $result          = MapperService::getMapData($content, $delimiter, $configuration->isHeaders(), $data);
 
         // sort the column on if they're mapped or not.
         foreach ($result as $index => $set) {
             $values                   = $set['values'];
             $mapped                   = array_keys($set['mapped']);
-            usort($values, function (string $a, string $b) use ($mapped) {
+            usort($values, static function (string $a, string $b) use ($mapped) {
                 if (in_array($a, $mapped, true) && !in_array($b, $mapped, true)) {
                     return 1;
                 }
@@ -253,10 +254,15 @@ class MapController extends Controller
          * To map Nordigen and SimpleFIN, pretend the file has one "column" (this is based on the CSV importer after all)
          * that contains:
          * - opposing account names (this is preordained).
+         * FIXME bad way of checking the flow
          */
         if (
-            'nordigen' === $importJob->getFlow() || 'sophtron' === $importJob->getFlow()
-            || 'spectre' === $importJob->getFlow() || 'lunchflow' === $importJob->getFlow()) {
+            'nordigen' === $importJob->getFlow()
+            || 'sophtron' === $importJob->getFlow()
+            || 'spectre' === $importJob->getFlow()
+            || 'lunchflow' === $importJob->getFlow()
+            || 'eb' === $importJob->getFlow()
+        ) {
             // FIXME should be in a helper or something generic.
             // index 0, opposing account name:
             $index                        = 0;
@@ -280,7 +286,6 @@ class MapController extends Controller
             return $data;
         }
         if ('simplefin' === $importJob->getFlow()) {
-
             // index 0: expense/revenue account mapping
             $index                          = 0;
             $expenseRevenue                 = config('csv.import_roles.opposing-name') ?? null;
@@ -319,14 +324,11 @@ class MapController extends Controller
 
             /** @var array $row */
             foreach ($transaction['transactions'] as $row) {
-                $opposing[] = (string)(array_key_exists('destination_name', $row) ? $row['destination_name'] : '');
-                $opposing[] = (string)(array_key_exists('source_name', $row) ? $row['source_name'] : '');
+                $opposing[] = (string) (array_key_exists('destination_name', $row) ? $row['destination_name'] : '');
+                $opposing[] = (string) (array_key_exists('source_name', $row) ? $row['source_name'] : '');
             }
         }
-        $filtered = array_filter(
-            $opposing,
-            static fn (string $value) => '' !== $value
-        );
+        $filtered = array_filter($opposing, static fn (string $value) => '' !== $value);
 
         return array_unique($filtered);
     }
@@ -344,8 +346,8 @@ class MapController extends Controller
             /** @var array $row */
             foreach ($transaction['transactions'] as $row) {
                 // Extract expense/revenue destination names from SimpleFIN transactions
-                $destinationName = (string)(array_key_exists('destination_name', $row) ? $row['destination_name'] : '');
-                $sourceName      = (string)(array_key_exists('source_name', $row) ? $row['source_name'] : '');
+                $destinationName = (string) (array_key_exists('destination_name', $row) ? $row['destination_name'] : '');
+                $sourceName      = (string) (array_key_exists('source_name', $row) ? $row['source_name'] : '');
 
                 // Add both source and destination names as potential expense/revenue accounts
                 if ('' !== $destinationName) {
@@ -386,7 +388,7 @@ class MapController extends Controller
             foreach ($column as $valueIndex => $value) {
                 $mappedValue = $mapping[$columnIndex][$valueIndex] ?? null;
                 if (null !== $mappedValue && 0 !== $mappedValue && '0' !== $mappedValue) {
-                    $data[$columnIndex][$value] = (int)$mappedValue;
+                    $data[$columnIndex][$value] = (int) $mappedValue;
                 }
             }
         }

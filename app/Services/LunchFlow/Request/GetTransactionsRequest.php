@@ -31,6 +31,7 @@ use App\Exceptions\RateLimitException;
 use App\Services\LunchFlow\Response\GetTransactionsResponse;
 use App\Services\Shared\Response\Response;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class GetTransactionsRequest
@@ -39,8 +40,11 @@ class GetTransactionsRequest extends Request
 {
     private string $identifier = '';
 
-    public function __construct(string $apiToken, private readonly int $account)
-    {
+    public function __construct(
+        #[SensitiveParameter]
+        string $apiToken,
+        private readonly int $account
+    ) {
         $this->setApiKey($apiToken);
         $this->setUrl(sprintf('accounts/%d/transactions', $this->account));
     }

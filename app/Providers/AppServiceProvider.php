@@ -44,9 +44,6 @@ class AppServiceProvider extends ServiceProvider
     #[Override]
     public function register(): void
     {
-        $this->app->bind(
-            'steam',
-            static fn () => new Steam()
-        );
+        $this->app->bind('steam', static fn () => new Steam());
     }
 }

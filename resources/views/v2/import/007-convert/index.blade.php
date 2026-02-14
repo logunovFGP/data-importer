@@ -108,6 +108,8 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <form class="new-account-form" data-account-id="{{ $accountId }}">
+                                                    <input type="hidden" name="liability_type" value="{{ $accountData['liability_type'] ?? '' }}">
+                                                    <input type="hidden" name="liability_direction" value="{{ $accountData['liability_direction'] ?? '' }}">
                                                     <div class="form-group mb-2">
                                                         <label class="form-label">Account name:</label>
                                                         <input type="text" class="form-control form-control-sm"
@@ -119,8 +121,8 @@
                                                         <label class="form-label">Account type:</label>
                                                         <select class="form-control form-control-sm" name="account_type"
                                                                 required>
-                                                            <option value="asset" selected>Asset account</option>
-                                                            <option value="liability">Liability account</option>
+                                                            <option value="asset" @if($accountData['type'] === 'asset') selected @endif>Asset account</option>
+                                                            <option value="liabilities" @if($accountData['type'] === 'liabilities') selected @endif>Liability account</option>
                                                         </select>
                                                         <small class="form-text text-muted">Smart default: asset account
                                                             (recommended for most accounts)</small>

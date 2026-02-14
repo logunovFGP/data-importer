@@ -33,19 +33,19 @@ use Illuminate\Support\Facades\Log;
  */
 class Transaction
 {
-    public string           $accountId;
-    public string           $amount;
-    public string           $category;
-    public Carbon           $createdAt;
-    public string           $currencyCode;
-    public string           $description;
-    public bool             $duplicated;
+    public string $accountId;
+    public string $amount;
+    public string $category;
+    public Carbon $createdAt;
+    public string $currencyCode;
+    public string $description;
+    public bool $duplicated;
     public TransactionExtra $extra;
-    public string           $id;
-    public Carbon           $madeOn;
-    public string           $mode;
-    public string           $status;
-    public Carbon           $updatedAt;
+    public string $id;
+    public Carbon $madeOn;
+    public string $mode;
+    public string $status;
+    public Carbon $updatedAt;
 
     /**
      * Transaction constructor.
@@ -190,6 +190,7 @@ class Transaction
 
         // I think this covers everything, but you never know, so:
         return null;
+
         // return sprintf('(unknown %s account)', $direction);
     }
 
@@ -249,6 +250,7 @@ class Transaction
 
         // I think this covers everything, but you never know, so:
         return null;
+
         // return sprintf('(unknown %s account)', $direction);
     }
 

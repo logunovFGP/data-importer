@@ -50,9 +50,7 @@ class IndexController extends Controller
     public function flush(): RedirectResponse
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
-        session()->forget([
-            Constants::SELECTED_BANK_COUNTRY,
-        ]);
+        session()->forget([Constants::SELECTED_BANK_COUNTRY]);
         session()->flush();
         session()->regenerate(true);
         Artisan::call('cache:clear');
@@ -87,11 +85,10 @@ class IndexController extends Controller
             $this->clearOldJobs();
         }
 
-
         // display to user the method of authentication
-        $clientId          = (string)config('importer.client_id');
-        $url               = (string)config('importer.url');
-        $accessTokenConfig = (string)config('importer.access_token');
+        $clientId          = (string) config('importer.client_id');
+        $url               = (string) config('importer.url');
+        $accessTokenConfig = (string) config('importer.access_token');
 
         Log::debug('IndexController authentication detection', [
             'client_id'           => $clientId,
@@ -117,7 +114,12 @@ class IndexController extends Controller
             $flexible = true;
         }
 
-        Log::debug('IndexController authentication type flags', ['pat' => $pat, 'clientIdWithURL' => $clientIdWithURL, 'URLonly' => $URLonly, 'flexible' => $flexible]);
+        Log::debug('IndexController authentication type flags', [
+            'pat'             => $pat,
+            'clientIdWithURL' => $clientIdWithURL,
+            'URLonly'         => $URLonly,
+            'flexible'        => $flexible,
+        ]);
 
         $isDocker          = config('importer.docker.is_docker', false);
         $identifier        = substr(session()->getId(), 0, 10);

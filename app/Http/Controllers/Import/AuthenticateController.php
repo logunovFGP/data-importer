@@ -26,6 +26,7 @@ namespace App\Http\Controllers\Import;
 
 use App\Exceptions\ImporterErrorException;
 use App\Http\Controllers\Controller;
+use App\Services\EnableBanking\AuthenticationValidator as EnableBankingValidator;
 use App\Services\Enums\AuthenticationStatus;
 use App\Services\LunchFlow\AuthenticationValidator as LunchFlowValidator;
 use App\Services\Nordigen\AuthenticationValidator as NordigenValidator;
@@ -81,9 +82,11 @@ class AuthenticateController extends Controller
 
         if (AuthenticationStatus::NODATA === $result) {
             // need to get and present the auth data in the system (yes it is always empty).
-            $data = $validator->getData();
+            $data    = $validator->getData();
+            $route   = route('eb-connect.callback');
+            $isHttps = str_starts_with($route, 'https://');
 
-            return view('import.002-authenticate.index')->with(compact('mainTitle', 'flow', 'subTitle', 'pageTitle', 'data', 'error'));
+            return view('import.002-authenticate.index')->with(compact('mainTitle', 'flow', 'subTitle', 'pageTitle', 'data', 'error', 'route', 'isHttps'));
         }
 
         if (AuthenticationStatus::AUTHENTICATED === $result) {
@@ -112,6 +115,9 @@ class AuthenticateController extends Controller
 
             case 'sophtron':
                 return new SophtronValidator();
+
+            case 'eb':
+                return new EnableBankingValidator();
         }
 
         return null;
@@ -130,12 +136,12 @@ class AuthenticateController extends Controller
         $all        = $request->all();
         $submission = [];
         foreach ($all as $name => $value) {
-            if (str_starts_with((string)$name, $flow)) {
+            if (str_starts_with((string) $name, $flow)) {
                 $shortName              = str_replace(sprintf('%s_', $flow), '', $name);
-                if ('' === (string)$value) {
+                if ('' === (string) $value) {
                     return redirect(route(self::AUTH_ROUTE, [$flow]))->with(['error' => sprintf('The "%s"-field must be filled in.', $shortName)]);
                 }
-                $submission[$shortName] = (string)$value;
+                $submission[$shortName] = (string) $value;
             }
         }
         $validator->setData($submission);

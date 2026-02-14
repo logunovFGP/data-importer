@@ -53,10 +53,10 @@ class UploadController extends Controller
     use CollectsSettings;
     use VerifyJSON;
 
-    private string              $configFileContent     = '';
-    private string              $configFileName;
-    private string              $contentType;
-    private string              $importableFileContent = '';
+    private string $configFileContent     = '';
+    private string $configFileName;
+    private string $contentType;
+    private string $importableFileContent = '';
     private ImportJobRepository $repository;
 
     /**
@@ -80,9 +80,7 @@ class UploadController extends Controller
         Log::debug(sprintf('Now at %s', __METHOD__));
         $mainTitle = 'Upload your file(s)';
         $subTitle  = 'Start page and instructions';
-        $settings  = [
-            'simplefin' => $this->getSimpleFINSettings(),
-        ];
+        $settings  = ['simplefin'  => $this->getSimpleFINSettings()];
         $list      = $this->getConfigurations();
 
         return view('import.003-upload.index', compact('mainTitle', 'subTitle', 'list', 'flow', 'settings'));
@@ -135,7 +133,7 @@ class UploadController extends Controller
         // at this point the config (unprocessed) is in $this->configFileContent
 
         // process pre-selected file (if present):
-        $errors        = $this->processSelection($errors, (string)$request->get('existing_config'), $configFile);
+        $errors        = $this->processSelection($errors, (string) $request->get('existing_config'), $configFile);
         // the config in $this->configFileContent may now be overruled.
 
         // stop here if any errors:
@@ -178,7 +176,7 @@ class UploadController extends Controller
                 $collector             = new SimpleFINNewJobDataCollector();
                 $collector->setImportJob($importJob);
                 $collector->useDemo    = $request->boolean('use_demo');
-                $collector->setupToken = (string)$request->get('simplefin_token');
+                $collector->setupToken = (string) $request->get('simplefin_token');
                 $errors                = $collector->validate();
                 $importJob             = $collector->getImportJob();
                 $this->repository->saveToDisk($importJob);
@@ -204,6 +202,11 @@ class UploadController extends Controller
                 Log::debug('No extra steps for Lunch Flow.');
 
                 break;
+
+            case 'eb':
+                Log::debug('No extra steps for Enable Banking.');
+
+                break;
         }
 
         // stop again if any errors:
@@ -213,7 +216,6 @@ class UploadController extends Controller
 
         // redirect to configuration controller.
         return redirect()->route('configure-import.index', [$importJob->identifier]);
-
     }
 
     /**
@@ -246,7 +248,7 @@ class UploadController extends Controller
 
         switch ($this->contentType) {
             case 'csv':
-                $content = (string)file_get_contents($file->getPathname());
+                $content = (string) file_get_contents($file->getPathname());
 
                 // https://stackoverflow.com/questions/11066857/detect-eol-type-using-php
                 // because apparently there are banks that use "\r" as newline. Looking at the morons of KBC Bank, Belgium.
@@ -260,12 +262,15 @@ class UploadController extends Controller
                 break;
 
             case 'camt':
-                $content = (string)file_get_contents($file->getPathname());
+                $content = (string) file_get_contents($file->getPathname());
 
                 break;
 
             default:
-                $errors->add('importable_file', sprintf('The file type of your upload is "%s". This file type is not supported. Please check the logs, and start over. Sorry about this.', $this->contentType));
+                $errors->add('importable_file', sprintf(
+                    'The file type of your upload is "%s". This file type is not supported. Please check the logs, and start over. Sorry about this.',
+                    $this->contentType
+                ));
         }
         if (null !== $content && '' !== $content) {
             $this->importableFileContent = $content;
@@ -277,17 +282,27 @@ class UploadController extends Controller
     private function getError(int $error): string
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
-        $errors = [UPLOAD_ERR_OK => 'There is no error, the file uploaded with success.', UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.', UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.', UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded.', UPLOAD_ERR_NO_FILE => 'No file was uploaded.', UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.', UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk. Introduced in PHP 5.1.0.', UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the file upload.'];
+        $errors = [
+            UPLOAD_ERR_OK         => 'There is no error, the file uploaded with success.',
+            UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+            UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+            UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
+            UPLOAD_ERR_NO_FILE    => 'No file was uploaded.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk. Introduced in PHP 5.1.0.',
+            UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload.',
+        ];
 
         return $errors[$error] ?? 'Unknown error';
     }
 
     private function detectEOL(string $string): string
     {
-        $eols     = ['\n\r' => "\n\r", // 0x0A - 0x0D - acorn BBC
-            '\r\n'          => "\r\n", // 0x0D - 0x0A - Windows, DOS OS/2
-            '\n'            => "\n", // 0x0A -      - Unix, OSX
-            '\r'            => "\r", // 0x0D -      - Apple ][, TRS80
+        $eols     = [
+            '\n\r' => "\n\r", // 0x0A - 0x0D - acorn BBC
+            '\r\n' => "\r\n", // 0x0D - 0x0A - Windows, DOS OS/2
+            '\n'   => "\n", // 0x0A -      - Unix, OSX
+            '\r'   => "\r", // 0x0D -      - Apple ][, TRS80
         ];
         $curCount = 0;
         $curEol   = '';
@@ -312,7 +327,7 @@ class UploadController extends Controller
         Log::debug('Config file is present.');
         $errorNumber             = $file->getError();
         if (0 !== $errorNumber) {
-            $errors->add('config_file', (string)$errorNumber);
+            $errors->add('config_file', (string) $errorNumber);
 
             return $errors;
         }
@@ -327,7 +342,7 @@ class UploadController extends Controller
             return $errors;
         }
 
-        $this->configFileContent = (string)file_get_contents($path);
+        $this->configFileContent = (string) file_get_contents($path);
 
         return $errors;
     }
@@ -340,7 +355,7 @@ class UploadController extends Controller
         if (!$file instanceof UploadedFile && '' !== $selection) {
             Log::debug('User selected a config file from the store.');
             $disk                    = Storage::disk('configurations');
-            $content                 = (string)$disk->get($selection);
+            $content                 = (string) $disk->get($selection);
             $this->configFileContent = $content;
         }
 

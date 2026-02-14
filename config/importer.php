@@ -64,8 +64,8 @@ declare(strict_types=1);
  */
 
 return [
-    'version'                       => '2.0.5',
-    'build_time'                    => 1768581519,
+    'version'                       => '2.1.0',
+    'build_time'                    => 1771070334,
     'fake_data'                     => env('FAKE_DATA', false),
     'providers'                     => [
         'file'      => [
@@ -112,7 +112,7 @@ return [
         ],
         'eb'        => [
             'title'                     => 'Enable Banking',
-            'enabled'                   => false,
+            'enabled'                   => true,
             'conversion_before_mapping' => true,
             'explanation'               => '',
             'supports_new_accounts'     => true,
@@ -163,7 +163,7 @@ return [
     'ignore_not_found_transactions' => env('IGNORE_NOT_FOUND_TRANSACTIONS', false),
     'namespace'                     => 'c40dcba2-411d-11ec-973a-0242ac130003',
     'use_cache'                     => env('USE_CACHE', false),
-    'minimum_version'               => '6.4.14',
+    'minimum_version'               => '6.4.19',
     'cache_api_calls'               => false,
     'ignored_files'                 => ['.gitignore'],
     'tracker_site_id'               => env('TRACKER_SITE_ID', ''),

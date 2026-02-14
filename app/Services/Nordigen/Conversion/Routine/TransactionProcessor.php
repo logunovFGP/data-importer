@@ -48,12 +48,13 @@ class TransactionProcessor
     use CreatesAccounts;
 
     /** @var string */
-    private const string DATE_TIME_FORMAT  = 'Y-m-d H:i:s';
-    private array               $accounts  = [];
-    private Configuration       $configuration;
-    private ?Carbon             $notAfter  = null;
-    private ?Carbon             $notBefore = null;
-    private ImportJob           $importJob;
+    private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s';
+
+    private array $accounts               = [];
+    private Configuration $configuration;
+    private ?Carbon $notAfter             = null;
+    private ?Carbon $notBefore            = null;
+    private ImportJob $importJob;
     private ImportJobRepository $repository;
 
     /**
@@ -85,7 +86,15 @@ class TransactionProcessor
          * @var int    $destinationId
          */
         foreach ($accounts as $account => $destinationId) {
-            Log::debug(sprintf('[%s] [%d/%d] Going to download transactions for account #%d "%s" (into #%d)', config('importer.version'), $index, $total, $index, $account, $destinationId));
+            Log::debug(sprintf(
+                '[%s] [%d/%d] Going to download transactions for account #%d "%s" (into #%d)',
+                config('importer.version'),
+                $index,
+                $total,
+                $index,
+                $account,
+                $destinationId
+            ));
             $object                     = new Account();
             $object->setIdentifier($account);
             $fullInfo                   = null;
@@ -99,11 +108,14 @@ class TransactionProcessor
             try {
                 $fullInfo = AccountInformationCollector::collectInformation($object);
             } catch (AgreementExpiredException $e) {
-                $this->importJob->conversionStatus->addError(0, '[a113]: Your GoCardless End User Agreement has expired. You must refresh it by generating a new one through the Firefly III Data Importer user interface. See the other error messages for more information.');
-                if (array_key_exists('summary', $e->json) && '' !== (string)$e->json['summary']) {
+                $this->importJob->conversionStatus->addError(
+                    0,
+                    '[a113]: Your GoCardless End User Agreement has expired. You must refresh it by generating a new one through the Firefly III Data Importer user interface. See the other error messages for more information.'
+                );
+                if (array_key_exists('summary', $e->json) && '' !== (string) $e->json['summary']) {
                     $this->importJob->conversionStatus->addError(0, $e->json['summary']);
                 }
-                if (array_key_exists('detail', $e->json) && '' !== (string)$e->json['detail']) {
+                if (array_key_exists('detail', $e->json) && '' !== (string) $e->json['detail']) {
                     $this->importJob->conversionStatus->addError(0, $e->json['detail']);
                 }
                 $return[$account] = [];
@@ -123,7 +135,13 @@ class TransactionProcessor
                 continue;
             }
             $url                        = config('nordigen.url');
-            $request                    = new GetTransactionsRequest($url, $accessToken, $account, $this->configuration->getDateNotBefore(), $this->configuration->getDateNotAfter());
+            $request                    = new GetTransactionsRequest(
+                $url,
+                $accessToken,
+                $account,
+                $this->configuration->getDateNotBefore(),
+                $this->configuration->getDateNotAfter()
+            );
             $request->setTimeOut(config('importer.connection.timeout'));
 
             /** @var GetTransactionsResponse $transactions */
@@ -136,10 +154,7 @@ class TransactionProcessor
                 $return[$account]           = [];
 
                 // save the rate limits:
-                $this->rateLimits[$account] = [
-                    'remaining' => $request->getRemaining(),
-                    'reset'     => $request->getReset(),
-                ];
+                $this->rateLimits[$account] = ['remaining' => $request->getRemaining(), 'reset'     => $request->getReset()];
                 ++$index;
 
                 continue;
@@ -149,21 +164,22 @@ class TransactionProcessor
                 $return[$account]           = [];
                 $this->importJob->conversionStatus->addError(0, $e->json['detail'] ?? '[a114]: Your EUA has expired.');
                 // save rate limits, even though they may not be there.
-                $this->rateLimits[$account] = [
-                    'remaining' => $request->getRemaining(),
-                    'reset'     => $request->getReset(),
-                ];
+                $this->rateLimits[$account] = ['remaining' => $request->getRemaining(), 'reset'     => $request->getReset()];
                 ++$index;
 
                 continue;
             }
-            $this->rateLimits[$account] = [
-                'remaining' => $request->getRemaining(),
-                'reset'     => $request->getReset(),
-            ];
+            $this->rateLimits[$account] = ['remaining' => $request->getRemaining(), 'reset'     => $request->getReset()];
 
             $return[$account]           = $this->filterTransactions($transactions);
-            Log::debug(sprintf('[%s] [%d/%d] Done downloading transactions for account #%d "%s"', config('importer.version'), $index, $total, $index, $account));
+            Log::debug(sprintf(
+                '[%s] [%d/%d] Done downloading transactions for account #%d "%s"',
+                config('importer.version'),
+                $index,
+                $total,
+                $index,
+                $account
+            ));
             ++$index;
         }
         Log::debug('Done with download of transactions.');
@@ -208,24 +224,20 @@ class TransactionProcessor
             }
 
             if ($this->notBefore instanceof Carbon && $madeOn->lt($this->notBefore)) {
-                Log::debug(
-                    sprintf(
-                        'Skip transaction because "%s" is before "%s".',
-                        $madeOn->format(self::DATE_TIME_FORMAT),
-                        $this->notBefore->format(self::DATE_TIME_FORMAT)
-                    )
-                );
+                Log::debug(sprintf(
+                    'Skip transaction because "%s" is before "%s".',
+                    $madeOn->format(self::DATE_TIME_FORMAT),
+                    $this->notBefore->format(self::DATE_TIME_FORMAT)
+                ));
 
                 continue;
             }
             if ($this->notAfter instanceof Carbon && $madeOn->gt($this->notAfter)) {
-                Log::debug(
-                    sprintf(
-                        'Skip transaction because "%s" is after "%s".',
-                        $madeOn->format(self::DATE_TIME_FORMAT),
-                        $this->notAfter->format(self::DATE_TIME_FORMAT)
-                    )
-                );
+                Log::debug(sprintf(
+                    'Skip transaction because "%s" is after "%s".',
+                    $madeOn->format(self::DATE_TIME_FORMAT),
+                    $this->notAfter->format(self::DATE_TIME_FORMAT)
+                ));
 
                 continue;
             }

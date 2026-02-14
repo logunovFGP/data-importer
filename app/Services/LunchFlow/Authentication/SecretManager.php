@@ -26,6 +26,7 @@ namespace App\Services\LunchFlow\Authentication;
 
 use App\Services\Shared\Configuration\Configuration;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class SecretManager
@@ -36,19 +37,18 @@ class SecretManager
 
     public static function getApiKey(?Configuration $configuration = null): string
     {
-
         if (!self::hasApiKey()) {
             Log::debug('LunchFlow: No API key in hasApiKey() session, will return config OR Configuration variable.');
 
-            $apiKey = (string)config('lunchflow.api_key');
+            $apiKey = (string) config('lunchflow.api_key');
             if ('' !== $apiKey) {
                 return $apiKey;
             }
 
-            return (string)$configuration?->getLunchFlowApiKey();
+            return (string) $configuration?->getLunchFlowApiKey();
         }
 
-        return (string)session()->get(self::API_KEY);
+        return (string) session()->get(self::API_KEY);
     }
 
     /**
@@ -56,10 +56,10 @@ class SecretManager
      */
     private static function hasApiKey(): bool
     {
-        return '' !== (string)session()->get(self::API_KEY);
+        return '' !== (string) session()->get(self::API_KEY);
     }
 
-    public static function saveApiKey(string $apiKey): void
+    public static function saveApiKey(#[SensitiveParameter] string $apiKey): void
     {
         session()->put(self::API_KEY, $apiKey);
     }

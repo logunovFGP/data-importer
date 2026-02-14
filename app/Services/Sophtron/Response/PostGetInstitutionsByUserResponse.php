@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * GetInstitutionsResponse.php
  * Copyright (c) 2025 james@firefly-iii.org

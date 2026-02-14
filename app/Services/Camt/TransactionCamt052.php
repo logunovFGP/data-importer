@@ -21,8 +21,8 @@ class TransactionCamt052 extends AbstractTransaction
     }
 
     /*public function getFieldByIndex(string $field, int $index): string
-    {
-        // implement 053-specific Logic
-        return '';
-    }*/
+     * {
+     * // implement 053-specific Logic
+     * return '';
+     * }*/
 }

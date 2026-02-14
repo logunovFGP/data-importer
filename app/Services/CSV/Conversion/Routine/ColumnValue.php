@@ -32,12 +32,12 @@ use Illuminate\Support\Facades\Log;
  */
 class ColumnValue
 {
-    private bool    $appendValue;
+    private bool $appendValue;
     private ?string $configuration;
-    private int     $mappedValue;
-    private string  $originalRole;
-    private string  $role;
-    private string  $value;
+    private int $mappedValue;
+    private string $originalRole;
+    private string $role;
+    private string $value;
 
     /**
      * ColumnValue constructor.

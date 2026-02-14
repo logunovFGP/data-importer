@@ -28,6 +28,7 @@ use App\Services\Nordigen\Response\NewUserAgreementResponse;
 use App\Services\Shared\Response\Response;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class PostNewUserAgreement
@@ -38,7 +39,7 @@ class PostNewUserAgreement extends Request
     private string $bank;
     private string $maxHistoricalDays;
 
-    public function __construct(string $url, string $token)
+    public function __construct(string $url, #[SensitiveParameter] string $token)
     {
         $this->setParameters([]);
         $this->setBase($url);
@@ -60,12 +61,11 @@ class PostNewUserAgreement extends Request
     public function post(): Response
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
-        $array
-                = [
-                    'institution_id'        => $this->bank,
-                    'max_historical_days'   => $this->maxHistoricalDays,
-                    'access_valid_for_days' => $this->accessValidForDays,
-                ];
+        $array  = [
+            'institution_id'        => $this->bank,
+            'max_historical_days'   => $this->maxHistoricalDays,
+            'access_valid_for_days' => $this->accessValidForDays,
+        ];
 
         $result = $this->authenticatedJsonPost($array);
         Log::debug('Returned from POST: ', $result);

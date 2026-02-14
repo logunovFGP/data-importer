@@ -1,5 +1,7 @@
+<?php
+
 /*
- * gocardless.js
+ * ErrorResponse.php
  * Copyright (c) 2025 james@firefly-iii.org
  *
  * This file is part of Firefly III (https://github.com/firefly-iii).
@@ -18,35 +20,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import '../../boot/bootstrap.js';
+declare(strict_types=1);
 
+namespace App\Services\EnableBanking\Response;
 
-let gocardless = function () {
-    return {
-        selectedCountry: 'XX',
-        selectedBank: '',
-        functionName() {
+use App\Services\Shared\Response\Response;
 
-        },
-        init() {
-            console.log('hello gocardless');
-        },
+/**
+ * Class ErrorResponse
+ */
+class ErrorResponse extends Response
+{
+    public string $message = '';
+    public string $code    = '';
+    public array  $details = [];
+
+    public function __construct(array $data = [])
+    {
+        $this->message = $data['message'] ?? $data['error'] ?? 'Unknown error';
+        $this->code    = $data['code'] ?? $data['error_code'] ?? '';
+        $this->details = $data['details'] ?? [];
     }
-}
 
-
-function loadPage() {
-    Alpine.data('gocardless', () => gocardless());
-    Alpine.start();
-}
-
-// wait for load until bootstrapped event is received.
-document.addEventListener('data-importer-bootstrapped', () => {
-    console.log('Loaded through event listener.');
-    loadPage();
-});
-// or is bootstrapped before event is triggered.
-if (window.bootstrapped) {
-    console.log('Loaded through window variable.');
-    loadPage();
+    public static function fromArray(array $array): self
+    {
+        return new self($array);
+    }
 }

@@ -28,6 +28,7 @@ use App\Services\Nordigen\Response\NewRequisitionResponse;
 use App\Services\Shared\Response\Response;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class PostNewRequisitionRequest
@@ -39,7 +40,7 @@ class PostNewRequisitionRequest extends Request
     private string $reference;
     private string $identifier;
 
-    public function __construct(string $url, string $token, string $identifier)
+    public function __construct(string $url, #[SensitiveParameter] string $token, string $identifier)
     {
         $this->setParameters([]);
         $this->setBase($url);
@@ -61,13 +62,12 @@ class PostNewRequisitionRequest extends Request
     public function post(): Response
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
-        $array
-                = [
-                    'redirect'       => route('gocardless-connect.callback', [$this->identifier]),
-                    'institution_id' => $this->bank,
-                    'reference'      => $this->reference,
-                    'agreement'      => $this->agreement,
-                ];
+        $array  = [
+            'redirect'       => route('gocardless-connect.callback', [$this->identifier]),
+            'institution_id' => $this->bank,
+            'reference'      => $this->reference,
+            'agreement'      => $this->agreement,
+        ];
 
         $result = $this->authenticatedJsonPost($array);
         Log::debug('Returned from POST: ', $result);

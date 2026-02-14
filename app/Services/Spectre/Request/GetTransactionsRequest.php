@@ -27,6 +27,7 @@ namespace App\Services\Spectre\Request;
 use App\Services\Shared\Response\Response;
 use App\Services\Spectre\Response\GetTransactionsResponse;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class GetTransactionsRequest
@@ -39,7 +40,7 @@ class GetTransactionsRequest extends Request
     /**
      * GetTransactionsRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[SensitiveParameter] string $secret)
     {
         $this->setBase($url);
         $this->setAppId($appId);
@@ -55,13 +56,7 @@ class GetTransactionsRequest extends Request
         while ($hasNextPage) {
             Log::debug(sprintf('Now calling GetTransactionsRequest for next_id %d', $nextId));
 
-            $this->setParameters(
-                [
-                    'connection_id' => $this->connectionId,
-                    'account_id'    => $this->accountId,
-                    'from_id'       => $nextId,
-                ]
-            );
+            $this->setParameters(['connection_id' => $this->connectionId, 'account_id'    => $this->accountId, 'from_id'       => $nextId]);
             $response    = $this->authenticatedGet();
 
             // count entries:

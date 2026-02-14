@@ -57,38 +57,22 @@ class DuplicateCheckController extends Controller
     {
         $importJob           = $this->repository->find($identifier);
         $applicationAccounts = $importJob->getApplicationAccounts();
-        $name                = trim((string)$request->input('name', ''));
-        $type                = trim((string)$request->input('type', ''));
+        $name                = trim((string) $request->input('name', ''));
+        $type                = trim((string) $request->input('type', ''));
 
         if ('' === $name || '' === $type) {
-            Log::debug('DUPLICATE_CHECK: Empty name or type, returning no duplicate');
+            Log::debug('Duplicate check: Empty name or type, returning no duplicate');
 
-            return response()->json(
-                [
-                    'isDuplicate' => false,
-                    'message'     => null,
-                ]
-            );
+            return response()->json(['isDuplicate' => false, 'message'     => null]);
         }
         // Validate account type
-        $validTypes          = ['asset', 'liability'];
+        $validTypes          = ['asset', 'liabilities'];
         if (!in_array($type, $validTypes, true)) {
-            Log::warning('DUPLICATE_CHECK: Invalid account type provided', [
-                'type'        => $type,
-                'valid_types' => $validTypes,
-            ]);
+            Log::warning('Duplicate check: Invalid account type provided', ['type'        => $type, 'valid_types' => $validTypes]);
 
-            return response()->json(
-                [
-                    'isDuplicate' => false,
-                    'message'     => null,
-                ]
-            );
+            return response()->json(['isDuplicate' => false, 'message'     => null]);
         }
-        $arrayToCheck        = [
-            'asset'     => Constants::ASSET_ACCOUNTS,
-            'liability' => Constants::LIABILITIES,
-        ];
+        $arrayToCheck        = ['asset'       => Constants::ASSET_ACCOUNTS, 'liabilities' => Constants::LIABILITIES];
         $array               = $applicationAccounts[$arrayToCheck[$type]] ?? [];
         $isDuplicate         = false;
 
@@ -103,19 +87,13 @@ class DuplicateCheckController extends Controller
             $message = sprintf('%s <em>%s</em> already exists!', ucfirst($type), $name);
         }
 
-        Log::debug('DUPLICATE_CHECK: Validation result', [
+        Log::debug('Duplicate check: Validation result', [
             'name'        => $name,
             'type'        => $type,
             'isDuplicate' => $isDuplicate,
             'message'     => $message,
         ]);
 
-        return response()->json(
-            [
-                'isDuplicate' => $isDuplicate,
-                'message'     => $message,
-            ]
-        );
-
+        return response()->json(['isDuplicate' => $isDuplicate, 'message'     => $message]);
     }
 }

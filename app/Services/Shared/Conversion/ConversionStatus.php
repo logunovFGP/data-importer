@@ -39,11 +39,12 @@ class ConversionStatus
     public const string CONVERSION_RUNNING = 'conv_running';
 
     public const string CONVERSION_WAITING = 'waiting_to_start';
-    public array   $errors                 = [];
-    public array   $messages               = [];
+
+    public array $errors                   = [];
+    public array $messages                 = [];
     private string $status;
-    public array   $warnings               = [];
-    public array   $rateLimits             = [];
+    public array $warnings                 = [];
+    public array $rateLimits               = [];
 
     /**
      * ConversionStatus constructor.

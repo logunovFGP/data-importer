@@ -33,9 +33,6 @@ class Constants
     public const string ASSET_ACCOUNTS               = 'assets';
     public const string CONFIGURATION                = 'configuration';
 
-
-
-
     // stores the configuration array
     public const string LIABILITIES                  = 'liabilities';
 
@@ -65,5 +62,4 @@ class Constants
 
     // session variable names:
     public const string SESSION_VANITY_URL           = 'vanity_url';
-
 }

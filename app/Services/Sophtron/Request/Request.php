@@ -35,24 +35,25 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\TransferException;
 use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\ResponseInterface;
+use SensitiveParameter;
 
 /**
  * Class Request
  */
 abstract class Request
 {
-    private string   $base;
-    protected string $method     = 'GET';
-    private string   $authString = '';
-    private array    $parameters;
-    private float    $timeOut    = 3.14;
+    private string $base;
+    protected string $method   = 'GET';
+    private string $authString = '';
+    private array $parameters;
+    private float $timeOut     = 3.14;
 
     protected string $userId;
     protected string $accessKey;
     protected string $url;
 
-    private int $remaining       = -1;
-    private int $reset           = -1;
+    private int $remaining     = -1;
+    private int $reset         = -1;
 
     /**
      * @throws ImporterHttpException
@@ -144,11 +145,7 @@ abstract class Request
     {
         // config here
 
-        return new Client(
-            [
-                'connect_timeout' => $this->timeOut,
-            ]
-        );
+        return new Client(['connect_timeout' => $this->timeOut]);
     }
 
     public function getToken(): string
@@ -156,7 +153,7 @@ abstract class Request
         return $this->token;
     }
 
-    public function setToken(string $token): void
+    public function setToken(#[SensitiveParameter] string $token): void
     {
         $this->token = $token;
     }
@@ -168,6 +165,7 @@ abstract class Request
     protected function authenticatedJsonPost(array $json): array
     {
         throw new ImporterHttpException('Do not execute this.');
+
         //        Log::debug(sprintf('Now at %s', __METHOD__));
         //        $fullUrl = sprintf('%s/%s', $this->getBase(), $this->getUrl());
         //
@@ -216,14 +214,12 @@ abstract class Request
         $client  = $this->getClient();
 
         try {
-            $opts = [
-                'headers' => [
-                    'Accept'        => 'application/json',
-                    'Content-Type'  => 'application/json',
-                    'Authorization' => sprintf('%s', $this->authString),
-                    'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_a')),
-                ],
-            ];
+            $opts = ['headers' => [
+                'Accept'        => 'application/json',
+                'Content-Type'  => 'application/json',
+                'Authorization' => sprintf('%s', $this->authString),
+                'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_a')),
+            ]];
             if (count($body) > 0) {
                 $opts['json'] = $body;
             }
@@ -251,10 +247,10 @@ abstract class Request
             // if app can get response, parse it.
             $json            = [];
             if (method_exists($e, 'getResponse')) {
-                $body = (string)$e->getResponse()->getBody();
+                $body = (string) $e->getResponse()->getBody();
                 $json = json_decode($body, true) ?? [];
             }
-            if (array_key_exists('summary', $json) && str_contains((string)$json['summary'], 'expired')) {
+            if (array_key_exists('summary', $json) && str_contains((string) $json['summary'], 'expired')) {
                 $exception       = new AgreementExpiredException();
                 $exception->json = $json;
 
@@ -267,7 +263,7 @@ abstract class Request
 
             throw $exception;
         }
-        $body    = (string)$res->getBody();
+        $body    = (string) $res->getBody();
         if (json_validate($body)) {
             return json_decode($body, true) ?? [];
         }
@@ -278,6 +274,7 @@ abstract class Request
     private function logRateLimitHeaders(ResponseInterface $res, bool $fromErrorSituation): void
     {
         throw new ImporterErrorException('Should not be necesary.');
+
         //        $headers = $res->getHeaders();
         //        $method  = $fromErrorSituation ? 'error' : 'debug';
         //        if (array_key_exists('http_x_ratelimit_limit', $headers)) {
@@ -307,6 +304,7 @@ abstract class Request
     private function pauseForRateLimit(ResponseInterface $res, bool $fromErrorSituation): void
     {
         throw new ImporterErrorException('Should not be necesary.');
+
         //        $method      = $fromErrorSituation ? 'error' : 'debug';
         //        Log::{$method}(sprintf('[%s] Now in pauseForRateLimit', config('importer.version')));
         //        $headers     = $res->getHeaders();
@@ -342,6 +340,7 @@ abstract class Request
     public static function formatTime(int $reset): string
     {
         throw new ImporterErrorException('Should not be necesary.');
+
         //        $return  = '';
         //        if ($reset < 0) {
         //            Log::warning('The reset time is negative!');
@@ -377,6 +376,7 @@ abstract class Request
     private function reportAndPause(string $type, int $remaining, int $reset, bool $fromErrorSituation): void
     {
         throw new ImporterErrorException('Should not be necessary.');
+
         //        if ($remaining < 0) {
         //            // no need to report:
         //            return;

@@ -69,7 +69,6 @@ class ConfigurationController extends Controller
 
         // if the job is "contains_content", redirect to a step that will fix this, and show the user an intermediate page.
         if (!$doParse && 'contains_content' === $importJob->getState()) {
-
             // extra check for Sophtron, if it has no institutions or accounts.
             if ('sophtron' === $flow && 0 === count($importJob->getServiceAccounts())) {
                 return view('import.004-configure.sophtron-needs-institutions')->with(compact('mainTitle', 'subTitle', 'identifier'));
@@ -85,13 +84,19 @@ class ConfigurationController extends Controller
             if ($messages->count() > 0) {
                 // missing_requisitions
                 // if the job has no requisitions (Nordigen!) need to redirect to get some?
-                if ($messages->has('missing_requisitions') && 'true' === (string)$messages->get('missing_requisitions')[0]) {
+                if ($messages->has('missing_requisitions') && 'true' === (string) $messages->get('missing_requisitions')[0]) {
                     $importJob->setState('needs_connection_details');
                     $this->repository->saveToDisk($importJob);
 
                     return redirect()->route('select-bank.index', [$identifier]);
                 }
-                if ($messages->has('expired_agreement') && 'true' === (string)$messages->get('expired_agreement')[0]) {
+                if ($messages->has('missing_sessions') && 'true' === (string) $messages->get('missing_sessions')[0]) {
+                    $importJob->setState('needs_connection_details');
+                    $this->repository->saveToDisk($importJob);
+
+                    return redirect()->route('eb-select-bank.index', [$identifier]);
+                }
+                if ($messages->has('expired_agreement') && 'true' === (string) $messages->get('expired_agreement')[0]) {
                     $importJob->setServiceAccounts([]);
                     $configuration = $importJob->getConfiguration();
                     $configuration->clearRequisitions();
@@ -101,11 +106,19 @@ class ConfigurationController extends Controller
                     $redirect      = route('select-bank.index', [$identifier]);
 
                     return view('import.004-configure.gocardless-expired')->with(compact('mainTitle', 'subTitle', 'redirect'));
-
                 }
-                //
+                if ($messages->has('no_accounts') && 'eb' === $flow) {
+                    $importJob->setServiceAccounts([]);
+                    $configuration = $importJob->getConfiguration();
+                    $configuration->clearEnableBankingSessions();
+                    $importJob->setConfiguration($configuration);
+                    $importJob->setState('needs_connection_details');
+                    $this->repository->saveToDisk($importJob);
+
+                    return redirect()->route('eb-select-bank.index', [$identifier])->withErrors($messages);
+                }
+
                 // if the agreement has expired, show error and exit gracefully.
-                // https://firefly-data.hades.internal/configure-import/2385f86b-0e50-4ba7-8b7c-e663471f2dd6?parse=true
 
                 // if there is any state for the job here forget about it, just remove it.
                 $this->repository->deleteImportJob($importJob);
@@ -118,7 +131,7 @@ class ConfigurationController extends Controller
 
         // if configuration says to skip this configuration step, skip it:
         $configuration       = $importJob->getConfiguration();
-        $doNotSkip           = 'true' === $request->get('do_not_skip');
+        $doNotSkip           = 'true' === $request->input('do_not_skip');
         if (true === $configuration->isSkipForm() && false === $doNotSkip) {
             // FIXME must also skip roles and mapping.
             $redirect = $this->redirectToNextstep($importJob);
@@ -134,7 +147,18 @@ class ConfigurationController extends Controller
         $accounts            = $this->mergeAccountLists($flow, $applicationAccounts, $serviceAccounts);
         $camtType            = $configuration->getCamtType();
 
-        return view('import.004-configure.index', compact('camtType', 'identifier', 'mainTitle', 'subTitle', 'applicationAccounts', 'configuration', 'flow', 'accounts', 'uniqueColumns', 'currencies'));
+        return view('import.004-configure.index', compact(
+            'camtType',
+            'identifier',
+            'mainTitle',
+            'subTitle',
+            'applicationAccounts',
+            'configuration',
+            'flow',
+            'accounts',
+            'uniqueColumns',
+            'currencies'
+        ));
     }
 
     private function mergeAccountLists(string $flow, array $applicationAccounts, array $serviceAccounts): array
@@ -145,8 +169,9 @@ class ConfigurationController extends Controller
             'simplefin' => ImportServiceAccount::convertSimpleFINArray($serviceAccounts),
             'lunchflow' => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
             'sophtron'  => ImportServiceAccount::convertSophtronArray($serviceAccounts),
+            'eb'        => ImportServiceAccount::convertEnableBankingArray($serviceAccounts),
             'file'      => [],
-            default     => throw new ImporterErrorException(sprintf('Cannot mergeAccountLists("%s")', $flow)),
+            default     => throw new ImporterErrorException(sprintf('Cannot mergeAccountLists("%s")', $flow))
         };
 
         return $this->mergeGenericAccountList($generic, $applicationAccounts);
@@ -157,7 +182,7 @@ class ConfigurationController extends Controller
         Log::debug(sprintf('Method %s', __METHOD__));
 
         $dateObj           = new Date();
-        [$locale, $format] = $dateObj->splitLocaleFormat((string)$request->get('format'));
+        [$locale, $format] = $dateObj->splitLocaleFormat((string) $request->get('format'));
 
         /** @var Carbon $date */
         $date              = today()->locale($locale);
@@ -190,6 +215,8 @@ class ConfigurationController extends Controller
         // at this moment the config should be valid and saved.
         // file import ONLY needs roles before it is complete. After completion, can go to overview.
         if ('file' === $importJob->getFlow()) {
+            Log::debug('Redirect to roles because flow is file.');
+
             return route('configure-roles.index', [$importJob->identifier]);
         }
 
@@ -198,6 +225,8 @@ class ConfigurationController extends Controller
         $this->repository->saveToDisk($importJob);
 
         // can now redirect to conversion, because that will be the next step.
+        Log::debug('Redirect to conversion because flow is not file.');
+
         return route('data-conversion.index', [$importJob->identifier]);
     }
 }

@@ -51,7 +51,7 @@ class ValidateJsonFile extends Command
      */
     public function handle(): int
     {
-        $file   = (string)$this->argument('file');
+        $file   = (string) $this->argument('file');
         if (!is_file($file) || !is_readable($file)) {
             $this->error(sprintf('File %s does not exist or is not readable.', $file));
 

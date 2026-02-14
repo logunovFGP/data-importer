@@ -53,13 +53,13 @@ class AutoImportController extends Controller
             throw new ImporterErrorException('Please set CAN_POST_AUTOIMPORT=true for this function to work.');
         }
 
-        $secret       = (string)($request->get('secret') ?? '');
-        $systemSecret = (string)config('importer.auto_import_secret');
+        $secret       = (string) ($request->get('secret') ?? '');
+        $systemSecret = (string) config('importer.auto_import_secret');
         if ('' === $secret || '' === $systemSecret || $secret !== config('importer.auto_import_secret') || strlen($systemSecret) < 16) {
             throw new ImporterErrorException('Please make sure your secret value matches whatever is in AUTO_IMPORT_SECRET.');
         }
 
-        $argument     = (string)($request->get('directory') ?? './');
+        $argument     = (string) ($request->get('directory') ?? './');
         $directory    = realpath($argument);
         if (false === $directory) {
             throw new ImporterErrorException(sprintf('"%s" does not resolve to an existing real directory.', $argument));

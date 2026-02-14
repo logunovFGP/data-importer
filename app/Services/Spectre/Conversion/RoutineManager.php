@@ -43,11 +43,11 @@ class RoutineManager implements RoutineManagerInterface
 {
     use CollectsAccounts;
 
-    private array                $allErrors;
-    private array                $allMessages;
-    private array                $allWarnings;
-    private Configuration        $configuration;
-    private FilterTransactions   $transactionFilter;
+    private array $allErrors;
+    private array $allMessages;
+    private array $allWarnings;
+    private Configuration $configuration;
+    private FilterTransactions $transactionFilter;
     private GenerateTransactions $transactionGenerator;
     private TransactionProcessor $transactionProcessor;
 
@@ -82,6 +82,7 @@ class RoutineManager implements RoutineManagerInterface
         $this->transactionProcessor->setConfiguration($configuration);
         $this->transactionProcessor->setDownloadIdentifier($this->getIdentifier());
         $this->transactionGenerator->setConfiguration($configuration);
+
         // $this->transactionGenerator->setIdentifier($this->getIdentifier());
         // $this->transactionFilter->setIdentifier($this->getIdentifier());
     }

@@ -67,10 +67,10 @@ class ConversionController extends Controller
         // default back to mapping
         $jobBackUrl          = $this->getJobBackUrl($flow, $identifier);
         $flow                = $importJob->getFlow();
-
         $nextUrl             = route('submit-data.index', [$identifier]);
         // next URL is different when it's not a file flow (in ALL those cases, its mapping)
-        if ('file' !== $flow && $configuration->getDoMapping()) {
+        if ('file' !== $flow && $configuration->isMapAllData()) {
+            Log::debug('Will send user to mapping next.');
             $nextUrl = route('data-mapping.index', [$identifier]);
         }
 
@@ -85,7 +85,6 @@ class ConversionController extends Controller
         if (true === config(sprintf('importer.providers.%s.supports_new_accounts', $flow))) {
             $newAccountsToCreate = $configuration->getNewAccounts();
         }
-
         if (null === $routine) {
             throw new ImporterErrorException(sprintf('Could not create routine manager for flow "%s"', $flow));
         }
@@ -127,15 +126,14 @@ class ConversionController extends Controller
                 foreach ($newAccountData as $accountId => $accountDetails) {
                     if (array_key_exists($accountId, $existingNewAccounts) && null !== $existingNewAccounts[$accountId]) {
                         // Merge the detailed data with existing data
-                        $existingNewAccounts[$accountId] = array_merge(
-                            $existingNewAccounts[$accountId],
-                            [
-                                'name'            => $accountDetails['name'],
-                                'type'            => $accountDetails['type'],
-                                'currency'        => $accountDetails['currency'],
-                                'opening_balance' => $accountDetails['opening_balance'],
-                            ]
-                        );
+                        $existingNewAccounts[$accountId] = array_merge($existingNewAccounts[$accountId], [
+                            'name'                => $accountDetails['name'],
+                            'type'                => $accountDetails['type'],
+                            'currency'            => $accountDetails['currency'],
+                            'opening_balance'     => $accountDetails['opening_balance'],
+                            'liability_type'      => $accountDetails['liability_type'] ?? null,
+                            'liability_direction' => $accountDetails['liability_direction'] ?? null,
+                        ]);
                     }
                 }
                 $configuration->setNewAccounts($existingNewAccounts);
@@ -183,7 +181,6 @@ class ConversionController extends Controller
         Log::debug(sprintf('Conversion routine "%s" yielded %d transaction(s).', $flow, count($transactions)));
         $importJob->setConvertedTransactions($transactions);
         $this->repository->saveToDisk($importJob);
-
 
         if ('file' !== $flow) {
             // all other workflows go to mapping (if requested from configuration?)

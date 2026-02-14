@@ -32,7 +32,7 @@ class Bank
     public string $id;
     public string $logo;
     public string $name;
-    public int    $transactionTotalDays;
+    public int $transactionTotalDays;
 
     /**
      * @return static

@@ -24,11 +24,11 @@ declare(strict_types=1);
 
 namespace App\Services\Spectre\Conversion\Routine;
 
-use Carbon\Carbon;
 use App\Services\Shared\Configuration\Configuration;
 use App\Services\Spectre\Model\Transaction;
 use App\Support\Http\CollectsAccounts;
 use App\Support\Internal\DuplicateSafetyCatch;
+use Carbon\Carbon;
 use GrumpyDictator\FFIIIApiSupport\Exceptions\ApiHttpException;
 use Illuminate\Support\Facades\Log;
 
@@ -40,11 +40,11 @@ class GenerateTransactions
     use CollectsAccounts;
     use DuplicateSafetyCatch;
 
-    private array         $accounts;
+    private array $accounts;
     private Configuration $configuration;
-    private array         $specialSubTypes = ['REVERSAL', 'REQUEST', 'BILLING', 'SCT', 'SDD', 'NLO'];
-    private array         $targetAccounts;
-    private array         $targetTypes;
+    private array $specialSubTypes = ['REVERSAL', 'REQUEST', 'BILLING', 'SCT', 'SDD', 'NLO'];
+    private array $targetAccounts;
+    private array $targetTypes;
 
     /**
      * GenerateTransactions constructor.
@@ -189,7 +189,13 @@ class GenerateTransactions
         }
         $transaction                   = $this->positiveTransactionSafetyCatch($transaction, (string) $entry->getPayer(), (string) $entry->getPayerIban());
 
-        Log::debug(sprintf('destination_id = %d, source_name = "%s", source_iban = "%s", source_id = "%s"', $transaction['destination_id'] ?? '', $transaction['source_name'] ?? '', $transaction['source_iban'] ?? '', $transaction['source_id'] ?? ''));
+        Log::debug(sprintf(
+            'destination_id = %d, source_name = "%s", source_iban = "%s", source_id = "%s"',
+            $transaction['destination_id'] ?? '',
+            $transaction['source_name'] ?? '',
+            $transaction['source_iban'] ?? '',
+            $transaction['source_id'] ?? ''
+        ));
 
         return $transaction;
     }
@@ -206,7 +212,11 @@ class GenerateTransactions
         $transaction['destination_name'] = $entry->getPayee() ?? '(unknown destination account)';
         $transaction['destination_iban'] = $entry->getPayeeIban() ?? '';
 
-        Log::debug(sprintf('processNegativeTransaction: destination_name = "%s", destination_iban = "%s"', $transaction['destination_name'], $transaction['destination_iban']));
+        Log::debug(sprintf(
+            'processNegativeTransaction: destination_name = "%s", destination_iban = "%s"',
+            $transaction['destination_name'],
+            $transaction['destination_iban']
+        ));
 
         // check if the destination IBAN is a known account and what type it has: perhaps the
         // transaction type needs to be changed:
@@ -228,7 +238,13 @@ class GenerateTransactions
 
         $transaction                     = $this->negativeTransactionSafetyCatch($transaction, (string) $entry->getPayee(), (string) $entry->getPayeeIban());
 
-        Log::debug(sprintf('source_id = %d, destination_id = "%s", destination_name = "%s", destination_iban = "%s"', $transaction['source_id'], $transaction['destination_id'] ?? '', $transaction['destination_name'] ?? '', $transaction['destination_iban'] ?? ''));
+        Log::debug(sprintf(
+            'source_id = %d, destination_id = "%s", destination_name = "%s", destination_iban = "%s"',
+            $transaction['source_id'],
+            $transaction['destination_id'] ?? '',
+            $transaction['destination_name'] ?? '',
+            $transaction['destination_iban'] ?? ''
+        ));
 
         return $transaction;
     }

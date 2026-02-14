@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * CollectsSettings.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -27,8 +28,6 @@ trait CollectsSettings
 {
     protected function getSimpleFINSettings(): array
     {
-        return [
-            'token' => old('simplefin_token') ?? config('simplefin.token'),
-        ];
+        return ['token' => old('simplefin_token') ?? config('simplefin.token')];
     }
 }

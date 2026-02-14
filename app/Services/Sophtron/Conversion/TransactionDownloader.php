@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * TransactionDownloader.php
  * Copyright (c) 2026 james@firefly-iii.org
@@ -36,7 +37,7 @@ class TransactionDownloader
 {
     use CreatesAccounts;
 
-    private ImportJob           $importJob;
+    private ImportJob $importJob;
     private ImportJobRepository $repository;
 
     public function __construct(ImportJob $importJob)

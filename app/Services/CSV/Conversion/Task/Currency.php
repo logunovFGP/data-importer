@@ -44,7 +44,8 @@ class Currency extends AbstractTask
     {
         if (
             (0 === $transaction['currency_id'] || null === $transaction['currency_id'])
-            && (null === $transaction['currency_code'] || '' === $transaction['currency_code'])) {
+            && (null === $transaction['currency_code'] || '' === $transaction['currency_code'])
+        ) {
             $transaction['currency_id']   = $this->transactionCurrency->id;
             $transaction['currency_code'] = null;
             Log::debug(sprintf('Set currency to %d because it was NULL or empty.', $this->transactionCurrency->id));

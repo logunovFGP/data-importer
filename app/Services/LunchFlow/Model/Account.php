@@ -29,11 +29,11 @@ namespace App\Services\LunchFlow\Model;
  */
 class Account
 {
-    public int     $id;
-    public string  $institutionLogo;
-    public string  $institutionName;
-    public string  $name;
-    public string  $provider;
+    public int $id;
+    public string $institutionLogo;
+    public string $institutionName;
+    public string $name;
+    public string $provider;
     public ?string $currency = null;
     public ?string $status   = null;
 

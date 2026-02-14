@@ -245,7 +245,7 @@ window.updateDuplicateStatus = function(accountId) {
         const statusElement = document.getElementById('widget-status-' + accountId);
 
         if (!statusElement) {
-            console.log('DUPLICATE_CHECK: Status element not found for account:', accountId);
+            console.log('Duplicate check: Status element not found for account:', accountId);
             return false;
         }
 
@@ -260,7 +260,7 @@ window.updateDuplicateStatus = function(accountId) {
         // Get current type value
         const accountType = typeSelect ? typeSelect.value : '';
 
-        console.log('DUPLICATE_CHECK: Checking account', {
+        console.log('Duplicate check: Checking account', {
             accountId: accountId,
             name: accountName,
             type: accountType
@@ -296,7 +296,7 @@ window.updateDuplicateStatus = function(accountId) {
             return response.json();
         })
         .then(data => {
-            console.log('DUPLICATE_CHECK: Response received', data);
+            console.log('Duplicate check: Response received', data);
 
             if (data.isDuplicate) {
                 statusElement.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>' + data.message;
@@ -307,7 +307,7 @@ window.updateDuplicateStatus = function(accountId) {
             }
         })
         .catch(error => {
-            console.error('DUPLICATE_CHECK: Error during duplicate check', error);
+            console.error('Duplicate check: Error during duplicate check', error);
             // Graceful degradation - show ready status on error
             statusElement.innerHTML = '<i class="fas fa-check-circle me-1"></i>Ready for import';
             statusElement.className = 'text-muted';
@@ -315,7 +315,7 @@ window.updateDuplicateStatus = function(accountId) {
 
         return true;
     } catch (error) {
-        console.error('DUPLICATE_CHECK: Exception in updateDuplicateStatus', error);
+        console.error('Duplicate check: Exception in updateDuplicateStatus', error);
         return false;
     }
 }
@@ -480,7 +480,7 @@ window.updateAccountRoleVisibility = function(accountId) {
     }
 }
 
-console.log('Global SimpleFIN account management functions loaded');
+console.log('Global account management functions loaded');
 </script>
 
 </body>

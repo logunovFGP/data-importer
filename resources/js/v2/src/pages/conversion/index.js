@@ -92,7 +92,9 @@ let index = function () {
                     name: formData.get('account_name'),
                     type: formData.get('account_type'),
                     currency: formData.get('account_currency'),
-                    opening_balance: formData.get('opening_balance') || null
+                    opening_balance: formData.get('opening_balance') || null,
+                    liability_type: formData.get('liability_type') || null,
+                    liability_direction: formData.get('liability_direction') || null,
                 };
             });
 
@@ -115,7 +117,7 @@ let index = function () {
                 this.getJobStatus();
                 this.post.running = false;
             }).catch((error) => {
-                console.error('JOB HAS FAILED :(');
+                console.error('[a] JOB HAS FAILED :(');
                 this.post.result  = error;
                 this.post.errored = true;
             }).finally(() => {
@@ -186,7 +188,7 @@ let index = function () {
                     return;
                 }
             }).catch((error) => {
-                console.error('JOB HAS FAILED :(');
+                console.error('[b] JOB HAS FAILED :(');
                 this.post.result  = error;
                 this.post.errored = true;
             });

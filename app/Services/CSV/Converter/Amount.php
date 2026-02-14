@@ -138,13 +138,13 @@ class Amount implements ConverterInterface
                 $decimal = $temp->getSymbol(NumberFormatter::DECIMAL_SEPARATOR_SYMBOL);
                 Log::debug(sprintf('Using fallback locale "%s" to determine decimal character: "%s"', config('csv.fallback_locale'), $decimal));
             }
-
         }
 
         // decimal character still null? Search from the left for '.',',' or ' '.
         if (null === $decimal) {
             // See issue #8404
             $decimal = $this->findFromLeft($value);
+
             // Log::debug('Disabled "findFromLeft" because it happens more often that "1.000" is thousand than "1.000" is 1 with three zeroes.');
         }
 
@@ -175,6 +175,7 @@ class Amount implements ConverterInterface
         Log::debug(sprintf('Is formatted to : "%s"', $formatted));
 
         return $formatted;
+
         // @codeCoverageIgnoreEnd
     }
 
@@ -210,7 +211,7 @@ class Amount implements ConverterInterface
         $length          = strlen($value);
         $decimalPosition = $length - 3;
 
-        return ($length > 2 && '.' === $value[$decimalPosition]) || ($length > 2 && strpos($value, '.') > $decimalPosition);
+        return $length > 2 && '.' === $value[$decimalPosition] || $length > 2 && strpos($value, '.') > $decimalPosition;
     }
 
     /**

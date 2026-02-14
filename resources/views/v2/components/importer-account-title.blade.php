@@ -25,11 +25,12 @@
                 } elseif (empty($allAccounts)) {
                     // No configuration yet - use sensible defaults
                     // Check if there's an automatic mapping
-                    if ($mappedTo !== null) {
-                        $shouldCheck = true; // Auto-mapped accounts should be checked
-                    } else {
-                        $shouldCheck = true; // Default to checked for user convenience
-                    }
+                    $shouldCheck = true;
+//                    if ($mappedTo !== null) {
+//                        $shouldCheck = true; // Auto-mapped accounts should be checked
+//                    } else {
+//                        $shouldCheck = true; // Default to checked for user convenience
+//                    }
                 }
             @endphp
             @if($shouldCheck) checked="checked" @endif

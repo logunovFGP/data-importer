@@ -35,12 +35,10 @@ use App\Models\ImportJob;
  */
 trait ProgressInformation
 {
-    protected array   $errors     = [];
-    protected string  $identifier;
-    protected array   $messages   = [];
-    protected array   $warnings   = [];
-    protected array   $rateLimits = [];
+    protected array $errors     = [];
+    protected string $identifier;
+    protected array $messages   = [];
+    protected array $warnings   = [];
+    protected array $rateLimits = [];
     private ImportJob $importJob;
-
-
 }

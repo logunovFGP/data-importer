@@ -35,15 +35,16 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class SimpleFINService
  */
 class SimpleFINService
 {
-    private string        $setupToken = '';
+    private string $setupToken  = '';
     private Configuration $configuration;
-    private string $accessToken       = '';
+    private string $accessToken = '';
 
     /**
      * @throws ImporterErrorException
@@ -124,9 +125,7 @@ class SimpleFINService
 
         // Set parameters to retrieve all accounts.
         // 2025-07-18 set balances-only to signal to SimpleFIN we only want account info.
-        $parameters = [
-            'balances-only' => 1,
-        ];
+        $parameters = ['balances-only' => 1];
         $request->setParameters($parameters);
 
         Log::debug('SimpleFIN requesting all accounts with parameters', $parameters);
@@ -212,7 +211,7 @@ class SimpleFINService
     /**
      * Check if a token is a base64-encoded claim URL
      */
-    private function isBase64ClaimUrl(string $token): bool
+    private function isBase64ClaimUrl(#[SensitiveParameter] string $token): bool
     {
         // Try to decode as base64
         $decoded = base64_decode($token, true);
@@ -223,7 +222,7 @@ class SimpleFINService
         }
 
         // Check if decoded string looks like a SimpleFIN claim URL
-        return (bool)preg_match('/^https?:\/\/.+\/simplefin\/claim\/.+$/', $decoded);
+        return (bool) preg_match('/^https?:\/\/.+\/simplefin\/claim\/.+$/', $decoded);
     }
 
     /**
@@ -244,10 +243,7 @@ class SimpleFINService
         Log::debug(sprintf('Decoded claim URL: %s', $claimUrl));
 
         try {
-            $client    = new Client([
-                'timeout' => $this->getTimeout(),
-                'verify'  => config('importer.connection.verify'),
-            ]);
+            $client    = new Client(['timeout' => $this->getTimeout(), 'verify'  => config('importer.connection.verify')]);
 
             $parts     = parse_url($claimUrl);
             Log::debug(sprintf('Parsed $claimUrl parts: %s', json_encode($parts)));
@@ -258,11 +254,9 @@ class SimpleFINService
             ];
             Log::debug('Headers for claim URL exchange', $headers);
 
-            $response  = $client->post($claimUrl, [
-                'headers' => $headers,
-            ]);
+            $response  = $client->post($claimUrl, ['headers' => $headers]);
 
-            $accessUrl = (string)$response->getBody();
+            $accessUrl = (string) $response->getBody();
 
             if ('' === $accessUrl) {
                 throw new ImporterErrorException('Empty access URL returned from SimpleFIN claim exchange');
@@ -276,10 +270,9 @@ class SimpleFINService
             Log::debug('Successfully exchanged claim URL for access URL');
 
             return $accessUrl;
-
         } catch (ClientException $e) {
             $statusCode   = $e->getResponse()->getStatusCode();
-            $responseBody = (string)$e->getResponse()->getBody();
+            $responseBody = (string) $e->getResponse()->getBody();
 
             Log::error(sprintf('SimpleFIN claim URL exchange failed with HTTP %d: %s', $statusCode, $e->getMessage()));
             Log::error(sprintf('SimpleFIN 403 response body: %s', $responseBody));
@@ -288,10 +281,17 @@ class SimpleFINService
                 // Log the actual response for debugging
                 Log::error(sprintf('DETAILED 403 ERROR - URL: %s, Response: %s', $claimUrl, $responseBody));
 
-                throw new ImporterErrorException(sprintf('SimpleFIN claim URL exchange failed (403 Forbidden): %s', '' !== $responseBody && '0' !== $responseBody ? $responseBody : 'No response body available'));
+                throw new ImporterErrorException(sprintf(
+                    'SimpleFIN claim URL exchange failed (403 Forbidden): %s',
+                    '' !== $responseBody && '0' !== $responseBody ? $responseBody : 'No response body available'
+                ));
             }
 
-            throw new ImporterErrorException(sprintf('Failed to exchange SimpleFIN claim URL: HTTP %d error - %s', $statusCode, '' !== $responseBody && '0' !== $responseBody ? $responseBody : $e->getMessage()));
+            throw new ImporterErrorException(sprintf(
+                'Failed to exchange SimpleFIN claim URL: HTTP %d error - %s',
+                $statusCode,
+                '' !== $responseBody && '0' !== $responseBody ? $responseBody : $e->getMessage()
+            ));
         } catch (GuzzleException $e) {
             Log::error(sprintf('Failed to exchange SimpleFIN claim URL: %s', $e->getMessage()));
 
@@ -302,7 +302,7 @@ class SimpleFINService
     /**
      * Validate SimpleFIN credentials format
      */
-    public function validateCredentials(string $token, string $apiUrl): array
+    public function validateCredentials(#[SensitiveParameter] string $token, string $apiUrl): array
     {
         $errors = [];
 
@@ -325,7 +325,7 @@ class SimpleFINService
 
     private function getTimeout(): float
     {
-        return (float)config('simplefin.connection_timeout', 30.0);
+        return (float) config('simplefin.connection_timeout', 30.0);
     }
 
     public function getAccessToken(): string
@@ -333,7 +333,7 @@ class SimpleFINService
         return $this->accessToken;
     }
 
-    public function setSetupToken(string $setupToken): void
+    public function setSetupToken(#[SensitiveParameter] string $setupToken): void
     {
         $this->setupToken = $setupToken;
     }
@@ -344,7 +344,7 @@ class SimpleFINService
         $this->accessToken   = $configuration->getAccessToken();
     }
 
-    public function setAccessToken(string $accessToken): void
+    public function setAccessToken(#[SensitiveParameter] string $accessToken): void
     {
         $this->accessToken = $accessToken;
     }

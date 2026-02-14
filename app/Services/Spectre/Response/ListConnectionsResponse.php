@@ -36,7 +36,7 @@ use Iterator;
 class ListConnectionsResponse extends Response implements Iterator, Countable
 {
     private readonly Collection $collection;
-    private int        $position = 0;
+    private int $position = 0;
 
     public function __construct(array $data)
     {

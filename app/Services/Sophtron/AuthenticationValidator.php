@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * AuthenticationValidator.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -49,10 +50,7 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
      */
     public function getData(): array
     {
-        return [
-            'user_id'    => SecretManager::getSophtronUserId(null),
-            'access_key' => SecretManager::getSophtronAccessKey(null),
-        ];
+        return ['user_id'    => SecretManager::getSophtronUserId(null), 'access_key' => SecretManager::getSophtronAccessKey(null)];
     }
 
     public function setData(array $data): void

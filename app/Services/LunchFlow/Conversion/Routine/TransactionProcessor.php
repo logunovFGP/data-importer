@@ -44,11 +44,13 @@ class TransactionProcessor
 {
     use CollectsAccounts;
     use CreatesAccounts;
+
     private ImportJob $importJob;
 
     /** @var string */
     private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s';
-    private array   $accounts;
+
+    private array $accounts;
     private ?Carbon $notAfter             = null;
     private ?Carbon $notBefore            = null;
 
@@ -85,13 +87,12 @@ class TransactionProcessor
             // first create the account if it does not exist.
             if (0 === $fireflyIIIAccountId) {
                 Log::debug('Firefly III account is zero, create it.');
-                $createdAccount                           = $this->createOrFindExistingAccount((string)$importServiceAccountId);
+                $createdAccount                           = $this->createOrFindExistingAccount((string) $importServiceAccountId);
                 $updatedAccounts                          = $configuration->getAccounts();
                 $updatedAccounts[$importServiceAccountId] = $createdAccount->id;
                 $configuration->setAccounts($updatedAccounts);
                 Log::debug(sprintf('Created Firefly III account #%d', $createdAccount->id));
             }
-
 
             $apiToken                        = SecretManager::getApiKey($configuration);
 
@@ -108,7 +109,6 @@ class TransactionProcessor
                 $this->importJob->conversionStatus->addWarning(0, $e->getMessage());
                 $return[$importServiceAccountId] = [];
 
-
                 continue;
             } catch (AgreementExpiredException $e) {
                 Log::debug(sprintf('Ran into %s instead of GetTransactionsResponse', $e::class));
@@ -120,7 +120,12 @@ class TransactionProcessor
             }
 
             $return[$importServiceAccountId] = $this->filterTransactions($transactions);
-            Log::debug(sprintf('[%s] Done downloading %d Lunch Flow transactions for account #%d', config('importer.version'), count($return[$importServiceAccountId]), $importServiceAccountId));
+            Log::debug(sprintf(
+                '[%s] Done downloading %d Lunch Flow transactions for account #%d',
+                config('importer.version'),
+                count($return[$importServiceAccountId]),
+                $importServiceAccountId
+            ));
         }
         Log::debug('Done with download of transactions.');
 
@@ -154,18 +159,32 @@ class TransactionProcessor
             $madeOn   = $transaction->getDate();
 
             if ($this->notBefore instanceof Carbon && $madeOn->lt($this->notBefore)) {
-                Log::debug(sprintf('Skip transaction because "%s" is before "%s".', $madeOn->format(self::DATE_TIME_FORMAT), $this->notBefore->format(self::DATE_TIME_FORMAT)));
+                Log::debug(sprintf(
+                    'Skip transaction because "%s" is before "%s".',
+                    $madeOn->format(self::DATE_TIME_FORMAT),
+                    $this->notBefore->format(self::DATE_TIME_FORMAT)
+                ));
 
                 continue;
             }
             if ($this->notAfter instanceof Carbon && $madeOn->gt($this->notAfter)) {
-                Log::debug(sprintf('Skip transaction because "%s" is after "%s".', $madeOn->format(self::DATE_TIME_FORMAT), $this->notAfter->format(self::DATE_TIME_FORMAT)));
+                Log::debug(sprintf(
+                    'Skip transaction because "%s" is after "%s".',
+                    $madeOn->format(self::DATE_TIME_FORMAT),
+                    $this->notAfter->format(self::DATE_TIME_FORMAT)
+                ));
 
                 continue;
             }
             // add error if amount is zero:
             if (0 === bccomp('0', $transaction->amount)) {
-                $this->importJob->conversionStatus->addWarning(0, sprintf('Transaction #%s ("%s", "%s", "%s") has an amount of zero and has been ignored..', $transaction->id, $transaction->account, $transaction->getDestinationName(), $transaction->getDescription()));
+                $this->importJob->conversionStatus->addWarning(0, sprintf(
+                    'Transaction #%s ("%s", "%s", "%s") has an amount of zero and has been ignored..',
+                    $transaction->id,
+                    $transaction->account,
+                    $transaction->getDestinationName(),
+                    $transaction->getDescription()
+                ));
                 Log::debug(sprintf('Skip transaction because amount is zero: "%s".', $transaction->amount));
 
                 continue;

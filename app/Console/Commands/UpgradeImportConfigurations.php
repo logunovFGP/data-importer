@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\Shared\Configuration\Configuration;
-use Illuminate\Console\Command;
 use FilesystemIterator;
+use Illuminate\Console\Command;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;

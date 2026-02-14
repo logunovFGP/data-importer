@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace App\Services\Spectre\Model;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class TransactionExtra

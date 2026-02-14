@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * PostGetTransactionsByTransactionDate.php
  * Copyright (c) 2026 james@firefly-iii.org
@@ -42,7 +43,6 @@ class PostGetTransactionsByTransactionDateRequest extends Request
         $this->url       = 'api/transaction/getTransactionsByTransactionDate';
         $this->method    = 'POST';
         $this->calculateAuthString();
-
     }
 
     public function get(): Response
@@ -52,11 +52,7 @@ class PostGetTransactionsByTransactionDateRequest extends Request
 
     public function post(): Response
     {
-        $body   = [
-            'accountID' => $this->accountId,
-            'startDate' => '1970-01-01',
-            'endDate'   => date('Y-m-d'),
-        ];
+        $body   = ['accountID' => $this->accountId, 'startDate' => '1970-01-01', 'endDate'   => date('Y-m-d')];
         if ('' !== $this->start) {
             $body['startDate'] = $this->start;
         }
@@ -66,6 +62,7 @@ class PostGetTransactionsByTransactionDateRequest extends Request
         $result = $this->authenticatedPost($body);
 
         return new PostGetTransactionsByTransactionDateResponse($result);
+
         // Implement post() method.
     }
 

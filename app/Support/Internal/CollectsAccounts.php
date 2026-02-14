@@ -25,11 +25,11 @@ declare(strict_types=1);
 namespace App\Support\Internal;
 
 use App\Exceptions\ImporterHttpException;
+use App\Services\LunchFlow\Authentication\SecretManager as LunchFlowSecretManager;
+use App\Services\LunchFlow\Request\GetAccountsRequest as LunchFlowGetAccountsRequest;
 use App\Services\Shared\Configuration\Configuration;
 use App\Services\Spectre\Authentication\SecretManager as SpectreSecretManager;
-use App\Services\LunchFlow\Authentication\SecretManager as LunchFlowSecretManager;
 use App\Services\Spectre\Request\GetAccountsRequest as SpectreGetAccountsRequest;
-use App\Services\LunchFlow\Request\GetAccountsRequest as LunchFlowGetAccountsRequest;
 use App\Services\Spectre\Response\GetAccountsResponse;
 use GuzzleHttp\Exception\GuzzleException;
 

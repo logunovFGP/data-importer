@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * AccountMapper.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -61,7 +62,10 @@ class AccountMapper
         $this->loadFireflyIIIAccounts();
 
         // Try to find by name first
-        $matchingAccounts = array_filter($this->fireflyIIIAccounts, fn (Account $current) => strtolower((string)$current->name) === strtolower($account->name));
+        $matchingAccounts = array_filter(
+            $this->fireflyIIIAccounts,
+            static fn (Account $current) => strtolower((string) $current->name) === strtolower($account->name)
+        );
 
         if (0 === count($matchingAccounts)) {
             return null;
@@ -116,7 +120,7 @@ class AccountMapper
             ];
 
             // Add opening balance date if opening balance is provided
-            if ('' !== (string)$openingBalance && is_numeric($openingBalance) && '0.00' !== $openingBalance) {
+            if ('' !== (string) $openingBalance && is_numeric($openingBalance) && '0.00' !== $openingBalance) {
                 $payload['opening_balance']      = $openingBalance;
                 $payload['opening_balance_date'] = $config['opening_balance_date'] ?? Carbon::now()->format('Y-m-d');
             }
@@ -134,7 +138,7 @@ class AccountMapper
                     AccountType::LOAN        => 'loan',
                     AccountType::MORTGAGE    => 'mortgage',
                     AccountType::LIABILITIES => 'debt', // Default generic liabilities to debt
-                    'liability'              => 'debt', // Handle user-provided 'liability' type
+                    // 'liability'              => 'debt', // Handle user-provided 'liability' type
                 ];
 
                 $payload['liability_type']      = $config['liability_type'] ?? $liabilityTypeMap[$accountType] ?? 'debt';
@@ -142,12 +146,12 @@ class AccountMapper
             }
 
             // Add IBAN if provided
-            if (array_key_exists('iban', $config) && '' !== (string)$config['iban'] && IbanConverter::isValidIban((string)$config['iban'])) {
+            if (array_key_exists('iban', $config) && '' !== (string) $config['iban'] && IbanConverter::isValidIban((string) $config['iban'])) {
                 $payload['iban'] = $config['iban'];
             }
 
             // Add account number if provided
-            if (array_key_exists('account_number', $config) && '' !== (string)$config['account_number']) {
+            if (array_key_exists('account_number', $config) && '' !== (string) $config['account_number']) {
                 $payload['account_number'] = $config['account_number'];
             }
 
@@ -176,7 +180,6 @@ class AccountMapper
             Log::error(sprintf('Unexpected response type when creating account "%s"', $accountName));
 
             return null;
-
         } catch (ApiHttpException $e) {
             Log::error(sprintf('API error creating account "%s": %s', $accountName, $e->getMessage()));
 
@@ -203,8 +206,8 @@ class AccountMapper
     private function getCurrencyCode(ImportServiceAccount $account, array $config): string
     {
         // 1. Use user-configured currency first
-        if (array_key_exists('currency', $config) && '' !== (string)$config['currency']) {
-            return (string)$config['currency'];
+        if (array_key_exists('currency', $config) && '' !== (string) $config['currency']) {
+            return (string) $config['currency'];
         }
 
         // 2. Fall back to account currency
@@ -228,22 +231,35 @@ class AccountMapper
 
         try {
             // Verify authentication context before making API calls
-            $baseUrl     = SecretManager::getBaseUrl();
-            $accessToken = SecretManager::getAccessToken();
+            $baseUrl                  = SecretManager::getBaseUrl();
+            $accessToken              = SecretManager::getAccessToken();
 
             if ('' === $baseUrl || '' === $accessToken) {
                 Log::warning('Missing authentication context for Firefly III account loading');
 
                 throw new ImporterErrorException('Authentication context not available for account loading');
             }
+            $this->fireflyIIIAccounts = [];
 
-            $request     = new GetAccountsRequest($baseUrl, $accessToken);
+            // double request to also get the liabilities
+            $request                  = new GetAccountsRequest($baseUrl, $accessToken);
             $request->setType(AccountType::ASSET);
-            $response    = $request->get();
+            $response                 = $request->get();
 
             if ($response instanceof GetAccountsResponse) {
                 $this->fireflyIIIAccounts = iterator_to_array($response);
-                Log::debug(sprintf('Loaded %d Firefly III accounts', count($this->fireflyIIIAccounts)));
+                Log::debug(sprintf('Loaded %d Firefly III asset accounts', count($this->fireflyIIIAccounts)));
+            }
+
+            // double request to also get the liabilities
+            $request                  = new GetAccountsRequest($baseUrl, $accessToken);
+            $request->setType(AccountType::LIABILITIES);
+            $response                 = $request->get();
+
+            if ($response instanceof GetAccountsResponse) {
+                $array                    = array_values(iterator_to_array($response));
+                $this->fireflyIIIAccounts = array_merge(array_values($this->fireflyIIIAccounts), $array);
+                Log::debug(sprintf('Loaded %d Firefly III liabilities', count($array)));
             }
         } catch (ApiHttpException $e) {
             Log::error(sprintf('Could not load Firefly III accounts: %s', $e->getMessage()));
@@ -270,7 +286,6 @@ class AccountMapper
                 }
 
                 return $request->post();
-
             } catch (ApiHttpException $e) {
                 $lastException = $e;
                 $errorMessage  = $e->getMessage();
@@ -287,7 +302,7 @@ class AccountMapper
                 Log::warning(sprintf('DNS/connection error for account "%s" (attempt %d): %s', $accountName, $attempt + 1, $errorMessage));
 
                 // If this was the last attempt, we'll throw after the loop
-                if ($attempt === count($retryDelays) - 1) {
+                if ($attempt === (count($retryDelays) - 1)) {
                     break;
                 }
             }
@@ -305,7 +320,7 @@ class AccountMapper
     private function shouldRetryApiCall(string $errorMessage, int $attempt, int $maxAttempts): bool
     {
         // Don't retry if we've exhausted all attempts
-        if ($attempt >= $maxAttempts - 1) {
+        if ($attempt >= ($maxAttempts - 1)) {
             return false;
         }
 
@@ -314,14 +329,13 @@ class AccountMapper
             'Resolving timed out',
             'cURL error 28',
             'Connection timed out',
-            'cURL error 6',  // Couldn't resolve host
-            'cURL error 7',  // Couldn't connect to host
+            'cURL error 6', // Couldn't resolve host
+            'cURL error 7', // Couldn't connect to host
             'Failed to connect',
             'Name or service not known',
             'Temporary failure in name resolution',
         ];
 
-        return array_any($retryableErrors, fn ($retryableError) => false !== stripos($errorMessage, $retryableError));
-
+        return array_any($retryableErrors, static fn ($retryableError) => false !== stripos($errorMessage, $retryableError));
     }
 }

@@ -44,38 +44,23 @@ class Amount extends AbstractTask
     {
         Log::debug(sprintf('Now at the start of processAmount("%s")', $transaction['amount']));
         $amount                = null;
-        if ($this->validAmount((string)$transaction['amount'])) {
+        if ($this->validAmount((string) $transaction['amount'])) {
             Log::debug('Transaction["amount"] value is not NULL, assume this is the correct value.');
             $amount = $transaction['amount'];
         }
 
-        if (null === $amount && $this->validAmount((string)$transaction['amount_debit'])) {
-            Log::debug(
-                sprintf(
-                    'Transaction["amount_debit"] value is not NULL ("%s"), assume this is the correct value.',
-                    $transaction['amount_debit'],
-                ),
-            );
+        if (null === $amount && $this->validAmount((string) $transaction['amount_debit'])) {
+            Log::debug(sprintf('Transaction["amount_debit"] value is not NULL ("%s"), assume this is the correct value.', $transaction['amount_debit']));
             $amount = $transaction['amount_debit'];
         }
 
-        if (null === $amount && $this->validAmount((string)$transaction['amount_credit'])) {
-            Log::debug(
-                sprintf(
-                    'Transaction["amount_credit"] value is not NULL ("%s"), assume this is the correct value.',
-                    $transaction['amount_credit'],
-                ),
-            );
+        if (null === $amount && $this->validAmount((string) $transaction['amount_credit'])) {
+            Log::debug(sprintf('Transaction["amount_credit"] value is not NULL ("%s"), assume this is the correct value.', $transaction['amount_credit']));
             $amount = $transaction['amount_credit'];
         }
 
-        if (null === $amount && $this->validAmount((string)$transaction['amount_negated'])) {
-            Log::debug(
-                sprintf(
-                    'Transaction["amount_negated"] value is not NULL ("%s"), assume this is the correct value.',
-                    $transaction['amount_negated'],
-                ),
-            );
+        if (null === $amount && $this->validAmount((string) $transaction['amount_negated'])) {
+            Log::debug(sprintf('Transaction["amount_negated"] value is not NULL ("%s"), assume this is the correct value.', $transaction['amount_negated']));
             $amount = $transaction['amount_negated'];
         }
 
@@ -84,9 +69,9 @@ class Amount extends AbstractTask
             $transaction['amount_modifier'] = '1';
         }
         if (array_key_exists('foreign_amount', $transaction)) {
-            $transaction['foreign_amount'] = (string)$transaction['foreign_amount'];
+            $transaction['foreign_amount'] = (string) $transaction['foreign_amount'];
         }
-        $amount                = (string)$amount;
+        $amount                = (string) $amount;
         if ('' === $amount) {
             Log::error('Amount is EMPTY. This will give problems further ahead.', $transaction);
             unset($transaction['amount_modifier']);

@@ -56,7 +56,7 @@ class DebugController extends Controller
                 $logFile = $handler->getUrl();
                 if (null !== $logFile) {
                     try {
-                        $logContent = (string)file_get_contents($logFile);
+                        $logContent = (string) file_get_contents($logFile);
                     } catch (Exception) {
                         // @ignoreException
                     }
@@ -80,14 +80,7 @@ class DebugController extends Controller
         Log::info(sprintf('[%s] I am a INFO message.', config('importer.version')));
         Log::debug('I am a DEBUG message.');
 
-        return view(
-            'debug',
-            compact(
-                'now',
-                'table',
-                'logContent',
-            )
-        );
+        return view('debug', compact('now', 'table', 'logContent'));
     }
 
     private function getTable(): string
@@ -109,14 +102,14 @@ class DebugController extends Controller
         if (true === $isDocker) {
             try {
                 if (file_exists('/var/www/counter-main.txt')) {
-                    $build = trim((string)file_get_contents('/var/www/counter-main.txt'));
+                    $build = trim((string) file_get_contents('/var/www/counter-main.txt'));
                 }
             } catch (Exception $e) {
                 Log::debug('Could not check build counter, but that\'s ok.');
                 Log::warning($e->getMessage());
             }
-            if ('' !== (string)config('importer.docker.base_build')) {
-                $baseBuild = (string)config('importer.docker.base_build');
+            if ('' !== (string) config('importer.docker.base_build')) {
+                $baseBuild = (string) config('importer.docker.base_build');
             }
         }
         $search    = ['~', '#'];
@@ -137,7 +130,7 @@ class DebugController extends Controller
         return [
             'debug'          => var_export(config('app.debug'), true),
             'display_errors' => ini_get('display_errors'),
-            'reporting'      => $this->errorReporting((int)ini_get('error_reporting')),
+            'reporting'      => $this->errorReporting((int) ini_get('error_reporting')),
             'bcscale'        => bcscale(),
         ];
     }
@@ -162,8 +155,6 @@ class DebugController extends Controller
 
     private function getUserInfo(): array
     {
-        return [
-            'user_agent' => request()->header('user-agent'),
-        ];
+        return ['user_agent' => request()->header('user-agent')];
     }
 }

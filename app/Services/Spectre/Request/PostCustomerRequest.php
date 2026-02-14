@@ -27,6 +27,7 @@ namespace App\Services\Spectre\Request;
 use App\Exceptions\ImporterErrorException;
 use App\Services\Shared\Response\Response;
 use App\Services\Spectre\Response\PostCustomerResponse;
+use SensitiveParameter;
 
 /**
  * Class PostCustomerRequest
@@ -38,7 +39,7 @@ class PostCustomerRequest extends Request
     /**
      * PostCustomerRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[SensitiveParameter] string $secret)
     {
         $this->setBase($url);
         $this->setAppId($appId);
@@ -60,11 +61,7 @@ class PostCustomerRequest extends Request
         if ('' === $this->identifier) {
             throw new ImporterErrorException('No identifier for PostCustomerRequest');
         }
-        $data     = [
-            'data' => [
-                'identifier' => $this->identifier,
-            ],
-        ];
+        $data     = ['data' => ['identifier' => $this->identifier]];
 
         $response = $this->sendSignedSpectrePost($data);
 

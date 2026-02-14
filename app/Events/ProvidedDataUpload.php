@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * ProvidedDataUpload.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -23,11 +24,11 @@ declare(strict_types=1);
 
 namespace App\Events;
 
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\Channel;
 
 class ProvidedDataUpload
 {
@@ -38,7 +39,9 @@ class ProvidedDataUpload
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $fileName) {}
+    public function __construct(
+        public string $fileName
+    ) {}
 
     /**
      * Get the channels the event should broadcast on.
@@ -47,8 +50,6 @@ class ProvidedDataUpload
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('channel-name'),
-        ];
+        return [new PrivateChannel('channel-name')];
     }
 }

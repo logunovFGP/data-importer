@@ -78,9 +78,13 @@ class RoleService
         $headers   = [];
         if (true === $configuration->isHeaders()) {
             try {
-                $stmt    = new Statement()->limit(1)->offset(0);
+                $stmt    = new Statement()
+                    ->limit(1)
+                    ->offset(0)
+                ;
                 $records = $stmt->process($reader);
                 $headers = $records->first();
+
                 // @codeCoverageIgnoreStart
             } catch (Exception $e) {
                 Log::error(sprintf('[%s]: %s', config('importer.version'), $e->getMessage()));
@@ -94,13 +98,17 @@ class RoleService
             Log::debug('Role service: file has no headers');
 
             try {
-                $stmt    = new Statement()->limit(1)->offset(0);
+                $stmt    = new Statement()
+                    ->limit(1)
+                    ->offset(0)
+                ;
                 $records = $stmt->process($reader);
                 $count   = count($records->first());
                 Log::debug(sprintf('Role service: first row has %d columns', $count));
                 for ($i = 0; $i < $count; ++$i) {
                     $headers[] = sprintf('Column #%d', $i + 1);
                 }
+
                 // @codeCoverageIgnoreStart
             } catch (Exception $e) {
                 Log::error(sprintf('[%s]: %s', config('importer.version'), $e->getMessage()));
@@ -146,7 +154,11 @@ class RoleService
 
         // make statement.
         try {
-            $stmt = new Statement()->limit(self::EXAMPLE_COUNT)->offset($offset);
+            $stmt = new Statement()
+                ->limit(self::EXAMPLE_COUNT)
+                ->offset($offset)
+            ;
+
             // @codeCoverageIgnoreStart
         } catch (Exception $e) {
             Log::error(sprintf('[%s]: %s', config('importer.version'), $e->getMessage()));
@@ -170,7 +182,7 @@ class RoleService
                 $combinedParts    = [];
 
                 foreach ($pseudoIdentifier['source_columns'] as $sourceIndex) {
-                    $value = isset($line[$sourceIndex]) ? trim((string)$line[$sourceIndex]) : '';
+                    $value = isset($line[$sourceIndex]) ? trim((string) $line[$sourceIndex]) : '';
                     if ('' !== $value) {
                         $combinedParts[] = $value;
                     }
@@ -185,17 +197,17 @@ class RoleService
                     $count         = count($pseudoIdentifier['source_columns']);
                     if ($count > 1) {
                         $combinedValue    = substr(hash('sha256', $combinedValue), 0, 8);
-                        $pseudoExamples[] = ['raw' => $rawValue, 'hashed' => $combinedValue];
+                        $pseudoExamples[] = ['raw'    => $rawValue, 'hashed' => $combinedValue];
                     }
                     if ($count <= 1) {
-                        $pseudoExamples[] = ['raw' => $rawValue, 'hashed' => null];
+                        $pseudoExamples[] = ['raw'    => $rawValue, 'hashed' => null];
                     }
                 }
             }
 
             foreach ($line as $index => $cell) {
-                if (strlen((string)$cell) > self::EXAMPLE_LENGTH) {
-                    $cell = sprintf('%s...', substr((string)$cell, 0, self::EXAMPLE_LENGTH));
+                if (strlen((string) $cell) > self::EXAMPLE_LENGTH) {
+                    $cell = sprintf('%s...', substr((string) $cell, 0, self::EXAMPLE_LENGTH));
                 }
                 $examples[$index][] = $cell;
                 $examples[$index]   = array_unique($examples[$index]);
@@ -212,10 +224,7 @@ class RoleService
             $examples[$line] = $entries;
         }
 
-        return [
-            'columns'           => $examples,
-            'pseudo_identifier' => $pseudoExamples,
-        ];
+        return ['columns'           => $examples, 'pseudo_identifier' => $pseudoExamples];
     }
 
     public static function getExampleDataFromCamt(string $content, Configuration $configuration): array
@@ -245,7 +254,7 @@ class RoleService
             Log::debug('Processing statement');
             $entries = $statement->getEntries();
             Log::debug(sprintf('Found %d entry(s)', count($entries)));
-            foreach ($entries as $entry) {                       // -> Level C
+            foreach ($entries as $entry) { // -> Level C
                 Log::debug('Processing entry');
                 $count = count($entry->getTransactionDetails()); // count level D entries.
                 Log::debug(sprintf('Found %d level D split(s)', $count));
@@ -275,7 +284,7 @@ class RoleService
                 break;
             }
             foreach ($fieldNames as $name) {
-                $name   = (string)$name;
+                $name   = (string) $name;
                 if (array_key_exists($name, $examples)) { // there is at least one example, so we can check how many
                     if (count($examples[$name]) > 5) { // there are already five examples, so jump to next field
                         Log::debug(sprintf('Already have 5 examples for "%s", stop.', $name));
@@ -308,6 +317,7 @@ class RoleService
         }
         foreach ($examples as $key => $list) {
             $examples[$key] = array_unique($list);
+
             // filter disabled, since empty values are already removed.
             // $examples[$key] = array_filter($examples[$key], fn (string $value) => '' !== $value);
         }

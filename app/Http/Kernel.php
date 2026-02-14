@@ -57,56 +57,53 @@ class Kernel extends HttpKernel
      *
      * These middleware are run during every request to your application.
      */
-    protected $middleware
-        = [
-            TrustProxies::class,
-            HandleCors::class,
-            CheckForMaintenanceMode::class,
-            ValidatePostSize::class,
-            TrimStrings::class,
-            ConvertEmptyStringsToNull::class,
-            StartSession::class,
-        ];
+    protected $middleware        = [
+        TrustProxies::class,
+        HandleCors::class,
+        CheckForMaintenanceMode::class,
+        ValidatePostSize::class,
+        TrimStrings::class,
+        ConvertEmptyStringsToNull::class,
+        StartSession::class,
+    ];
 
     /**
      * The application's route middleware groups.
      */
-    protected $middlewareGroups
-        = [
-            'web' => [
-                EncryptCookies::class,
-                AddQueuedCookiesToResponse::class,
-                // StartSession::class,
-                // \Illuminate\Session\Middleware\AuthenticateSession::class,
-                ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
-                SubstituteBindings::class,
-            ],
+    protected $middlewareGroups  = [
+        'web' => [
+            EncryptCookies::class,
+            AddQueuedCookiesToResponse::class,
+            // StartSession::class,
+            // \Illuminate\Session\Middleware\AuthenticateSession::class,
+            ShareErrorsFromSession::class,
+            VerifyCsrfToken::class,
+            SubstituteBindings::class,
+        ],
 
-            'api' => [
-                // VerifyCsrfToken::class,
-                //  StartSession::class,
-                'throttle:60,1',
-                SubstituteBindings::class,
-            ],
-        ];
+        'api' => [
+            // VerifyCsrfToken::class,
+            //  StartSession::class,
+            'throttle:60,1',
+            SubstituteBindings::class,
+        ],
+    ];
 
     /**
      * The application's route middleware.
      *
      * These middleware may be assigned to groups or used individually.
      */
-    protected $middlewareAliases
-        = [
-            'auth'             => Authenticate::class,
-            'auth.basic'       => AuthenticateWithBasicAuth::class,
-            'bindings'         => SubstituteBindings::class,
-            'cache.headers'    => SetCacheHeaders::class,
-            'can'              => Authorize::class,
-            'guest'            => RedirectIfAuthenticated::class,
-            'password.confirm' => RequirePassword::class,
-            'signed'           => ValidateSignature::class,
-            'throttle'         => ThrottleRequests::class,
-            'verified'         => EnsureEmailIsVerified::class,
-        ];
+    protected $middlewareAliases = [
+        'auth'             => Authenticate::class,
+        'auth.basic'       => AuthenticateWithBasicAuth::class,
+        'bindings'         => SubstituteBindings::class,
+        'cache.headers'    => SetCacheHeaders::class,
+        'can'              => Authorize::class,
+        'guest'            => RedirectIfAuthenticated::class,
+        'password.confirm' => RequirePassword::class,
+        'signed'           => ValidateSignature::class,
+        'throttle'         => ThrottleRequests::class,
+        'verified'         => EnsureEmailIsVerified::class,
+    ];
 }

@@ -36,7 +36,10 @@ use Illuminate\Support\Facades\Log;
  */
 class PostNewTokenRequest extends Request
 {
-    public function __construct(private readonly string $identifier, private readonly string $key) {}
+    public function __construct(
+        private readonly string $identifier,
+        private readonly string $key
+    ) {}
 
     public function get(): Response {}
 
@@ -46,20 +49,14 @@ class PostNewTokenRequest extends Request
         $client = new Client();
 
         try {
-            $res = $client->post(
-                $url,
-                [
-                    'json'    => [
-                        'secret_id'  => $this->identifier,
-                        'secret_key' => $this->key,
-                    ],
-                    'headers' => [
-                        'accept'       => 'application/json',
-                        'content-type' => 'application/json',
-                        'User-Agent'   => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                    ],
-                ]
-            );
+            $res = $client->post($url, [
+                'json'    => ['secret_id'  => $this->identifier, 'secret_key' => $this->key],
+                'headers' => [
+                    'accept'       => 'application/json',
+                    'content-type' => 'application/json',
+                    'User-Agent'   => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
+                ],
+            ]);
         } catch (GuzzleException $e) {
             Log::error(sprintf('[%s]: %s', config('importer.version'), $e->getMessage()));
 

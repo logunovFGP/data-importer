@@ -32,6 +32,7 @@ use App\Exceptions\ImporterHttpException;
 use App\Exceptions\RateLimitException;
 use App\Services\Nordigen\Response\ArrayResponse;
 use App\Services\Shared\Response\Response;
+use SensitiveParameter;
 
 /**
  * Class GetAccountBalanceRequest
@@ -40,7 +41,7 @@ class GetAccountBalanceRequest extends Request
 {
     private string $identifier;
 
-    public function __construct(string $url, string $token, string $identifier)
+    public function __construct(string $url, #[SensitiveParameter] string $token, string $identifier)
     {
         $this->setParameters([]);
         $this->setBase($url);

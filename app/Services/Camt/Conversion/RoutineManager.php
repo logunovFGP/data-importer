@@ -43,9 +43,9 @@ class RoutineManager implements RoutineManagerInterface
 {
     private TransactionConverter $transactionConverter;
     private TransactionExtractor $transactionExtractor;
-    private TransactionMapper    $transactionMapper;
-    private ImportJob            $importJob;
-    private ImportJobRepository  $repository;
+    private TransactionMapper $transactionMapper;
+    private ImportJob $importJob;
+    private ImportJobRepository $repository;
 
     public function __construct(ImportJob $importJob)
     {
@@ -93,7 +93,9 @@ class RoutineManager implements RoutineManagerInterface
         $pseudoTransactions = $this->transactionConverter->convert($rawTransactions);
 
         // put the result into firefly iii compatible arrays (and replace mapping when necessary)
+        $this->transactionMapper->setImportJob($this->importJob);
         $transactions       = $this->transactionMapper->map($pseudoTransactions);
+        $this->importJob    = $this->transactionMapper->getImportJob();
 
         if (0 === count($transactions)) {
             Log::error('No transactions found in CAMT file');

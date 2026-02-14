@@ -24,13 +24,13 @@ declare(strict_types=1);
 
 namespace App\Services\Nordigen;
 
-use Carbon\Carbon;
 use App\Exceptions\ImporterErrorException;
 use App\Exceptions\ImporterHttpException;
 use App\Services\Nordigen\Authentication\SecretManager;
 use App\Services\Nordigen\Request\PostNewTokenRequest;
 use App\Services\Nordigen\Response\TokenSetResponse;
 use App\Services\Session\Constants;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use JetBrains\PhpStorm\NoReturn;
 use Psr\Container\ContainerExceptionInterface;

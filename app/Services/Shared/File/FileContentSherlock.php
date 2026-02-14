@@ -24,9 +24,9 @@ declare(strict_types=1);
 
 namespace App\Services\Shared\File;
 
-use Genkgo\Camt\MessageFormatInterface;
 use Exception;
 use Genkgo\Camt\Config;
+use Genkgo\Camt\MessageFormatInterface;
 use Genkgo\Camt\Reader;
 use Illuminate\Support\Facades\Log;
 use Safe\Exceptions\FilesystemException;
@@ -104,8 +104,8 @@ class FileContentSherlock
             $class  = $format instanceof MessageFormatInterface ? $format::class : self::class;
             Log::debug(sprintf('Class is: %s', $class));
             if (false !== preg_match('/Camt(\d+).*V(\d+)/', $class, $m)) {
-                $type    = $m[1];      // e. g. 052 or 053
-                $version = $m[2];   // e. g. 08
+                $type    = $m[1]; // e. g. 052 or 053
+                $version = $m[2]; // e. g. 08
                 Log::debug(sprintf('CAMT Type: %s', $type));
                 Log::debug(sprintf('CAMT Version: %s', $version));
             }

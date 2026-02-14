@@ -32,13 +32,14 @@ class SubmissionStatus
     public const string SUBMISSION_ERRORED = 'submission_errored';
     public const string SUBMISSION_RUNNING = 'submission_running';
     public const string SUBMISSION_WAITING = 'waiting_to_start';
-    public array   $errors                 = [];
-    public array   $messages               = [];
+
+    public array $errors                   = [];
+    public array $messages                 = [];
     private string $status;
-    public array   $warnings               = [];
-    public int     $currentTransaction     = 0;
-    public int     $totalTransactions      = 0;
-    public int     $progressPercentage     = 0;
+    public array $warnings                 = [];
+    public int   $currentTransaction       = 0;
+    public int   $totalTransactions        = 0;
+    public int   $progressPercentage       = 0;
 
     /**
      * ImportJobStatus constructor.
@@ -83,7 +84,7 @@ class SubmissionStatus
         Log::debug(sprintf('Update progress: %d/%d transactions', $currentTransaction, $totalTransactions));
         $this->currentTransaction = $currentTransaction;
         $this->totalTransactions  = $totalTransactions;
-        $this->progressPercentage = $totalTransactions > 0 ? (int)round(($currentTransaction / $totalTransactions) * 100) : 0;
+        $this->progressPercentage = $totalTransactions > 0 ? (int) round(($currentTransaction / $totalTransactions) * 100) : 0;
     }
 
     /**

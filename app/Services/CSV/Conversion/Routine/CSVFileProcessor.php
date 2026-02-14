@@ -28,20 +28,20 @@ use App\Exceptions\ImporterErrorException;
 use App\Models\ImportJob;
 use App\Services\Shared\Configuration\Configuration;
 use Illuminate\Support\Facades\Log;
+use JsonException;
 use League\Csv\Exception;
 use League\Csv\Reader;
 use League\Csv\ResultSet;
 use League\Csv\Statement;
-use JsonException;
 
 /**
  * Class CSVFileProcessor
  */
 class CSVFileProcessor
 {
-    private string        $delimiter;
-    private bool          $hasHeaders;
-    private Reader        $reader;
+    private string $delimiter;
+    private bool $hasHeaders;
+    private Reader $reader;
     private ImportJob $importJob;
     private Configuration $configuration;
 
@@ -103,11 +103,7 @@ class CSVFileProcessor
 
     public function setDelimiter(string $delimiter): void
     {
-        $map             = [
-            'tab'       => "\t",
-            'semicolon' => ';',
-            'comma'     => ',',
-        ];
+        $map             = ['tab'       => "\t", 'semicolon' => ';', 'comma'     => ','];
 
         $this->delimiter = $map[$delimiter] ?? ',';
     }
@@ -147,10 +143,7 @@ class CSVFileProcessor
     private function sanitize(array $line): array
     {
         $lineValues = array_values($line);
-        array_walk(
-            $lineValues,
-            static fn ($element) => trim(str_replace('&nbsp;', ' ', (string) $element))
-        );
+        array_walk($lineValues, static fn ($element) => trim(str_replace('&nbsp;', ' ', (string) $element)));
 
         return $lineValues;
     }
