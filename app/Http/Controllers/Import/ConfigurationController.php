@@ -216,6 +216,7 @@ class ConfigurationController extends Controller
         // file import ONLY needs roles before it is complete. After completion, can go to overview.
         if ('file' === $importJob->getFlow()) {
             Log::debug('Redirect to roles because flow is file.');
+
             return route('configure-roles.index', [$importJob->identifier]);
         }
 
@@ -225,6 +226,7 @@ class ConfigurationController extends Controller
 
         // can now redirect to conversion, because that will be the next step.
         Log::debug('Redirect to conversion because flow is not file.');
+
         return route('data-conversion.index', [$importJob->identifier]);
     }
 }
