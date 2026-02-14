@@ -6,22 +6,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 - GitHub user @barreeeiroo built support for [Enable Banking](https://enablebanking.com/). Read more about it in the [documentation](https://docs.firefly-iii.org/tutorials/data-importer/eb/).
-
-### Changed
-- This release requires PHP 8.5
-
-### Deprecated
-- This release stops supporting PHP 8.4
-
-### Removed
-- This release stops supporting PHP 8.4
+- Support for batch submissions
+- #10753
 
 ### Fixed
-- Initial release.
-
-### Security
-- Initial release.
-
+- Default currency validation for SimpleFIN
+- #11539
+- #11577
+- #11600
+- #11687
+- #11693
 
 ## v2.0.5 - 2026-01-17
 
