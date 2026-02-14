@@ -83,8 +83,10 @@ class AuthenticateController extends Controller
         if (AuthenticationStatus::NODATA === $result) {
             // need to get and present the auth data in the system (yes it is always empty).
             $data = $validator->getData();
+            $route =route('eb-connect.callback');
+            $isHttps = str_starts_with($route, 'https://');
 
-            return view('import.002-authenticate.index')->with(compact('mainTitle', 'flow', 'subTitle', 'pageTitle', 'data', 'error'));
+            return view('import.002-authenticate.index')->with(compact('mainTitle', 'flow', 'subTitle', 'pageTitle', 'data', 'error','route','isHttps'));
         }
 
         if (AuthenticationStatus::AUTHENTICATED === $result) {

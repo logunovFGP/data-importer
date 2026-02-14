@@ -17,9 +17,14 @@
 
                         @if('eb' === $flow)
                             <p>
-                                Your callback URL is:<br>
-                                <code>{{route('eb-connect.callback')}}</code>
+                                Your redirect URL is:<br>
+                                <code>{{$route}}</code>
                             </p>
+                            @if(!$isHttps)
+                                <div class="alert alert-warning" role="alert">
+                                    Your redirect URL does not start with <code>https://</code>. Enable Banking requires a secure redirect URL when using production data. You can either fake it and add https when configuring Enable Banking, or set up your local Data Importer to use https.
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>
