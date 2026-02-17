@@ -1,0 +1,16 @@
+# firefly-iii-importer
+
+## Module context
+- Name: firefly-iii-importer
+- Role: Workspace placeholder for local importer plugin/runtime integration.
+- Current status: module currently contains minimal content (boundary marker only).
+
+## Operational guidance for assistants
+- Treat as a workspace boundary; avoid speculative edits until target runtime files appear.
+- Prefer creating context files and guardrails before making code changes when active assets are added.
+- Respect root and sibling-module instructions when integrating future code.
+
+## Planned setup notes
+- Add module-specific code and context files only when concrete source assets are introduced.
+- Continue using root-level AGENTS constraints for behavior and verification policy.
+

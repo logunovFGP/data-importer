@@ -1,21 +1,2 @@
-/node_modules
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
-.env
-.env.backup
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
-
-# ignore v1 node modules
-resources/js/v1/node_modules
-
-# ignore v2 node modules
-resources/js/v2/node_modules
-
-# ignore generated files.
-public/build
+AGENTS.md
+*PLAN*.md
