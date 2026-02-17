@@ -1,0 +1,126 @@
+@extends('layout.v2')
+@section('content')
+    <div class="container">
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <h1>{{ $mainTitle }}</h1>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="card">
+                    <div class="card-header">
+                        {{ $subTitle }}
+                    </div>
+                    <div class="card-body">
+                        <p>In order to import using {{ config('importer.providers.' . $flow . '.title') }} you must enter the authentication data you received from this provider. You can read how to get the necessary codes in the <a target="_blank" href="https://docs.firefly-iii.org/how-to/data-importer/import/third-party-providers/">documentation</a></p>
+
+                        @if('eb' === $flow)
+                            <p>
+                                Your redirect URL is:<br>
+                                <code>{{$route}}</code>
+                            </p>
+                            @if(!$isHttps)
+                                <div class="alert alert-warning" role="alert">
+                                    Your redirect URL does not start with <code>https://</code>. Enable Banking requires a secure redirect URL when using production data. You can either fake it and add https when configuring Enable Banking, or set up your local Data Importer to use https.
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="card">
+                    <div class="card-header">
+                        Form
+                    </div>
+                    <div class="card-body">
+                        @if('' !== ($error ?? ''))
+                            <p class="text-danger">{{ $error }}</p>
+                        @endif
+
+                        <form method="post" action="{{ route('authenticate-flow.post', [$flow]) }}" accept-charset="UTF-8">
+                            <input type="hidden" name="_token" value="{{ csrf_token() }}"/>
+
+                            @foreach($data as $key => $value)
+                                <div class="form-group row">
+                                    <label for="date" class="col-sm-3 col-form-label">{{ trans(sprintf('import.label_%s_%s', $flow, $key)) }}</label>
+                                    <div class="col-sm-9">
+                                        @if($key === 'private_key')
+                                            <input type="hidden" name="{{ sprintf('%s_%s', $flow, $key) }}" id="{{ sprintf('%s_%s', $flow, $key) }}" value="{{ $value }}">
+                                            <input type="file" class="form-control" id="{{ sprintf('%s_%s_file', $flow, $key) }}" accept=".pem"
+                                                   aria-describedby="{{ sprintf('%s_%s', $flow, $key) }}_help" data-target="{{ sprintf('%s_%s', $flow, $key) }}">
+                                            <small id="{{ sprintf('%s_%s', $flow, $key) }}_help" class="form-text text-muted">
+                                                {{ trans(sprintf('import.help_%s_%s', $flow, $key)) }}
+                                            </small>
+                                            @if($value !== '')
+                                                <small class="form-text text-success">A private key is already loaded.</small>
+                                            @endif
+                                        @else
+                                            <input type="text" name="{{ sprintf('%s_%s', $flow, $key) }}" class="form-control" id="{{ sprintf('%s_%s', $flow, $key) }}"
+                                                   placeholder="{{ trans(sprintf('import.placeholder_%s_%s', $flow, $key)) }}" value="{{ $value }}" aria-describedby="{{ sprintf('%s_%s', $flow, $key) }}_help">
+                                            <small id="{{ sprintf('%s_%s', $flow, $key) }}_help" class="form-text text-muted">
+                                                {{ trans(sprintf('import.help_%s_%s', $flow, $key)) }}
+                                            </small>
+                                        @endif
+                                    </div>
+                                </div>
+
+                            @endforeach
+                            <button type="submit" class="float-end btn btn-primary">Authenticate &rarr;</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ route('index') }}" class="btn btn-secondary"><span
+                                    class="fas fa-arrow-left"></span> Go back to index</a>
+                            <a href="{{ route('flush') }}" class="btn btn-danger text-white btn-sm"><span
+                                    class="fas fa-redo-alt"></span> Start over</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle all file inputs for private keys
+            document.querySelectorAll('input[type="file"][data-target]').forEach(function(fileInput) {
+                const targetId = fileInput.getAttribute('data-target');
+                const hiddenInput = document.getElementById(targetId);
+
+                if (hiddenInput) {
+                    fileInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            if (!file.name.endsWith('.pem')) {
+                                alert('Please select a .pem file');
+                                fileInput.value = '';
+                                return;
+                            }
+
+                            const reader = new FileReader();
+                            reader.onload = function(event) {
+                                hiddenInput.value = event.target.result;
+                            };
+                            reader.onerror = function() {
+                                alert('Error reading file');
+                                fileInput.value = '';
+                            };
+                            reader.readAsText(file);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+@endsection
