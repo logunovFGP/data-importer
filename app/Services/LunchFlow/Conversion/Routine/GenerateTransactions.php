@@ -114,7 +114,7 @@ class GenerateTransactions
         $return = [];
 
         /**
-         * @var int   $accountId
+         * @var string $accountId
          * @var array $entries
          */
         foreach ($transactions as $accountId => $entries) {
@@ -142,7 +142,7 @@ class GenerateTransactions
      *
      * @throws ImporterHttpException
      */
-    private function generateTransaction(int $accountId, Transaction $entry): array
+    private function generateTransaction(string $accountId, Transaction $entry): array
     {
         $configuration            = $this->importJob->getConfiguration();
         Log::debug(sprintf('Lunch Flow transaction: "%s" with amount %s %s', $entry->getDescription(), $entry->currency, $entry->amount));
@@ -152,6 +152,17 @@ class GenerateTransactions
             'error_if_duplicate_hash' => $configuration->isIgnoreDuplicateTransactions(),
             'transactions'            => [],
         ];
+        // Resolve account's base currency for foreign currency detection.
+        $accountCurrency = $this->resolveAccountCurrency($accountId);
+        $transactionCurrency = $entry->currency;
+
+        // When transaction currency differs from account currency, set the transaction
+        // in the account's base currency and record the original as foreign amount.
+        // Matches ZenPlugins converters.ts invoice pattern.
+        $isForeignCurrency = '' !== $transactionCurrency
+            && '' !== $accountCurrency
+            && strtoupper($transactionCurrency) !== strtoupper($accountCurrency);
+
         $transaction              = [
             'type'          => 'withdrawal',
             'date'          => $entry->getDate()->toW3cString(),
@@ -159,12 +170,23 @@ class GenerateTransactions
             'amount'        => $entry->amount,
             'description'   => $entry->getDescription(),
             'order'         => 0,
-            'currency_code' => $entry->currency,
+            'currency_code' => $isForeignCurrency ? $accountCurrency : $transactionCurrency,
             'category_name' => null,
             'category_id'   => null,
             'external_id'   => $entry->getTransactionId(),
             'bonus_tags'    => [],
         ];
+
+        if ($isForeignCurrency) {
+            $transaction['foreign_amount']        = $entry->amount;
+            $transaction['foreign_currency_code'] = $transactionCurrency;
+            Log::debug(sprintf('Foreign currency detected: %s on %s account. Set foreign_amount=%s foreign_currency=%s', $transactionCurrency, $accountCurrency, $entry->amount, $transactionCurrency));
+        }
+
+        // Mark pending/hold transactions with a tag for visibility.
+        if ($entry->hold) {
+            $transaction['bonus_tags'][] = 'pending';
+        }
 
         if (1 === bccomp($entry->amount, '0')) {
             Log::debug('Amount is positive: assume transfer or deposit.');
@@ -187,7 +209,7 @@ class GenerateTransactions
      *
      * @throws ImporterHttpException
      */
-    private function appendPositiveAmountInfo(int $accountId, array $transaction, Transaction $entry): array
+    private function appendPositiveAmountInfo(string $accountId, array $transaction, Transaction $entry): array
     {
         // amount is positive: deposit or transfer. Lunch Flow account is the destination
         $transaction['type']           = 'deposit';
@@ -423,7 +445,7 @@ class GenerateTransactions
      *
      * @throws ImporterHttpException
      */
-    private function appendNegativeAmountInfo(int $accountId, array $transaction, Transaction $entry): array
+    private function appendNegativeAmountInfo(string $accountId, array $transaction, Transaction $entry): array
     {
         $transaction['amount']    = bcmul($entry->amount, '-1');
         $transaction['source_id'] = (int)$this->accounts[$accountId]; // FIXME entry may not exist, then what?
@@ -538,6 +560,32 @@ class GenerateTransactions
     private function ibanIsEmpty(string $iban): bool
     {
         return '' === $iban;
+    }
+
+    /**
+     * Resolve the base currency of a mapped Firefly III account.
+     * Used for foreign currency detection: when transaction currency differs from account currency.
+     */
+    private function resolveAccountCurrency(string $accountId): string
+    {
+        // Try userAccounts (keyed by IBAN or account number).
+        if (isset($this->userAccounts[$accountId])) {
+            $info = $this->userAccounts[$accountId];
+            $currency = (string)($info['currency_code'] ?? $info['currency'] ?? '');
+            if ('' !== $currency) {
+                return strtoupper($currency);
+            }
+        }
+
+        // Try extracting from currency-scoped account ID (e.g., GE00BASIS...#EUR).
+        if (str_contains($accountId, '#')) {
+            $scope = substr($accountId, (int)strrpos($accountId, '#') + 1);
+            if ('' !== $scope) {
+                return strtoupper($scope);
+            }
+        }
+
+        return '';
     }
 
     private function isExpenseOrRevenue(string $accountType, string $iban): bool

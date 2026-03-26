@@ -32,12 +32,13 @@ use Carbon\Carbon;
 class Transaction
 {
     public string $id;
-    public int    $account;
+    public string $account;
     public string $amount;
     public string $currency;
     public Carbon $date;
     public string $description;
     public string $merchant;
+    public bool   $hold = false;
 
     /**
      * Creates a transaction from a downloaded array.
@@ -49,12 +50,13 @@ class Transaction
         $object              = new self();
         // mandatory fields:
         $object->id          = $array['id'];
-        $object->account     = $array['accountId'];
+        $object->account     = (string)$array['accountId'];
         $object->amount      = (string)$array['amount'];
         $object->currency    = $array['currency'];
         $object->date        = Carbon::parse($array['date'], config('app.timezone'));
         $object->description = trim($array['description'] ?? '');
         $object->merchant    = trim($array['merchant'] ?? '');
+        $object->hold        = (bool)($array['hold'] ?? false);
 
         return $object;
     }
@@ -68,12 +70,13 @@ class Transaction
 
         // mandatory fields:
         $object->id          = $array['id'];
-        $object->account     = $array['account'];
+        $object->account     = (string)$array['account'];
         $object->amount      = $array['amount'];
         $object->currency    = $array['currency'];
         $object->date        = $array['date'];
         $object->description = $array['description'];
         $object->merchant    = $array['merchant'];
+        $object->hold        = (bool)($array['hold'] ?? false);
 
         return $object;
     }
@@ -126,6 +129,7 @@ class Transaction
             'date'        => $this->date,
             'description' => $this->description,
             'merchant'    => $this->merchant,
+            'hold'        => $this->hold,
         ];
     }
 }
