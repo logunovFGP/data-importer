@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * RoutineManager.php
  * Copyright (c) 2026 james@firefly-iii.org
@@ -30,10 +31,10 @@ use Illuminate\Support\Facades\Log;
 
 class RoutineManager implements RoutineManagerInterface
 {
-    private ImportJob             $importJob;
-    private ImportJobRepository   $repository;
+    private ImportJob $importJob;
+    private ImportJobRepository $repository;
     private TransactionDownloader $downloader;
-    private TransactionConverter  $converter;
+    private TransactionConverter $converter;
 
     public function __construct(ImportJob $importJob)
     {

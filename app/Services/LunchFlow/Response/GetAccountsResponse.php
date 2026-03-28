@@ -24,8 +24,8 @@ declare(strict_types=1);
 
 namespace App\Services\LunchFlow\Response;
 
-use App\Services\Shared\Response\Response;
 use App\Services\LunchFlow\Model\Account;
+use App\Services\Shared\Response\Response;
 use Countable;
 use Illuminate\Support\Collection;
 use Iterator;

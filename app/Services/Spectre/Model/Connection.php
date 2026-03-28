@@ -31,18 +31,18 @@ use Carbon\Carbon;
  */
 class Connection
 {
-    public string  $categorization;
-    public string  $countryCode;
-    public string  $customerId;
-    public string  $id;
-    public Carbon  $lastSuccess;
+    public string $categorization;
+    public string $countryCode;
+    public string $customerId;
+    public string $id;
+    public Carbon $lastSuccess;
     public ?string $nextPossibleRefreshAt = null;
-    public string  $providerCode;
-    public string  $providerId;
-    public string  $providerName;
-    public string  $secret;
-    public string  $status;
-    public Carbon  $updatedAt;
+    public string $providerCode;
+    public string $providerId;
+    public string $providerName;
+    public string $secret;
+    public string $status;
+    public Carbon $updatedAt;
 
     /**
      * Customer constructor.

@@ -24,17 +24,17 @@ declare(strict_types=1);
 
 namespace App\Services\Nordigen\Response;
 
-use Carbon\Carbon;
 use App\Services\Shared\Response\Response;
+use Carbon\Carbon;
 
 /**
  * Class TokenSetResponse
  */
 class TokenSetResponse extends Response
 {
-    public int    $accessExpires;
+    public int $accessExpires;
     public string $accessToken;
-    public int    $refreshExpires;
+    public int $refreshExpires;
     public string $refreshToken;
 
     public function __construct(array $data)

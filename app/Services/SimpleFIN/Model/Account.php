@@ -32,15 +32,15 @@ use InvalidArgumentException;
  */
 class Account
 {
-    public array   $org;
-    public string  $id;
-    public string  $name;
-    public string  $currency;
-    public string  $balance;
+    public array $org;
+    public string $id;
+    public string $name;
+    public string $currency;
+    public string $balance;
     public ?string $availableBalance;
-    public int     $balanceDate;
-    public array   $transactions;
-    public array   $extra;
+    public int $balanceDate;
+    public array $transactions;
+    public array $extra;
 
     public function __construct(array $data)
     {
@@ -109,7 +109,7 @@ class Account
 
     public function getBalanceAsFloat(): float
     {
-        return (float)$this->balance;
+        return (float) $this->balance;
     }
 
     public function getAvailableBalance(): ?string
@@ -119,7 +119,7 @@ class Account
 
     public function getAvailableBalanceAsFloat(): ?float
     {
-        return null !== $this->availableBalance ? (float)$this->availableBalance : null;
+        return null !== $this->availableBalance ? (float) $this->availableBalance : null;
     }
 
     public function getBalanceDate(): int
@@ -196,7 +196,6 @@ class Account
         if (!array_key_exists('sfin-url', $data['org']) && null !== $data['org']['sfin-url']) {
             throw new InvalidArgumentException('Organization must have sfin-url');
         }
-
 
         if (
             !array_key_exists('domain', $data['org'])

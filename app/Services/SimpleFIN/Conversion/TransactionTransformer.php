@@ -25,12 +25,12 @@ declare(strict_types=1);
 namespace App\Services\SimpleFIN\Conversion;
 
 use App\Services\CSV\Converter\Amount;
+use App\Services\Shared\Authentication\SecretManager;
 use App\Services\SimpleFIN\Model\Account;
 use App\Support\Http\CollectsAccounts;
 use Carbon\Carbon;
-use App\Services\Shared\Authentication\SecretManager;
-use Illuminate\Support\Facades\Log;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 // Removed SimpleFINModel imports as we now use arrays
 
@@ -43,7 +43,7 @@ class TransactionTransformer
 
     private array $expenseAccounts            = [];
     private array $revenueAccounts            = [];
-    private bool $accountsCollected           = false;
+    private bool  $accountsCollected          = false;
     private array $pendingTransactionClusters = []; // For clustering similar transactions in clean instances
 
     public function __construct()
@@ -91,33 +91,33 @@ class TransactionTransformer
 
         // Use 'posted' date as the primary transaction date.
         // SimpleFIN 'posted' is a UNIX timestamp.
-        $transactionTimestamp  = isset($transactionData['posted']) ? (int)$transactionData['posted'] : Carbon::now()->timestamp;
+        $transactionTimestamp  = isset($transactionData['posted']) ? (int) $transactionData['posted'] : Carbon::now()->timestamp;
         $transactionDateCarbon = Carbon::createFromTimestamp($transactionTimestamp);
 
         return [
-            'type'                  => $type,
-            'date'                  => $transactionDateCarbon->format('Y-m-d'),
-            'amount'                => $absoluteAmount,
-            'description'           => $this->sanitizeDescription($transactionData['description'] ?? 'N/A'),
-            'source_id'             => $sourceAccount['id'] ?? null,
-            'source_name'           => $sourceAccount['name'] ?? null,
-            'source_iban'           => $sourceAccount['iban'] ?? null,
-            'source_number'         => $sourceAccount['number'] ?? null,
-            'source_bic'            => $sourceAccount['bic'] ?? null,
-            'destination_id'        => $destinationAccount['id'] ?? null,
-            'destination_name'      => $destinationAccount['name'] ?? null,
-            'destination_iban'      => $destinationAccount['iban'] ?? null,
-            'destination_number'    => $destinationAccount['number'] ?? null,
-            'destination_bic'       => $destinationAccount['bic'] ?? null,
-            'currency_code'         => $this->getCurrencyCode($simpleFINAccountData),
-            'category_name'         => $this->extractCategory($transactionData),
-            'reconciled'            => false,
-            'notes'                 => $this->buildNotes($transactionData),
-            'tags'                  => $this->extractTags($transactionData),
-            'internal_reference'    => $transactionData['id'] ?? null,
-            'external_id'           => $this->buildExternalId($transactionData, $simpleFINAccountData),
-            'book_date'             => $this->getBookDate($transactionData),
-            'process_date'          => $this->getProcessDate($transactionData),
+            'type'               => $type,
+            'date'               => $transactionDateCarbon->format('Y-m-d'),
+            'amount'             => $absoluteAmount,
+            'description'        => $this->sanitizeDescription($transactionData['description'] ?? 'N/A'),
+            'source_id'          => $sourceAccount['id'] ?? null,
+            'source_name'        => $sourceAccount['name'] ?? null,
+            'source_iban'        => $sourceAccount['iban'] ?? null,
+            'source_number'      => $sourceAccount['number'] ?? null,
+            'source_bic'         => $sourceAccount['bic'] ?? null,
+            'destination_id'     => $destinationAccount['id'] ?? null,
+            'destination_name'   => $destinationAccount['name'] ?? null,
+            'destination_iban'   => $destinationAccount['iban'] ?? null,
+            'destination_number' => $destinationAccount['number'] ?? null,
+            'destination_bic'    => $destinationAccount['bic'] ?? null,
+            'currency_code'      => $this->getCurrencyCode($simpleFINAccountData),
+            'category_name'      => $this->extractCategory($transactionData),
+            'reconciled'         => false,
+            'notes'              => $this->buildNotes($transactionData),
+            'tags'               => $this->extractTags($transactionData),
+            'internal_reference' => $transactionData['id'] ?? null,
+            'external_id'        => $this->buildExternalId($transactionData, $simpleFINAccountData),
+            'book_date'          => $this->getBookDate($transactionData),
+            'process_date'       => $this->getProcessDate($transactionData),
         ];
     }
 
@@ -148,13 +148,7 @@ class TransactionTransformer
         }
 
         // No mapping or mapped to 0 (deferred creation) - return null ID to trigger name-based account creation
-        return [
-            'id'     => null,
-            'name'   => $accountName,
-            'iban'   => null,
-            'number' => $accountKey,
-            'bic'    => null,
-        ];
+        return ['id'     => null, 'name'   => $accountName, 'iban'   => null, 'number' => $accountKey, 'bic'    => null];
     }
 
     /**
@@ -170,13 +164,7 @@ class TransactionTransformer
         // Try to find existing expense or revenue account first
         $existingAccount    = $this->findExistingAccount($description, $isDeposit);
         if (null !== $existingAccount && [] !== $existingAccount) {
-            return [
-                'id'     => $existingAccount['id'],
-                'name'   => $existingAccount['name'],
-                'iban'   => null,
-                'number' => null,
-                'bic'    => null,
-            ];
+            return ['id'     => $existingAccount['id'], 'name'   => $existingAccount['name'], 'iban'   => null, 'number' => null, 'bic'    => null];
         }
 
         // For clean instances: try clustering when no existing accounts found
@@ -188,13 +176,7 @@ class TransactionTransformer
             if (0 === count($accountsToCheck)) {
                 $clusteredAccountName = $this->findClusteredAccountName($description, $isDeposit);
                 if (null !== $clusteredAccountName && '' !== $clusteredAccountName && '0' !== $clusteredAccountName) {
-                    return [
-                        'id'     => null,
-                        'name'   => $clusteredAccountName,
-                        'iban'   => null,
-                        'number' => null,
-                        'bic'    => null,
-                    ];
+                    return ['id'     => null, 'name'   => $clusteredAccountName, 'iban'   => null, 'number' => null, 'bic'    => null];
                 }
             }
         }
@@ -203,32 +185,14 @@ class TransactionTransformer
 
         // Check if automatic account creation is enabled
         if (!config('simplefin.auto_create_expense_accounts', true)) {
-            Log::warning(sprintf(
-                'Auto-creation disabled. No %s account will be created for "%s"',
-                $isDeposit ? 'revenue' : 'expense',
-                $description
-            ));
+            Log::warning(sprintf('Auto-creation disabled. No %s account will be created for "%s"', $isDeposit ? 'revenue' : 'expense', $description));
 
-            return [
-                'id'     => null,
-                'name'   => $counterAccountName,
-                'iban'   => null,
-                'number' => null,
-                'bic'    => null,
-            ];
+            return ['id'     => null, 'name'   => $counterAccountName, 'iban'   => null, 'number' => null, 'bic'    => null];
         }
-
-
 
         Log::info(sprintf('Creating new %s account "%s" for transaction "%s"', $isDeposit ? 'revenue' : 'expense', $counterAccountName, $description));
 
-        return [
-            'id'     => null,
-            'name'   => $counterAccountName,
-            'iban'   => null,
-            'number' => null,
-            'bic'    => null,
-        ];
+        return ['id'     => null, 'name'   => $counterAccountName, 'iban'   => null, 'number' => null, 'bic'    => null];
     }
 
     /**
@@ -271,15 +235,28 @@ class TransactionTransformer
      */
     private function getCurrencyCode(Account $simpleFINAccountData): string
     {
-        $currency = $simpleFINAccountData->getCurrency() ?? 'EUR'; // Default to EUR if not present
+        $currency = '' === $simpleFINAccountData->getCurrency() ? 'EUR' : $simpleFINAccountData->getCurrency(); // Default to EUR if not present
 
         // Replicate basic logic from SimpleFINAccount::isCustomCurrency() if it checked for 'XXX' or non-standard codes.
         // For now, pass through, or use a simple check. Let Firefly III handle currency validation.
         // If currency code is not 3 uppercase letters, SimpleFIN spec might imply it's "custom".
         // The previous code returned 'XXX' for custom.
-        if (3 === strlen($currency) && ctype_upper($currency)) {
-            return $currency;
+        if (3 === strlen($currency)) {
+            Log::debug(sprintf(
+                'getCurrencyCode for account "%s" ("%s") will return "%s"',
+                $simpleFINAccountData->getId(),
+                $simpleFINAccountData->getName(),
+                strtoupper($currency)
+            ));
+
+            return strtoupper($currency);
         }
+        Log::warning(sprintf(
+            'getCurrencyCode for account "%s" ("%s") found "%s", will return "XXX" instead.',
+            $simpleFINAccountData->getId(),
+            $simpleFINAccountData->getName(),
+            $currency
+        ));
 
         return 'XXX'; // Default for non-standard or missing currency codes, matching previous behavior.
     }
@@ -351,7 +328,7 @@ class TransactionTransformer
             $noteFields = ['memo', 'notes', 'reference', 'check_number'];
 
             foreach ($noteFields as $field) {
-                if (isset($extra[$field]) && '' !==  (string) $extra[$field]) {
+                if (isset($extra[$field]) && '' !== (string) $extra[$field]) {
                     $notes[] = sprintf('- %s: %s', ucfirst($field), $extra[$field]);
                 }
             }
@@ -373,8 +350,8 @@ class TransactionTransformer
      */
     private function getBookDate(array $transactionData): ?string
     {
-        if (isset($transactionData['posted']) && (int)$transactionData['posted'] > 0) {
-            return Carbon::createFromTimestamp((int)$transactionData['posted'])->format('Y-m-d');
+        if (isset($transactionData['posted']) && (int) $transactionData['posted'] > 0) {
+            return Carbon::createFromTimestamp((int) $transactionData['posted'])->format('Y-m-d');
         }
 
         return null;
@@ -387,8 +364,8 @@ class TransactionTransformer
      */
     private function getProcessDate(array $transactionData): ?string
     {
-        if (isset($transactionData['transacted_at']) && (int)$transactionData['transacted_at'] > 0) {
-            return Carbon::createFromTimestamp((int)$transactionData['transacted_at'])->format('Y-m-d');
+        if (isset($transactionData['transacted_at']) && (int) $transactionData['transacted_at'] > 0) {
+            return Carbon::createFromTimestamp((int) $transactionData['transacted_at'])->format('Y-m-d');
         }
 
         return null;
@@ -433,11 +410,7 @@ class TransactionTransformer
             Log::debug('Collecting revenue accounts from Firefly III');
             $this->revenueAccounts   = $this->collectRevenueAccounts();
 
-            Log::debug(sprintf(
-                'Collected %d expense accounts and %d revenue accounts',
-                count($this->expenseAccounts),
-                count($this->revenueAccounts)
-            ));
+            Log::debug(sprintf('Collected %d expense accounts and %d revenue accounts', count($this->expenseAccounts), count($this->revenueAccounts)));
 
             $this->accountsCollected = true;
         } catch (Exception $e) {
@@ -539,10 +512,7 @@ class TransactionTransformer
 
             if ($similarity > $bestSimilarity && $similarity >= $threshold) {
                 $bestSimilarity = $similarity;
-                $bestMatch      = [
-                    'account'    => $account,
-                    'similarity' => $similarity,
-                ];
+                $bestMatch      = ['account'    => $account, 'similarity' => $similarity];
             }
         }
 
@@ -615,12 +585,7 @@ class TransactionTransformer
             $similarity = $this->calculateSimilarity($normalizedDescription, $cluster['normalized_name']);
 
             if ($similarity >= $threshold) {
-                Log::debug(sprintf(
-                    'Clustering "%s" with existing cluster "%s" (similarity: %.2f)',
-                    $description,
-                    $clusterName,
-                    $similarity
-                ));
+                Log::debug(sprintf('Clustering "%s" with existing cluster "%s" (similarity: %.2f)', $description, $clusterName, $similarity));
 
                 // Add to existing cluster
                 $this->pendingTransactionClusters[$clusterName]['descriptions'][] = $description;

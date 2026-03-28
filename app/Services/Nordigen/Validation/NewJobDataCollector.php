@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * NewJobDataCollector.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -40,7 +41,7 @@ use Illuminate\Support\MessageBag;
 
 class NewJobDataCollector implements NewJobDataCollectorInterface
 {
-    private ImportJob           $importJob;
+    private ImportJob $importJob;
     private ImportJobRepository $repository;
 
     public function __construct()
@@ -94,7 +95,16 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
 
                 /** @var NordigenAccount $account */
                 foreach ($response as $index => $account) {
-                    Log::debug(sprintf('[%s] [%d/%d] Now collecting information for account %s', config('importer.version'), $index + 1, $total, $account->getIdentifier()), $account->toLocalArray());
+                    Log::debug(
+                        sprintf(
+                            '[%s] [%d/%d] Now collecting information for account %s',
+                            config('importer.version'),
+                            $index + 1,
+                            $total,
+                            $account->getIdentifier()
+                        ),
+                        $account->toLocalArray()
+                    );
 
                     try {
                         $account  = AccountInformationCollector::collectInformation($account, true);

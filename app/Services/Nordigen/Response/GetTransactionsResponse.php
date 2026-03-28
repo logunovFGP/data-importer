@@ -37,15 +37,14 @@ use Log;
 class GetTransactionsResponse extends Response implements Iterator, Countable
 {
     private readonly Collection $collection;
-    private int        $position = 0;
-    private string $accountId    = '';
+    private int    $position  = 0;
+    private string $accountId = '';
 
-    public function __construct(private readonly array $data)
-    {
+    public function __construct(
+        private readonly array $data
+    ) {
         $this->collection = new Collection();
         Log::debug('Created new GetTransactionsResponse');
-
-
     }
 
     public function setAccountId(string $accountId): void

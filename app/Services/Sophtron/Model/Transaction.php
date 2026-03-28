@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * Transaction.php
  * Copyright (c) 2026 james@firefly-iii.org
@@ -27,27 +28,27 @@ use Carbon\Carbon;
 
 class Transaction
 {
-    public ?Carbon $createdDateUtc           = null;
-    public string $id                        = '';
-    public Carbon  $lastModifiedUtc;
-    public string  $userId                   = '';
-    public string  $transactionId            = '';
-    public string  $userInstitutionAccountId = '';
-    public string  $status                   = '';
-    public string  $type                     = '';
-    public string  $amount                   = '';
-    public string  $currency                 = '';
-    public Carbon  $date;
-    public Carbon  $transactionDate;
-    public Carbon  $postDate;
-    public string  $description              = '';
-    public string  $balance                  = '';
-    public string  $merchant                 = '';
-    public string  $category                 = '';
-    public string  $checkNum                 = '';
-    public string  $memo                     = '';
-    public string  $checkImage               = '';
-    public ?Carbon $lastModified             = null;
+    public ?Carbon $createdDateUtc          = null;
+    public string  $id                      = '';
+    public Carbon $lastModifiedUtc;
+    public string $userId                   = '';
+    public string $transactionId            = '';
+    public string $userInstitutionAccountId = '';
+    public string $status                   = '';
+    public string $type                     = '';
+    public string $amount                   = '';
+    public string $currency                 = '';
+    public Carbon $date;
+    public Carbon $transactionDate;
+    public Carbon $postDate;
+    public string  $description             = '';
+    public string  $balance                 = '';
+    public string  $merchant                = '';
+    public string  $category                = '';
+    public string  $checkNum                = '';
+    public string  $memo                    = '';
+    public string  $checkImage              = '';
+    public ?Carbon $lastModified            = null;
 
     public static function fromArray(array $array): self
     {
@@ -60,13 +61,13 @@ class Transaction
         $object->userInstitutionAccountId = $array['UserInstitutionAccountID'];
         $object->status                   = $array['Status'];
         $object->type                     = $array['Type'];
-        $object->amount                   = (string)$array['Amount'];
+        $object->amount                   = (string) $array['Amount'];
         $object->currency                 = $array['Currency'] ?? '';
         $object->date                     = Carbon::parse($array['Date']);
         $object->transactionDate          = Carbon::parse($array['TransactionDate']);
         $object->postDate                 = Carbon::parse($array['PostDate']);
         $object->description              = $array['Description'];
-        $object->balance                  = (string)($array['Balance'] ?? '');
+        $object->balance                  = (string) ($array['Balance'] ?? '');
         $object->merchant                 = $array['Merchant'] ?? '';
         $object->category                 = $array['Category'] ?? '';
         $object->checkNum                 = $array['CheckNum'] ?? '';

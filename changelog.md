@@ -2,6 +2,21 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## v2.1.0 - 2026-02-01
+
+### Added
+- GitHub user @barreeeiroo built support for [Enable Banking](https://enablebanking.com/). Read more about it in the [documentation](https://docs.firefly-iii.org/tutorials/data-importer/eb/).
+- Support for batch submissions
+- [Issue 10753](https://github.com/firefly-iii/firefly-iii/issues/10753) (Add Enable Banking to Data Importer as alternative to GoCardless) reported by @Madnex
+
+### Fixed
+- Default currency validation for SimpleFIN
+- [Issue 11539](https://github.com/firefly-iii/firefly-iii/issues/11539) (Importing camt.053 file fails if amount is 0.0) reported by @j-palms
+- [Issue 11577](https://github.com/firefly-iii/firefly-iii/issues/11577) (Two notification emails after import) reported by @ragnarkarlsson
+- [Issue 11600](https://github.com/firefly-iii/firefly-iii/issues/11600) ([Importer] GoCardless import skips manual mapping step) reported by @avee87
+- [Issue 11687](https://github.com/firefly-iii/firefly-iii/issues/11687) (SimpleFIN import fails for liability accounts (mortgage/loan/debt)) reported by @demahaffey
+- [Issue 11693](https://github.com/firefly-iii/firefly-iii/issues/11693) (EmptyAccounts task fails to set "(no name)" for withdrawals with empty destination) reported by @sqelirus
+
 ## v2.0.5 - 2026-01-17
 
 > [!WARNING]

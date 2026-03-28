@@ -30,13 +30,14 @@ use App\Exceptions\ImporterHttpException;
 use App\Exceptions\RateLimitException;
 use App\Services\Nordigen\Response\ListAccountsResponse;
 use App\Services\Shared\Response\Response;
+use SensitiveParameter;
 
 /**
  * Class ListAccountsRequest
  */
 class ListAccountsRequest extends Request
 {
-    public function __construct(string $url, string $identifier, string $token)
+    public function __construct(string $url, string $identifier, #[SensitiveParameter] string $token)
     {
         $this->setParameters([]);
         $this->setBase($url);

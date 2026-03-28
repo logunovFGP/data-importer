@@ -24,30 +24,31 @@ declare(strict_types=1);
 
 namespace App\Services\Spectre\Request;
 
-use Carbon\Carbon;
 use App\Exceptions\ImporterErrorException;
 use App\Exceptions\ImporterHttpException;
 use App\Services\Shared\Response\Response;
+use Carbon\Carbon;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\TransferException;
 use Illuminate\Support\Facades\Log;
-use Exception;
 use JsonException;
 use RuntimeException;
+use SensitiveParameter;
 
 /**
  * Class Request
  */
 abstract class Request
 {
-    protected int  $expiresAt = 0;
+    protected int $expiresAt = 0;
     private string $appId;
     private string $base;
-    private array  $parameters;
+    private array $parameters;
     private string $secret;
-    private float  $timeOut   = 3.14;
+    private float $timeOut   = 3.14;
     private string $url;
 
     /**
@@ -94,19 +95,13 @@ abstract class Request
         $json    = null;
 
         try {
-            $res = $client->request(
-                'GET',
-                $fullUrl,
-                [
-                    'headers' => [
-                        'Accept'        => 'application/json',
-                        'Content-Type'  => 'application/json',
-                        'App-id'        => $this->getAppId(),
-                        'Secret'        => $this->getSecret(),
-                        'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                    ],
-                ]
-            );
+            $res = $client->request('GET', $fullUrl, ['headers' => [
+                'Accept'       => 'application/json',
+                'Content-Type' => 'application/json',
+                'App-id'       => $this->getAppId(),
+                'Secret'       => $this->getSecret(),
+                'User-Agent'   => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
+            ]]);
         } catch (TransferException $e) {
             Log::error(sprintf('TransferException: %s', $e->getMessage()));
             // if response, parse as error response.
@@ -129,15 +124,13 @@ abstract class Request
         try {
             $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw new ImporterHttpException(
-                sprintf(
-                    'Could not decode JSON (%s). Error[%d] is: %s. Response: %s',
-                    $fullUrl,
-                    $res->getStatusCode(),
-                    $e->getMessage(),
-                    $body
-                )
-            );
+            throw new ImporterHttpException(sprintf(
+                'Could not decode JSON (%s). Error[%d] is: %s. Response: %s',
+                $fullUrl,
+                $res->getStatusCode(),
+                $e->getMessage(),
+                $body
+            ));
         }
 
         if (null === $json) {
@@ -174,11 +167,7 @@ abstract class Request
     {
         // config here
 
-        return new Client(
-            [
-                'connect_timeout' => $this->timeOut,
-            ]
-        );
+        return new Client(['connect_timeout' => $this->timeOut]);
     }
 
     public function getAppId(): string
@@ -196,7 +185,7 @@ abstract class Request
         return $this->secret;
     }
 
-    public function setSecret(string $secret): void
+    public function setSecret(#[SensitiveParameter] string $secret): void
     {
         $this->secret = $secret;
     }
@@ -223,7 +212,7 @@ abstract class Request
 
         try {
             $client = $this->getClient();
-            $res    = $client->request('POST', $fullUrl, ['headers' => $headers, 'body' => $body]);
+            $res    = $client->request('POST', $fullUrl, ['headers' => $headers, 'body'    => $body]);
         } catch (Exception|GuzzleException $e) {
             throw new ImporterHttpException(sprintf('Guzzle Exception: %s', $e->getMessage()));
         }

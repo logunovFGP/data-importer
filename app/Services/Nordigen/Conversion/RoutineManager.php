@@ -46,12 +46,12 @@ class RoutineManager implements RoutineManagerInterface
 {
     use CreatesAccounts;
 
-    private Configuration        $configuration;
-    private FilterTransactions   $transactionFilter;
+    private Configuration $configuration;
+    private FilterTransactions $transactionFilter;
     private GenerateTransactions $transactionGenerator;
     private TransactionProcessor $transactionProcessor;
-    private ImportJobRepository  $repository;
-    private ImportJob            $importJob;
+    private ImportJobRepository $repository;
+    private ImportJob $importJob;
 
     private array $downloaded;
 
@@ -141,12 +141,12 @@ class RoutineManager implements RoutineManagerInterface
             $message = sprintf('You have no requests left for bank account "%s"', $account['name']);
 
             // add IBAN if present
-            if (array_key_exists('iban', $account) && '' !== (string)$account['iban']) {
+            if (array_key_exists('iban', $account) && '' !== (string) $account['iban']) {
                 $message .= sprintf(' (IBAN %s)', $account['iban']);
             }
 
             // add account number if present
-            if (array_key_exists('number', $account) && '' !== (string)$account['number']) {
+            if (array_key_exists('number', $account) && '' !== (string) $account['number']) {
                 $message .= sprintf(' (account number %s)', $account['number']);
             }
             $message .= sprintf('. The limit resets in %s. ', Request::formatTime($rateLimit['reset']));
@@ -155,12 +155,12 @@ class RoutineManager implements RoutineManagerInterface
             $message = sprintf('You have %d request(s) left for bank account "%s"', $rateLimit['remaining'], $account['name']);
 
             // add IBAN if present
-            if (array_key_exists('iban', $account) && '' !== (string)$account['iban']) {
+            if (array_key_exists('iban', $account) && '' !== (string) $account['iban']) {
                 $message .= sprintf(' (IBAN %s)', $account['iban']);
             }
 
             // add account number if present
-            if (array_key_exists('number', $account) && '' !== (string)$account['number']) {
+            if (array_key_exists('number', $account) && '' !== (string) $account['number']) {
                 $message .= sprintf(' (account number %s)', $account['number']);
             }
             $message .= '. ';
@@ -173,8 +173,7 @@ class RoutineManager implements RoutineManagerInterface
 
     private function findAccountInfo(array $accounts, int $accountId): ?array
     {
-        return array_find($accounts, fn ($account) => $account['id'] === $accountId);
-
+        return array_find($accounts, static fn ($account) => $account['id'] === $accountId);
     }
 
     /**
@@ -275,7 +274,10 @@ class RoutineManager implements RoutineManagerInterface
         if (0 === $total) {
             Log::warning('Downloaded nothing, will return nothing.');
             // add error to current error thing:
-            $this->importJob->conversionStatus->addError(0, '[a111]: No transactions were downloaded from GoCardless. You may be rate limited or something else went wrong.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                '[a111]: No transactions were downloaded from GoCardless. You may be rate limited or something else went wrong.'
+            );
             $this->repository->saveToDisk($this->importJob);
 
             return true;

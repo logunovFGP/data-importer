@@ -32,8 +32,9 @@ use Illuminate\Support\Facades\Log;
 
 class TransactionExtractor
 {
-    public function __construct(private Configuration $configuration)
-    {
+    public function __construct(
+        private Configuration $configuration
+    ) {
         Log::debug(sprintf('[%s] Now in %s', config('importer.version'), __METHOD__));
         $this->configuration = $configuration;
     }
@@ -55,7 +56,7 @@ class TransactionExtractor
             $camtType   = $this->configuration->getCamtType();
             $entryCount = count($entries);
             Log::debug(sprintf('[%s] [%d/%d] Now working on statement with %d entries.', config('importer.version'), $i + 1, $totalCount, $entryCount));
-            foreach ($entries as $ii => $entry) {                // -> Level C
+            foreach ($entries as $ii => $entry) { // -> Level C
                 $count = count($entry->getTransactionDetails()); // count level D entries.
                 Log::debug(sprintf('[%s] [%d/%d] Now working on entry with %d detail entries.', config('importer.version'), $ii + 1, $entryCount, $count));
                 if (0 === $count) {

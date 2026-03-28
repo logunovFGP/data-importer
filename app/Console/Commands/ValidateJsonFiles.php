@@ -26,11 +26,11 @@ namespace App\Console\Commands;
 
 use App\Console\VerifyJSON;
 use Illuminate\Console\Command;
-use Symfony\Component\Console\Command\Command as CommandAlias;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RecursiveRegexIterator;
 use RegexIterator;
+use Symfony\Component\Console\Command\Command as CommandAlias;
 
 class ValidateJsonFiles extends Command
 {
@@ -55,7 +55,7 @@ class ValidateJsonFiles extends Command
      */
     public function handle(): int
     {
-        $directory = (string)$this->argument('directory');
+        $directory = (string) $this->argument('directory');
         if (!is_dir($directory) || !is_readable($directory)) {
             $this->error(sprintf('Cannot read directory %s.', $directory));
 

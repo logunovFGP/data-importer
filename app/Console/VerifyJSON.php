@@ -39,7 +39,7 @@ trait VerifyJSON
     private function verifyJSON(string $file): bool
     {
         // basic check on the JSON.
-        $json       = (string)file_get_contents($file);
+        $json       = (string) file_get_contents($file);
 
         try {
             $config = json_decode($json, null, 512, JSON_THROW_ON_ERROR);

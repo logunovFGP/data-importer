@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * NewJobDataCollector.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -34,7 +35,7 @@ use Illuminate\Support\MessageBag;
 
 class NewJobDataCollector implements NewJobDataCollectorInterface
 {
-    private ImportJob           $importJob;
+    private ImportJob $importJob;
     private ImportJobRepository $repository;
 
     public function __construct()
@@ -76,7 +77,7 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
         $accounts   = $req->get();
 
         if ($accounts instanceof ErrorResponse) {
-            $message = (string)config(sprintf('importer.http_codes.%d', $accounts->statusCode));
+            $message = (string) config(sprintf('importer.http_codes.%d', $accounts->statusCode));
             $messageBag->add('config_file', sprintf('LunchFlow API error with HTTP code %d: %s', $accounts->statusCode, $message));
 
             return $messageBag;

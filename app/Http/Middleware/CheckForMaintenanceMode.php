@@ -34,7 +34,5 @@ class CheckForMaintenanceMode extends Middleware
     /**
      * The URIs that should be reachable while maintenance mode is enabled.
      */
-    protected $except
-        = [
-        ];
+    protected $except = [];
 }

@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * GetInstitutionsResponse.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -32,7 +33,7 @@ use Iterator;
 class GetInstitutionsResponse extends Response implements Iterator, Countable
 {
     private array $institutions;
-    private int   $position = 0;
+    private int $position = 0;
 
     public function __construct(array $data)
     {
@@ -45,10 +46,7 @@ class GetInstitutionsResponse extends Response implements Iterator, Countable
             $institution                                                     = Institution::fromArray($array);
             if (!array_key_exists($institution->countryCode, $this->institutions)) {
                 ++$countCountries;
-                $this->institutions[$institution->countryCode] = [
-                    'country_code' => $institution->countryCode,
-                    'institutions' => [],
-                ];
+                $this->institutions[$institution->countryCode] = ['country_code' => $institution->countryCode, 'institutions' => []];
             }
             ++$countInstitutions;
             $this->institutions[$institution->countryCode]['institutions'][] = $institution;

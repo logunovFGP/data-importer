@@ -24,8 +24,8 @@ declare(strict_types=1);
 
 namespace App\Services\SimpleFIN\Response;
 
-use GrumpyDictator\FFIIIApiSupport\Response\Response;
 use GrumpyDictator\FFIIIApiSupport\Model\Account;
+use GrumpyDictator\FFIIIApiSupport\Response\Response;
 
 /**
  * Class PostAccountResponse.

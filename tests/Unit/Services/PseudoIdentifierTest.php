@@ -108,27 +108,23 @@ final class PseudoIdentifierTest extends TestCase
     public function testMultiColumnIdentifierPreserved(): void
     {
         $newConfig = [
-            'version'                           => 3,
-            'duplicate_detection_method'        => 'cell',
-            'unique_column_index'               => 0,
-            'unique_column_type'                => 'external-id',
-            'pseudo_identifier'                 => [
-                'source_columns' => [0, 3, 5],
-                'separator'      => '|',
-                'role'           => 'external-id',
-            ],
-            'headers'                           => true,
-            'delimiter'                         => 'comma',
-            'date'                              => 'Y-m-d',
-            'default_account'                   => 1,
-            'rules'                             => true,
-            'ignore_duplicate_lines'            => true,
-            'ignore_duplicate_transactions'     => true,
-            'roles'                             => [],
-            'do_mapping'                        => [],
-            'mapping'                           => [],
-            'flow'                              => 'file',
-            'content_type'                      => 'csv',
+            'version'                       => 3,
+            'duplicate_detection_method'    => 'cell',
+            'unique_column_index'           => 0,
+            'unique_column_type'            => 'external-id',
+            'pseudo_identifier'             => ['source_columns' => [0, 3, 5], 'separator'      => '|', 'role'           => 'external-id'],
+            'headers'                       => true,
+            'delimiter'                     => 'comma',
+            'date'                          => 'Y-m-d',
+            'default_account'               => 1,
+            'rules'                         => true,
+            'ignore_duplicate_lines'        => true,
+            'ignore_duplicate_transactions' => true,
+            'roles'                         => [],
+            'do_mapping'                    => [],
+            'mapping'                       => [],
+            'flow'                          => 'file',
+            'content_type'                  => 'csv',
         ];
 
         $config    = Configuration::fromArray($newConfig);
@@ -219,14 +215,10 @@ final class PseudoIdentifierTest extends TestCase
     public function testPseudoIdentifierConfigurationRoundTrip(): void
     {
         $originalConfig = array_merge($this->getBaseConfiguration(), [
-            'duplicate_detection_method'        => 'cell',
-            'unique_column_index'               => 1,
-            'unique_column_type'                => 'internal_reference',
-            'pseudo_identifier'                 => [
-                'source_columns' => [1, 4],
-                'separator'      => '|',
-                'role'           => 'internal_reference',
-            ],
+            'duplicate_detection_method' => 'cell',
+            'unique_column_index'        => 1,
+            'unique_column_type'         => 'internal_reference',
+            'pseudo_identifier'          => ['source_columns' => [1, 4], 'separator'      => '|', 'role'           => 'internal_reference'],
         ]);
 
         // Load configuration

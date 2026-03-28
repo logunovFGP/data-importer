@@ -36,9 +36,7 @@ trait DuplicateSafetyCatch
         Log::debug(sprintf('[%s] Now in %s', config('importer.version'), __METHOD__));
 
         // check for columns:
-        if (!array_key_exists('source_id', $transaction)
-            || !array_key_exists('destination_id', $transaction)
-            || !array_key_exists('type', $transaction)) {
+        if (!array_key_exists('source_id', $transaction) || !array_key_exists('destination_id', $transaction) || !array_key_exists('type', $transaction)) {
             Log::debug('negativeTransactionSafetyCatch: missing columns, cannot continue.');
 
             return $transaction;
@@ -46,9 +44,7 @@ trait DuplicateSafetyCatch
 
         // safety catch: if the transaction is a transfer, BUT the source and destination are the same, Firefly III will break.
         // The data importer will try to correct this.
-        if ('transfer' === $transaction['type']
-            && 0 !== $transaction['destination_id']
-            && $transaction['destination_id'] === $transaction['source_id']) {
+        if ('transfer' === $transaction['type'] && 0 !== $transaction['destination_id'] && $transaction['destination_id'] === $transaction['source_id']) {
             Log::warning('Transaction is a "transfer", but source and destination are the same. Correcting.');
             $transaction['type']             = 'withdrawal';
 
@@ -76,17 +72,13 @@ trait DuplicateSafetyCatch
         // The data importer will try to correct this.
 
         // check for columns:
-        if (!array_key_exists('source_id', $transaction)
-            || !array_key_exists('destination_id', $transaction)
-            || !array_key_exists('type', $transaction)) {
+        if (!array_key_exists('source_id', $transaction) || !array_key_exists('destination_id', $transaction) || !array_key_exists('type', $transaction)) {
             Log::debug('positiveTransactionSafetyCatch: missing columns, cannot continue.');
 
             return $transaction;
         }
 
-        if ('transfer' === $transaction['type']
-            && 0 !== $transaction['destination_id']
-            && $transaction['destination_id'] === $transaction['source_id']) {
+        if ('transfer' === $transaction['type'] && 0 !== $transaction['destination_id'] && $transaction['destination_id'] === $transaction['source_id']) {
             Log::warning('Transaction is a "transfer", but source and destination are the same. Correcting.');
             $transaction['type']        = 'deposit';
 

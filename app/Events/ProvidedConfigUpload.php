@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * ProvidedConfigUpload.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -24,11 +25,11 @@ declare(strict_types=1);
 namespace App\Events;
 
 use App\Services\Shared\Configuration\Configuration;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\Channel;
 
 class ProvidedConfigUpload
 {
@@ -39,7 +40,10 @@ class ProvidedConfigUpload
     /**
      * Create a new event instance.
      */
-    public function __construct(public string $fileName, public Configuration $configuration) {}
+    public function __construct(
+        public string $fileName,
+        public Configuration $configuration
+    ) {}
 
     /**
      * Get the channels the event should broadcast on.
@@ -48,8 +52,6 @@ class ProvidedConfigUpload
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('channel-name'),
-        ];
+        return [new PrivateChannel('channel-name')];
     }
 }

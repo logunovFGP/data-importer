@@ -40,10 +40,10 @@ use Override;
  */
 class RoutineManager implements RoutineManagerInterface
 {
-    private Configuration        $configuration;
+    private Configuration $configuration;
     private GenerateTransactions $transactionGenerator;
     private TransactionProcessor $transactionProcessor;
-    private ImportJobRepository  $repository;
+    private ImportJobRepository $repository;
 
     private array $downloaded;
     private ImportJob $importJob;
@@ -95,7 +95,6 @@ class RoutineManager implements RoutineManagerInterface
         // need to refresh local import job because of changes made by the previous step.
         $this->importJob = $this->transactionProcessor->getImportJob();
         $this->transactionGenerator->setImportJob($this->importJob);
-
 
         // then report and stop if nothing was even downloaded
         if (true === $this->breakOnDownload()) {
@@ -154,7 +153,10 @@ class RoutineManager implements RoutineManagerInterface
         if (0 === $total) {
             Log::warning('Downloaded nothing, will return nothing.');
             // add error to current error thing:
-            $this->importJob->conversionStatus->addError(0, '[a111]: No transactions were downloaded from GoCardless. You may be rate limited or something else went wrong.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                '[a111]: No transactions were downloaded from GoCardless. You may be rate limited or something else went wrong.'
+            );
             $this->repository->saveToDisk($this->importJob);
 
             return true;

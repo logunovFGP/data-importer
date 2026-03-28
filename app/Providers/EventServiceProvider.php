@@ -38,16 +38,9 @@ class EventServiceProvider extends ServiceProvider
     /**
      * The event listener mappings for the application.
      */
-    protected $listen
-        = [
-            Registered::class                  => [
-                SendEmailVerificationNotification::class,
-            ],
-            ImportedTransactions::class        => [
-                'App\Handlers\Events\ImportedTransactionsEventHandler@sendReportOverMail',
-            ],
-            DownloadedSimpleFINAccounts::class => [
-                'App\Handlers\Events\ImportFlowHandler@handleDownloadedSimpleFINAccounts',
-            ],
-        ];
+    protected $listen = [
+        Registered::class                  => [SendEmailVerificationNotification::class],
+        ImportedTransactions::class        => ['App\Handlers\Events\ImportedTransactionsEventHandler@sendReportOverMail'],
+        DownloadedSimpleFINAccounts::class => ['App\Handlers\Events\ImportFlowHandler@handleDownloadedSimpleFINAccounts'],
+    ];
 }

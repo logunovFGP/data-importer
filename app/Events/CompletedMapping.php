@@ -20,7 +20,9 @@ class CompletedMapping
     /**
      * Create a new event instance.
      */
-    public function __construct(public Configuration $configuration) {}
+    public function __construct(
+        public Configuration $configuration
+    ) {}
 
     /**
      * Get the channels the event should broadcast on.
@@ -29,8 +31,6 @@ class CompletedMapping
      */
     public function broadcastOn(): array
     {
-        return [
-            new PrivateChannel('channel-name'),
-        ];
+        return [new PrivateChannel('channel-name')];
     }
 }

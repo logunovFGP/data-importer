@@ -42,13 +42,13 @@ use Override;
  */
 class RoutineManager implements RoutineManagerInterface
 {
-    private ColumnValueConverter       $columnValueConverter;
-    private Configuration              $configuration;
-    private CSVFileProcessor           $csvFileProcessor;
-    private LineProcessor              $lineProcessor;
+    private ColumnValueConverter $columnValueConverter;
+    private Configuration $configuration;
+    private CSVFileProcessor $csvFileProcessor;
+    private LineProcessor $lineProcessor;
     private PseudoTransactionProcessor $pseudoTransactionProcessor;
-    private ImportJob                  $importJob;
-    private ImportJobRepository        $repository;
+    private ImportJob $importJob;
+    private ImportJobRepository $repository;
 
     public function __construct(ImportJob $importJob)
     {
@@ -61,7 +61,6 @@ class RoutineManager implements RoutineManagerInterface
         $this->lineProcessor              = new LineProcessor($this->importJob);
         $this->columnValueConverter       = new ColumnValueConverter($this->importJob);
         $this->pseudoTransactionProcessor = new PseudoTransactionProcessor($this->importJob);
-
     }
 
     #[Override]

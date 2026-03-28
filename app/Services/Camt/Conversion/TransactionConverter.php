@@ -31,8 +31,9 @@ use Illuminate\Support\Facades\Log;
 
 class TransactionConverter
 {
-    public function __construct(private Configuration $configuration)
-    {
+    public function __construct(
+        private Configuration $configuration
+    ) {
         Log::debug('Constructed TransactionConverter.');
     }
 
@@ -62,9 +63,7 @@ class TransactionConverter
     private function convertSingle(AbstractTransaction $transaction): array
     {
         Log::debug('Convert single transaction into pseudo-transaction.');
-        $result           = [
-            'transactions' => [],
-        ];
+        $result           = ['transactions'          => []];
         $configuredRoles  = $this->getConfiguredRoles();
         $mapping          = $this->configuration->getMapping();
         $allRoles         = $this->configuration->getRoles();
@@ -79,7 +78,7 @@ class TransactionConverter
             // the final response to this may be to join these fields or only use the last one.
             $current                  = [];
             foreach ($fieldNames as $field) {
-                $field = (string)$field;
+                $field = (string) $field;
                 $role  = $allRoles[$field] ?? '_ignore';
                 if ('_ignore' !== $role) {
                     Log::debug(sprintf('Field "%s" was given role "%s".', $field, $role));
@@ -90,10 +89,7 @@ class TransactionConverter
                 // get by index, so grab it from the appropriate split or get the first one.
                 $value = trim($transaction->getFieldByIndex($field, $i));
                 if ('' !== $value) {
-                    $current[$role] ??= [
-                        'data'    => [],
-                        'mapping' => [],
-                    ];
+                    $current[$role] ??= ['data'    => [], 'mapping' => []];
                     if (array_key_exists($field, $mapping)) {
                         $current[$role]['mapping'] = array_merge($mapping[$field], $current[$role]['mapping']);
                     }

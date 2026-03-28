@@ -186,7 +186,7 @@
 
                 console.log('Import toggle for account:', accountId, 'enabled:', isImportEnabled);
             } else {
-                console.error('Could not find firefly account content or not imported text elements for account:', accountId);
+                console.error('Could not find firefly iii account content or not imported text elements for account:', accountId);
             }
         }
 

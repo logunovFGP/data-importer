@@ -58,11 +58,7 @@ class PostGetInstitutionsByUserRequest extends Request
 
     public function post(): Response
     {
-        $data = $this->authenticatedPost(
-            [
-                'userID' => $this->userId,
-            ]
-        );
+        $data = $this->authenticatedPost(['userID' => $this->userId]);
 
         return new PostGetInstitutionsByUserResponse($data);
     }

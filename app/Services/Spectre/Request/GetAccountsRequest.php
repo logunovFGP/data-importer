@@ -30,6 +30,7 @@ use App\Services\Spectre\Response\ErrorResponse;
 use App\Services\Spectre\Response\GetAccountsResponse;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class GetAccountsRequest
@@ -41,7 +42,7 @@ class GetAccountsRequest extends Request
     /**
      * ListConnectionsRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[SensitiveParameter] string $secret)
     {
         $this->type = 'all';
         $this->setBase($url);
@@ -56,11 +57,7 @@ class GetAccountsRequest extends Request
     public function get(): Response
     {
         Log::debug('GetAccountsRequest::get()');
-        $this->setParameters(
-            [
-                'connection_id' => $this->connection,
-            ]
-        );
+        $this->setParameters(['connection_id' => $this->connection]);
 
         try {
             $response = $this->authenticatedGet();

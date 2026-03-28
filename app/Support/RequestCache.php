@@ -25,10 +25,11 @@ declare(strict_types=1);
 namespace App\Support;
 
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 class RequestCache
 {
-    public static function has(string $identifier, string $token): bool
+    public static function has(string $identifier, #[SensitiveParameter] string $token): bool
     {
         Log::debug('has key in cache?');
         $key    = self::generateKey($identifier, $token);
@@ -38,7 +39,7 @@ class RequestCache
         return $result;
     }
 
-    public static function get(string $identifier, string $token): mixed
+    public static function get(string $identifier, #[SensitiveParameter] string $token): mixed
     {
         Log::debug('get!');
         $key = self::generateKey($identifier, $token);
@@ -46,14 +47,14 @@ class RequestCache
         return cache()->get($key);
     }
 
-    public static function set(string $identifier, string $token, mixed $data): void
+    public static function set(string $identifier, #[SensitiveParameter] string $token, mixed $data): void
     {
         Log::debug('set key forever!');
         $key = self::generateKey($identifier, $token);
         cache()->forever($key, $data);
     }
 
-    private static function generateKey(string $identifier, string $token): string
+    private static function generateKey(string $identifier, #[SensitiveParameter] string $token): string
     {
         $hash = hash('sha256', sprintf('%s-%s', $identifier, $token));
         Log::debug(sprintf('generateKey("%s", "%s...") results in "%s..."', $identifier, substr($token, 0, 10), substr($hash, 0, 10)));

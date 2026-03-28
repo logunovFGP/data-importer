@@ -38,8 +38,7 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
         Log::debug(sprintf('Now at %s', __METHOD__));
         // needs an APP key which isn't blank or zero or whatever.
         $key = (string) config('app.key');
-        if ('' ===   $key) {
-
+        if ('' === $key) {
             Log::warning(sprintf('app.key is empty ("%s"), cannot authenticate. Return OK anyway.', $key));
 
             return AuthenticationStatus::AUTHENTICATED;
@@ -51,9 +50,7 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
 
     public function getData(): array
     {
-        return [
-            'key' => (string) config('app.key'),
-        ];
+        return ['key' => (string) config('app.key')];
     }
 
     public function setData(array $data): void {}

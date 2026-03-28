@@ -24,10 +24,11 @@ declare(strict_types=1);
 
 namespace App\Services\SimpleFIN\Request;
 
+use App\Services\SimpleFIN\Response\PostAccountResponse;
 use GrumpyDictator\FFIIIApiSupport\Request\Request;
 use GrumpyDictator\FFIIIApiSupport\Response\Response;
 use GrumpyDictator\FFIIIApiSupport\Response\ValidationErrorResponse;
-use App\Services\SimpleFIN\Response\PostAccountResponse;
+use SensitiveParameter;
 
 /**
  * Class PostAccountRequest
@@ -38,7 +39,7 @@ class PostAccountRequest extends Request
     /**
      * PostAccountRequest constructor.
      */
-    public function __construct(string $url, string $token)
+    public function __construct(string $url, #[SensitiveParameter] string $token)
     {
         $this->setBase($url);
         $this->setToken($token);

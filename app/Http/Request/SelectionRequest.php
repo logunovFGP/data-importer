@@ -36,20 +36,12 @@ class SelectionRequest extends Request
         $country = $this->get('country');
         $days    = $this->get('days');
 
-        return [
-            'country' => $country,
-            'bank'    => $this->get(sprintf('bank_%s', $country)),
-            'days'    => $days,
-        ];
+        return ['country' => $country, 'bank'    => $this->get(sprintf('bank_%s', $country)), 'days'    => $days];
     }
 
     public function rules(): array
     {
-        return [
-            'country' => 'required|not_in:XX',
-            'bank_*'  => 'required',
-            'days'    => 'required|numeric|between:1,1000',
-        ];
+        return ['country' => 'required|not_in:XX', 'bank_*'  => 'required', 'days'    => 'required|numeric|between:1,1000'];
     }
 
     /**
@@ -57,16 +49,14 @@ class SelectionRequest extends Request
      */
     public function withValidator(Validator $validator): void
     {
-        $validator->after(
-            function (Validator $validator): void {
-                $data    = $validator->getData(); // @phpstan-ignore-line
-                $country = $data['country'];
-                $key     = sprintf('bank_%s', $country);
-                $value   = $data[$key] ?? 'XX';
-                if ('XX' === $value) {
-                    $validator->errors()->add('country', 'The selected bank is invalid.');
-                }
+        $validator->after(static function (Validator $validator): void {
+            $data    = $validator->getData(); // @phpstan-ignore-line
+            $country = $data['country'];
+            $key     = sprintf('bank_%s', $country);
+            $value   = $data[$key] ?? 'XX';
+            if ('XX' === $value) {
+                $validator->errors()->add('country', 'The selected bank is invalid.');
             }
-        );
+        });
     }
 }

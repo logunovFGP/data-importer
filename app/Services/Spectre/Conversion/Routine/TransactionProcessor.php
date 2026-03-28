@@ -40,10 +40,11 @@ use Illuminate\Support\Facades\Log;
 class TransactionProcessor
 {
     private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s';
+
     private Configuration $configuration;
-    private string        $downloadIdentifier;
-    private ?Carbon       $notAfter       = null;
-    private ?Carbon       $notBefore      = null;
+    private string $downloadIdentifier;
+    private ?Carbon $notAfter             = null;
+    private ?Carbon $notBefore            = null;
 
     /**
      * @throws ImporterHttpException
@@ -127,24 +128,20 @@ class TransactionProcessor
             $madeOn   = $transaction->madeOn;
 
             if ($this->notBefore instanceof Carbon && $madeOn->lt($this->notBefore)) {
-                Log::debug(
-                    sprintf(
-                        'Skip transaction because "%s" is before "%s".',
-                        $madeOn->format(self::DATE_TIME_FORMAT),
-                        $this->notBefore->format(self::DATE_TIME_FORMAT)
-                    )
-                );
+                Log::debug(sprintf(
+                    'Skip transaction because "%s" is before "%s".',
+                    $madeOn->format(self::DATE_TIME_FORMAT),
+                    $this->notBefore->format(self::DATE_TIME_FORMAT)
+                ));
 
                 continue;
             }
             if ($this->notAfter instanceof Carbon && $madeOn->gt($this->notAfter)) {
-                Log::debug(
-                    sprintf(
-                        'Skip transaction because "%s" is after "%s".',
-                        $madeOn->format(self::DATE_TIME_FORMAT),
-                        $this->notAfter->format(self::DATE_TIME_FORMAT)
-                    )
-                );
+                Log::debug(sprintf(
+                    'Skip transaction because "%s" is after "%s".',
+                    $madeOn->format(self::DATE_TIME_FORMAT),
+                    $this->notAfter->format(self::DATE_TIME_FORMAT)
+                ));
 
                 continue;
             }

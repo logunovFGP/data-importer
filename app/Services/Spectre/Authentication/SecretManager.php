@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace App\Services\Spectre\Authentication;
 
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class SecretManager
@@ -89,7 +90,7 @@ class SecretManager
     /**
      * Store access token in a cookie.
      */
-    public static function saveSecret(string $secret): void
+    public static function saveSecret(#[SensitiveParameter] string $secret): void
     {
         session()->put(self::SECRET, $secret);
     }

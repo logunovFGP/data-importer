@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * Institution.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -33,7 +34,7 @@ class Institution
     public string $logo              = '';
     public string $countryCode;
     public string $languageCode;
-    private bool  $isFinancial;
+    private bool $isFinancial;
     public string $loginFormUserName = '';
     public string $loginFormPassword = '';
     public string $routingNumber     = '';
@@ -98,7 +99,6 @@ class Institution
         }
 
         return $institution;
-
     }
 
     public function toArray(): array

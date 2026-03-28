@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * TransactionConverter.php
  * Copyright (c) 2026 james@firefly-iii.org
@@ -31,9 +32,9 @@ use Illuminate\Support\Facades\Log;
 class TransactionConverter
 {
     private ImportJob $importJob;
-    private bool      $isRules        = true;
-    private bool      $errorIfHash    = true;
-    private int       $defaultAccount = 0;
+    private bool $isRules        = true;
+    private bool $errorIfHash    = true;
+    private int  $defaultAccount = 0;
 
     public function __construct(ImportJob $importJob)
     {
@@ -62,11 +63,7 @@ class TransactionConverter
 
     private function convertTransaction(Transaction $original): array
     {
-        $return                   = [
-            'apply_rules'             => $this->isRules,
-            'error_if_duplicate_hash' => $this->errorIfHash,
-            'transactions'            => [],
-        ];
+        $return                   = ['apply_rules'             => $this->isRules, 'error_if_duplicate_hash' => $this->errorIfHash, 'transactions'            => []];
         $split                    = [
             'type'          => 'withdrawal',
             'date'          => null === $original->date ? now()->toW3cString() : $original->date->toW3cString(),

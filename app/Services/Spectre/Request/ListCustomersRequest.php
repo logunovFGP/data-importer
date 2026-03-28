@@ -31,6 +31,7 @@ use App\Services\Spectre\Response\ErrorResponse;
 use App\Services\Spectre\Response\ListCustomersResponse;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class ListCustomersRequest
@@ -40,7 +41,7 @@ class ListCustomersRequest extends Request
     /**
      * ListCustomersRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[SensitiveParameter] string $secret)
     {
         $this->type = 'all';
         $this->setBase($url);

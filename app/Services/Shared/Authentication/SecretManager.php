@@ -27,6 +27,7 @@ namespace App\Services\Shared\Authentication;
 use App\Models\ImportJob;
 use App\Services\Session\Constants;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 /**
  * Class SecretManager
@@ -53,20 +54,20 @@ class SecretManager
         // check: session
         if (session()->has($sessionField)) {
             Log::debug(sprintf('There is a "%s" in the session.', $sessionField));
-            $result = (string)session()->get($sessionField);
+            $result = (string) session()->get($sessionField);
         }
         // check: import job.
         if ('' === $result && null !== $importJob) {
             Log::debug(sprintf('Check if "%s" is in the import job.', $fieldName));
             $details = $importJob->getAuthenticationDetails();
             if (array_key_exists($fieldName, $details)) {
-                $result = (string)$details[$fieldName];
+                $result = (string) $details[$fieldName];
             }
         }
         // check: config
         if ('' === $result) {
             Log::debug(sprintf('Check if "%s" is in the config.', $fieldName));
-            $result = (string)config($configName);
+            $result = (string) config($configName);
         }
         Log::debug(sprintf('Return result. strlen=%d', strlen($result)));
 
@@ -94,7 +95,7 @@ class SecretManager
 
         $token = request()?->header('Authorization', '') ?? '';
         if (is_array($token)) {
-            $token = (string)reset($token);
+            $token = (string) reset($token);
         }
         if ('' === $token) {
             Log::debug('Access token in header is empty, will be ignored.');
@@ -110,10 +111,10 @@ class SecretManager
         }
         if (null === $token) {
             Log::debug('Access token is null, use config instead.');
-            $token = (string)config('importer.access_token');
+            $token = (string) config('importer.access_token');
         }
 
-        return (string)$token;
+        return (string) $token;
     }
 
     public static function getBaseUrl(): string
@@ -121,10 +122,10 @@ class SecretManager
         if (!self::hasBaseUrl()) {
             Log::debug('No base url in getBaseUrl() session, will return config variable.');
 
-            return (string)config('importer.url');
+            return (string) config('importer.url');
         }
 
-        return (string)session()->get(Constants::SESSION_BASE_URL);
+        return (string) session()->get(Constants::SESSION_BASE_URL);
     }
 
     /**
@@ -132,8 +133,7 @@ class SecretManager
      */
     private static function hasBaseUrl(): bool
     {
-        return session()->has(Constants::SESSION_BASE_URL)
-               && '' !== session()->get(Constants::SESSION_BASE_URL);
+        return session()->has(Constants::SESSION_BASE_URL) && '' !== session()->get(Constants::SESSION_BASE_URL);
     }
 
     /**
@@ -144,10 +144,10 @@ class SecretManager
         if (!self::hasClientId()) {
             Log::debug('No client id in hasClientId() session, will return config variable.');
 
-            return (int)config('importer.client_id');
+            return (int) config('importer.client_id');
         }
 
-        return (int)session()->get(Constants::SESSION_CLIENT_ID);
+        return (int) session()->get(Constants::SESSION_CLIENT_ID);
     }
 
     /**
@@ -155,22 +155,21 @@ class SecretManager
      */
     private static function hasClientId(): bool
     {
-        return session()->has(Constants::SESSION_CLIENT_ID)
-               && 0 !== session()->get(Constants::SESSION_CLIENT_ID);
+        return session()->has(Constants::SESSION_CLIENT_ID) && 0 !== session()->get(Constants::SESSION_CLIENT_ID);
     }
 
     public static function getVanityUrl(): string
     {
         if (!self::hasVanityUrl()) {
             Log::debug('No vanity url in getVanityUrl() session, will return config variable.');
-            if ('' === (string)config('importer.vanity_url')) {
-                return (string)config('importer.url');
+            if ('' === (string) config('importer.vanity_url')) {
+                return (string) config('importer.url');
             }
 
-            return (string)config('importer.vanity_url');
+            return (string) config('importer.vanity_url');
         }
 
-        return (string)session()->get(Constants::SESSION_VANITY_URL);
+        return (string) session()->get(Constants::SESSION_VANITY_URL);
     }
 
     /**
@@ -178,8 +177,7 @@ class SecretManager
      */
     private static function hasVanityUrl(): bool
     {
-        return session()->has(Constants::SESSION_VANITY_URL)
-               && '' !== session()->get(Constants::SESSION_VANITY_URL);
+        return session()->has(Constants::SESSION_VANITY_URL) && '' !== session()->get(Constants::SESSION_VANITY_URL);
     }
 
     /**
@@ -206,14 +204,13 @@ class SecretManager
      */
     private static function hasRefreshToken(): bool
     {
-        return session()->has(Constants::SESSION_REFRESH_TOKEN)
-               && '' !== session()->get(Constants::SESSION_REFRESH_TOKEN);
+        return session()->has(Constants::SESSION_REFRESH_TOKEN) && '' !== session()->get(Constants::SESSION_REFRESH_TOKEN);
     }
 
     /**
      * Store access token.
      */
-    public static function saveAccessToken(string $token): void
+    public static function saveAccessToken(#[SensitiveParameter] string $token): void
     {
         Log::debug(sprintf('saveAccessToken in session under "%s"', Constants::SESSION_ACCESS_TOKEN));
         session()->put(Constants::SESSION_ACCESS_TOKEN, $token);
@@ -230,7 +227,7 @@ class SecretManager
     /**
      * Store access token.
      */
-    public static function saveRefreshToken(string $token): void
+    public static function saveRefreshToken(#[SensitiveParameter] string $token): void
     {
         session()->put(Constants::SESSION_REFRESH_TOKEN, $token);
     }

@@ -29,6 +29,7 @@ use App\Exceptions\ImporterHttpException;
 use App\Services\Shared\Response\Response;
 use App\Services\Spectre\Response\ErrorResponse;
 use App\Services\Spectre\Response\PostRefreshConnectionResponse;
+use SensitiveParameter;
 
 /**
  * Class PostRefreshConnectionRequest
@@ -40,7 +41,7 @@ class PostRefreshConnectionRequest extends Request
     /**
      * ListCustomersRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[SensitiveParameter] string $secret)
     {
         $this->setBase($url);
         $this->setAppId($appId);
@@ -57,17 +58,12 @@ class PostRefreshConnectionRequest extends Request
     {
         $this->setUrl(sprintf($this->getUrl(), $this->connection));
 
-        $body = [
-            'data' => [
-                'return_connection_id' => false,
-                'automatic_refresh'    => true,
-                'show_widget'          => false,
-                'attempt'              => [
-                    'fetch_scopes' => ['accounts', 'transactions'],
-                    'return_to'    => $this->getUrl(),
-                ],
-            ],
-        ];
+        $body = ['data' => [
+            'return_connection_id' => false,
+            'automatic_refresh'    => true,
+            'show_widget'          => false,
+            'attempt'              => ['fetch_scopes' => ['accounts', 'transactions'], 'return_to'    => $this->getUrl()],
+        ]];
 
         try {
             $response = $this->sendUnsignedSpectrePost($body);

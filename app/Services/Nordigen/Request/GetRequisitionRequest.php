@@ -31,6 +31,7 @@ use App\Exceptions\RateLimitException;
 use App\Services\Nordigen\Response\ErrorResponse;
 use App\Services\Nordigen\Response\GetRequisitionResponse;
 use App\Services\Shared\Response\Response;
+use SensitiveParameter;
 
 /**
  * Class GetRequisitionRequest
@@ -39,7 +40,7 @@ class GetRequisitionRequest extends Request
 {
     private readonly string $requisitionId;
 
-    public function __construct(string $url, string $token, string $requisitionId)
+    public function __construct(string $url, #[SensitiveParameter] string $token, string $requisitionId)
     {
         $this->setParameters([]);
         $this->setBase($url);
@@ -56,11 +57,7 @@ class GetRequisitionRequest extends Request
         try {
             $response = $this->authenticatedGet();
         } catch (ImporterErrorException $e) {
-            $error = [
-                'error' => [
-                    'message' => $e->getMessage(),
-                ],
-            ];
+            $error = ['error' => ['message' => $e->getMessage()]];
 
             return new ErrorResponse($error);
         } catch (ImporterHttpException $e) {

@@ -50,17 +50,17 @@ use Illuminate\Support\Facades\Storage;
  */
 trait AutoImports
 {
-    protected array               $conversionErrors     = [];
-    protected array               $conversionMessages   = [];
-    protected array               $conversionWarnings   = [];
-    protected array               $conversionRateLimits = []; // only conversion can have rate limits.
-    protected string              $identifier;
-    protected array               $importErrors         = [];
-    protected array               $importMessages       = [];
-    protected array               $importWarnings       = [];
-    protected array               $importerAccounts     = [];
+    protected array $conversionErrors     = [];
+    protected array $conversionMessages   = [];
+    protected array $conversionWarnings   = [];
+    protected array $conversionRateLimits = []; // only conversion can have rate limits.
+    protected string $identifier;
+    protected array $importErrors         = [];
+    protected array $importMessages       = [];
+    protected array $importWarnings       = [];
+    protected array $importerAccounts     = [];
     protected ImportJobRepository $repository;
-    private ImportJob             $importJob;
+    private ImportJob $importJob;
 
     private function getFiles(string $directory): array
     {
@@ -247,7 +247,7 @@ trait AutoImports
         $messages         = $this->repository->parseImportJob($importJob);
 
         if ($messages->count() > 0) {
-            if ($messages->has('missing_requisitions') && 'true' === (string)$messages->get('missing_requisitions')[0]) {
+            if ($messages->has('missing_requisitions') && 'true' === (string) $messages->get('missing_requisitions')[0]) {
                 $this->error('Your import is missing a necessary GoCardless requisitions.');
 
                 return ExitCode::NO_REQUISITIONS_PRESENT->value;
@@ -269,7 +269,12 @@ trait AutoImports
             return ExitCode::GENERAL_ERROR->value;
         }
 
-        $this->line(sprintf('[a] Going to convert from file "%s" using configuration %s and flow "%s".', $importableFile, $jsonFile, $configuration->getFlow()));
+        $this->line(sprintf(
+            '[a] Going to convert from file "%s" using configuration %s and flow "%s".',
+            $importableFile,
+            $jsonFile,
+            $configuration->getFlow()
+        ));
         $this->importJob  = $importJob;
         $this->repository->saveToDisk($importJob);
         // this is it!
@@ -318,7 +323,7 @@ trait AutoImports
 
         $this->line('Done!');
 
-        // merge things:
+        // merge things, then report about it.
         $messages         = array_merge($importJob->conversionStatus->messages, $importJob->submissionStatus->messages);
         $warnings         = array_merge($importJob->conversionStatus->warnings, $importJob->submissionStatus->warnings);
         $errors           = array_merge($importJob->conversionStatus->errors, $importJob->submissionStatus->errors);
@@ -454,7 +459,6 @@ trait AutoImports
             return;
         }
 
-
         // set done:
         $importJob->submissionStatus->setStatus(SubmissionStatus::SUBMISSION_DONE);
         $this->importMessages = $importJob->submissionStatus->messages;
@@ -464,11 +468,7 @@ trait AutoImports
 
     private function reportImport(): void
     {
-        $list = [
-            'info'  => $this->importMessages,
-            'warn'  => $this->importWarnings,
-            'error' => $this->importErrors,
-        ];
+        $list = ['info'  => $this->importMessages, 'warn'  => $this->importWarnings, 'error' => $this->importErrors];
 
         // FIXME this reports to info() which ends up in the result.
         Log::info(sprintf('There are %d message(s)', count($this->importMessages)));
@@ -535,7 +535,11 @@ trait AutoImports
 
     private function reportBalanceDifference(Account $account, LocalAccount $localAccount): void
     {
-        Log::debug(sprintf('Report balance difference between GoCardless account "%s" and Firefly III account #%d.', $account->getIdentifier(), $localAccount->id));
+        Log::debug(sprintf(
+            'Report balance difference between GoCardless account "%s" and Firefly III account #%d.',
+            $account->getIdentifier(),
+            $localAccount->id
+        ));
         Log::debug(sprintf('GoCardless account has %d balance entry (entries)', count($account->getBalances())));
 
         /** @var Balance $balance */
@@ -549,7 +553,13 @@ trait AutoImports
     {
         // compare currencies, and warn if necessary.
         if ($balance->currency !== $localAccount->currencyCode) {
-            Log::warning(sprintf('GoCardless account "%s" has currency %s, Firefly III account #%d uses %s.', $account->getIdentifier(), $localAccount->id, $balance->currency, $localAccount->currencyCode));
+            Log::warning(sprintf(
+                'GoCardless account "%s" has currency %s, Firefly III account #%d uses %s.',
+                $account->getIdentifier(),
+                $localAccount->id,
+                $balance->currency,
+                $localAccount->currencyCode
+            ));
             $this->line(sprintf('Balance comparison (%s): Firefly III account #%d: Currency mismatch', $balance->type, $localAccount->id));
         }
 
@@ -563,11 +573,19 @@ trait AutoImports
 
         // compare balance, warn (also a message)
         Log::debug(sprintf('Comparing %s and %s', $balance->amount, $localAccount->currentBalance));
-        if (0 !== bccomp($balance->amount, (string)$localAccount->currentBalance)) {
+        if (0 !== bccomp($balance->amount, (string) $localAccount->currentBalance)) {
             Log::warning(sprintf('GoCardless balance is %s, Firefly III balance is %s.', $balance->amount, $localAccount->currentBalance));
-            $this->line(sprintf('Balance comparison (%s): Firefly III account #%d: GoCardless reports %s %s, Firefly III reports %s %d', $balance->type, $localAccount->id, $balance->currency, $balance->amount, $localAccount->currencyCode, $localAccount->currentBalance));
+            $this->line(sprintf(
+                'Balance comparison (%s): Firefly III account #%d: GoCardless reports %s %s, Firefly III reports %s %d',
+                $balance->type,
+                $localAccount->id,
+                $balance->currency,
+                $balance->amount,
+                $localAccount->currencyCode,
+                $localAccount->currentBalance
+            ));
         }
-        if (0 === bccomp($balance->amount, (string)$localAccount->currentBalance)) {
+        if (0 === bccomp($balance->amount, (string) $localAccount->currentBalance)) {
             $this->line(sprintf('Balance comparison (%s): Firefly III account #%d: Balance OK', $balance->type, $localAccount->id));
         }
     }
@@ -650,7 +668,7 @@ trait AutoImports
     protected function isNothingDownloaded(): bool
     {
         foreach ($this->conversionErrors as $errors) {
-            if (array_any($errors, fn ($error) => str_contains((string)$error, '[a111]'))) {
+            if (array_any($errors, static fn ($error) => str_contains((string) $error, '[a111]'))) {
                 return true;
             }
         }
@@ -661,7 +679,7 @@ trait AutoImports
     protected function isExpiredAgreement(): bool
     {
         foreach ($this->conversionErrors as $errors) {
-            if (array_any($errors, fn ($error) => str_contains((string)$error, 'EUA') && str_contains((string)$error, 'expired'))) {
+            if (array_any($errors, static fn ($error) => str_contains((string) $error, 'EUA') && str_contains((string) $error, 'expired'))) {
                 return true;
             }
         }

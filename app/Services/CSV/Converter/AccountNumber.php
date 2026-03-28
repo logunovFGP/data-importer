@@ -30,7 +30,7 @@ class AccountNumber implements ConverterInterface
 {
     public function convert(mixed $value): string
     {
-        $value = (string)$value;
+        $value = (string) $value;
 
         // replace spaces from cleaned string.
         return str_replace("\x20", '', Steam::cleanStringAndNewlines($value));

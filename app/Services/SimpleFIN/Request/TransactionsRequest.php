@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace App\Services\SimpleFIN\Request;
 
 use App\Exceptions\ImporterHttpException;
-use App\Services\SimpleFIN\Response\TransactionsResponse;
 use App\Services\Shared\Response\ResponseInterface as SharedResponseInterface;
+use App\Services\SimpleFIN\Response\TransactionsResponse;
 use Illuminate\Support\Facades\Log;
 
 /**

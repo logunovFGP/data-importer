@@ -31,6 +31,7 @@ use App\Exceptions\RateLimitException;
 use App\Services\Nordigen\Response\ErrorResponse;
 use App\Services\Nordigen\Response\ListBanksResponse;
 use App\Services\Shared\Response\Response;
+use SensitiveParameter;
 
 /**
  * Class ListBanksRequest
@@ -40,7 +41,7 @@ class ListBanksRequest extends Request
     /**
      * ListCustomersRequest constructor.
      */
-    public function __construct(string $url, string $token)
+    public function __construct(string $url, #[SensitiveParameter] string $token)
     {
         $this->setParameters([]);
         $this->setBase($url);
@@ -56,11 +57,7 @@ class ListBanksRequest extends Request
         try {
             $response = $this->authenticatedGet();
         } catch (ImporterErrorException $e) {
-            $error = [
-                'error' => [
-                    'message' => $e->getMessage(),
-                ],
-            ];
+            $error = ['error' => ['message' => $e->getMessage()]];
 
             return new ErrorResponse($error);
         } catch (ImporterHttpException $e) {

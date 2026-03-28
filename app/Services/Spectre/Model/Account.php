@@ -31,14 +31,14 @@ class Account
 {
     public string $accountName;
     public string $accountNumber;
-    public float  $balance;
+    public float $balance;
     public string $cardType;
     public string $clientName;
     public string $connectionId;
     public string $currencyCode;
     public string $iban;
     public string $id;
-    public bool   $matched;
+    public bool $matched;
     public string $name;
     public string $nature;
     public string $sortCode;

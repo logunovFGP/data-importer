@@ -37,9 +37,9 @@ class ImportedTransactions
     public const int TEST            = 3;
 
     public string $configurationFile = '';
-    public array $errors             = [];
-    public array $messages           = [];
-    public array $warnings           = [];
+    public array  $errors            = [];
+    public array  $messages          = [];
+    public array  $warnings          = [];
     public array $rateLimits;
 
     public function __construct(string $configurationFile, array $messages, array $warnings, array $errors, array $rateLimits)

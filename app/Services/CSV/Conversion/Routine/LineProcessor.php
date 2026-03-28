@@ -39,12 +39,12 @@ use Illuminate\Support\Facades\Log;
 class LineProcessor
 {
     private Configuration $configuration;
-    private string        $dateFormat;
-    private array         $doMapping;
-    private array         $mappedValues;
-    private array         $mapping;
-    private array         $roles;
-    private ImportJob     $importJob;
+    private string $dateFormat;
+    private array $doMapping;
+    private array $mappedValues;
+    private array $mapping;
+    private array $roles;
+    private ImportJob $importJob;
 
     /**
      * LineProcessor constructor.
@@ -110,7 +110,7 @@ class LineProcessor
         $return      = [];
         foreach ($line as $columnIndex => $value) {
             Log::debug(sprintf('Now at column %d/%d', $columnIndex + 1, $count));
-            $value        = trim((string)$value);
+            $value        = trim((string) $value);
             $originalRole = $this->roles[$columnIndex] ?? '_ignore';
             Log::debug(sprintf('Now at column #%d (%s), value "%s"', $columnIndex + 1, $originalRole, $value));
             if ('_ignore' === $originalRole) {
@@ -163,7 +163,7 @@ class LineProcessor
             // Combine values from source columns
             $combinedParts    = [];
             foreach ($pseudoIdentifier['source_columns'] as $sourceIndex) {
-                $value = isset($line[$sourceIndex]) ? trim((string)$line[$sourceIndex]) : '';
+                $value = isset($line[$sourceIndex]) ? trim((string) $line[$sourceIndex]) : '';
                 if ('' !== $value) {
                     $combinedParts[] = $value;
                 }

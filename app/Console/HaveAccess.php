@@ -67,7 +67,7 @@ trait HaveAccess
 
     protected function haveAccess(bool $console): bool
     {
-        $url             = (string)config('importer.url');
+        $url             = (string) config('importer.url');
         $token           = SecretManager::getAccessToken();
 
         $this->sendMessage($console, sprintf('Trying to connect to %s...', $url));
@@ -106,7 +106,11 @@ trait HaveAccess
 
         $compare         = version_compare($reportedVersion, config('importer.minimum_version'));
         if (-1 === $compare && !str_starts_with($reportedVersion, 'develop') && !str_starts_with($reportedVersion, 'branch')) {
-            $this->sendError($console, sprintf('The data importer cannot communicate with Firefly III v%s. Please upgrade to Firefly III v%s or higher.', $reportedVersion, config('importer.minimum_version')));
+            $this->sendError($console, sprintf(
+                'The data importer cannot communicate with Firefly III v%s. Please upgrade to Firefly III v%s or higher.',
+                $reportedVersion,
+                config('importer.minimum_version')
+            ));
 
             return false;
         }
@@ -143,7 +147,7 @@ trait HaveAccess
             if ($current === $path) {
                 return true;
             }
-            if (str_starts_with($path, (string)$current)) {
+            if (str_starts_with($path, (string) $current)) {
                 Log::debug(sprintf('SOFT match on isAllowedPath, "%s" is a subdirectory of "%s"', $path, $current));
 
                 return true;

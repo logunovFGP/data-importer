@@ -32,6 +32,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\TransferException;
 use Illuminate\Support\Facades\Log;
 use JsonException;
+use SensitiveParameter;
 
 /**
  * Class Request
@@ -39,7 +40,7 @@ use JsonException;
 abstract class Request
 {
     private string $base;
-    private float  $timeOut = 3.14;
+    private float $timeOut = 3.14;
     private string $url;
     private string $apiKey;
 
@@ -80,18 +81,12 @@ abstract class Request
         $body    = null;
 
         try {
-            $res = $client->request(
-                'GET',
-                $fullUrl,
-                [
-                    'headers' => [
-                        'Accept'       => 'application/json',
-                        'Content-Type' => 'application/json',
-                        'x-api-key'    => $this->apiKey,
-                        'User-Agent'   => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_c')),
-                    ],
-                ]
-            );
+            $res = $client->request('GET', $fullUrl, ['headers' => [
+                'Accept'       => 'application/json',
+                'Content-Type' => 'application/json',
+                'x-api-key'    => $this->apiKey,
+                'User-Agent'   => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_c')),
+            ]]);
         } catch (TransferException $e) {
             Log::error(sprintf('TransferException: %s', $e->getMessage()));
             // if response, parse as error response.
@@ -99,7 +94,7 @@ abstract class Request
             if (method_exists($e, 'hasResponse') && !$e->hasResponse()) {
                 throw new ImporterHttpException(sprintf('Exception: %s', $e->getMessage()));
             }
-            $body                  = method_exists($e, 'getResponse') ? (string)$e->getResponse()->getBody() : '';
+            $body                  = method_exists($e, 'getResponse') ? (string) $e->getResponse()->getBody() : '';
             $exception             = new ImporterHttpException(sprintf('Transfer exception leads to error: %s', $body), 0, $e);
             $exception->statusCode = $e->getResponse() ? $e->getResponse()->getStatusCode() : 0;
 
@@ -109,22 +104,20 @@ abstract class Request
             // return body, class must handle this
             Log::error(sprintf('[3] Status code is %d', $res->getStatusCode()));
 
-            $body = (string)$res->getBody();
+            $body = (string) $res->getBody();
         }
-        $body ??= (string)$res->getBody();
+        $body ??= (string) $res->getBody();
 
         try {
             $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            throw new ImporterHttpException(
-                sprintf(
-                    'Could not decode JSON (%s). Error[%d] is: %s. Response: %s',
-                    $fullUrl,
-                    $res->getStatusCode(),
-                    $e->getMessage(),
-                    $body
-                )
-            );
+            throw new ImporterHttpException(sprintf(
+                'Could not decode JSON (%s). Error[%d] is: %s. Response: %s',
+                $fullUrl,
+                $res->getStatusCode(),
+                $e->getMessage(),
+                $body
+            ));
         }
 
         if (null === $json) {
@@ -161,11 +154,7 @@ abstract class Request
     {
         // config here
 
-        return new Client(
-            [
-                'connect_timeout' => $this->timeOut,
-            ]
-        );
+        return new Client(['connect_timeout' => $this->timeOut]);
     }
 
     protected function getDefaultHeaders(): array
@@ -183,7 +172,7 @@ abstract class Request
         ];
     }
 
-    public function setApiKey(string $apiKey): void
+    public function setApiKey(#[SensitiveParameter] string $apiKey): void
     {
         $this->apiKey = $apiKey;
     }

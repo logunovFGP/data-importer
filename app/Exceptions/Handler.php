@@ -27,8 +27,8 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Override;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
@@ -36,15 +36,9 @@ use Throwable;
  */
 class Handler extends ExceptionHandler
 {
-    protected $dontFlash
-        = [
-            'password',
-            'password_confirmation',
-        ];
+    protected $dontFlash  = ['password', 'password_confirmation'];
 
-    protected $dontReport
-        = [
-        ];
+    protected $dontReport = [];
 
     /**
      * @param Request $request
@@ -59,7 +53,7 @@ class Handler extends ExceptionHandler
         if ($e instanceof ImporterErrorException || $e instanceof ImporterHttpException) {
             $isDebug = config('app.debug');
 
-            return response()->view('errors.exception', ['exception' => $e, 'debug' => $isDebug], 500);
+            return response()->view('errors.exception', ['exception' => $e, 'debug'     => $isDebug], 500);
         }
 
         return parent::render($request, $e);

@@ -41,10 +41,7 @@ class RolesPostRequest extends Request
 
     public function getAllForFile(): array
     {
-        $data = [
-            'roles'      => $this->get('roles') ?? [],
-            'do_mapping' => $this->get('do_mapping') ?? [],
-        ];
+        $data = ['roles'      => $this->get('roles') ?? [], 'do_mapping' => $this->get('do_mapping') ?? []];
         foreach (array_keys($data['roles']) as $index) {
             $data['do_mapping'][$index] = $this->convertBoolean($data['do_mapping'][$index] ?? 'false');
         }
@@ -56,10 +53,7 @@ class RolesPostRequest extends Request
     {
         $keys = implode(',', array_keys(config('csv.import_roles')));
 
-        return [
-            'roles.*'      => sprintf('required|in:%s', $keys),
-            'do_mapping.*' => 'numeric|between:0,1',
-        ];
+        return ['roles.*'      => sprintf('required|in:%s', $keys), 'do_mapping.*' => 'numeric|between:0,1'];
     }
 
     /**
@@ -67,12 +61,10 @@ class RolesPostRequest extends Request
      */
     public function withValidator(Validator $validator): void
     {
-        $validator->after(
-            function (Validator $validator): void {
-                // validate all account info
-                $this->validateAmountRole($validator);
-            }
-        );
+        $validator->after(function (Validator $validator): void {
+            // validate all account info
+            $this->validateAmountRole($validator);
+        });
     }
 
     protected function validateAmountRole(Validator $validator): void
@@ -109,13 +101,22 @@ class RolesPostRequest extends Request
             $validator->errors()->add('roles.0', 'You must select some roles to continue.');
         }
         if (!$hasDescription && !$ignoreWarnings) {
-            $validator->errors()->add('roles.0', 'Without a column with the role "Description", your transactions will be imported with the description "(no description)".');
+            $validator->errors()->add(
+                'roles.0',
+                'Without a column with the role "Description", your transactions will be imported with the description "(no description)".'
+            );
         }
         if (0 === $countTransactionDate && $countDates > 0 && !$ignoreWarnings) {
-            $validator->errors()->add('roles.0', 'You selected a date, but not "Date (primary transaction date)". If you do not give any column the "Date (primary transaction date)" role, all your transactions will be imported with today\'s date.');
+            $validator->errors()->add(
+                'roles.0',
+                'You selected a date, but not "Date (primary transaction date)". If you do not give any column the "Date (primary transaction date)" role, all your transactions will be imported with today\'s date.'
+            );
         }
         if (0 === $countTransactionDate && 0 === $countDates && !$ignoreWarnings) {
-            $validator->errors()->add('roles.0', 'You have not set a column to the role of "Date (primary transaction date)". All your transactions will be imported with today\'s date.');
+            $validator->errors()->add(
+                'roles.0',
+                'You have not set a column to the role of "Date (primary transaction date)". All your transactions will be imported with today\'s date.'
+            );
         }
         if (0 === $count) {
             $validator->errors()->add('roles.0', 'The import will fail if no column is assigned an "Amount"-role.');

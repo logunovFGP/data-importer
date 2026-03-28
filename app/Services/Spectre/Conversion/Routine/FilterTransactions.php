@@ -47,6 +47,7 @@ class FilterTransactions
                 unset($transaction['transactions'][0]['category_id']);
             }
             $return[] = $transaction;
+
             // Log::debug('Filtered ', $transaction);
         }
 

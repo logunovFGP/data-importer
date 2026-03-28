@@ -43,10 +43,10 @@ use Illuminate\Support\Facades\Log;
  */
 class PseudoTransactionProcessor
 {
-    private Account             $defaultAccount;
+    private Account $defaultAccount;
     private TransactionCurrency $primaryCurrency;
-    private array               $tasks;
-    private ImportJob           $importJob;
+    private array $tasks;
+    private ImportJob $importJob;
 
     /**
      * PseudoTransactionProcessor constructor.
@@ -144,6 +144,7 @@ class PseudoTransactionProcessor
         foreach ($lines as $index => $line) {
             Log::info(sprintf('Now processing line %d/%d.', $index + 1, $count));
             $processed[] = $this->processPseudoLine($line);
+
             // $this->addMessage($index, sprintf('Converted CSV line %d into a transaction.', $index + 1));
         }
         Log::info(sprintf('Done converting %d line(s) into transactions.', $count));

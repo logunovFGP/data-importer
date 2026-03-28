@@ -28,8 +28,8 @@ use App\Exceptions\ImporterErrorException;
 use App\Services\Camt\TransactionCamt052 as Transaction052;
 use App\Services\Camt\TransactionCamt053 as Transaction053;
 use App\Services\Shared\Configuration\Configuration;
-use Genkgo\Camt\Camt053\DTO\Statement as CamtStatement;
 use Genkgo\Camt\Camt052\DTO\Report as CamtReport;
+use Genkgo\Camt\Camt053\DTO\Statement as CamtStatement;
 use Genkgo\Camt\Config;
 use Genkgo\Camt\Reader as CamtReader;
 use Illuminate\Support\Facades\Log;
@@ -101,8 +101,7 @@ class MapperService
              *
              * Change on 2021-10-10: These unused_maps are no longer saved or use.
              * The original mapping (saved on disk) will be merged with the new mapping (submitted by the user)
-            */
-
+             */
             //            $mappedValues  = array_keys($columnInfo['mapped'] ?? []);
             //            $foundValues   = $columnInfo['values'] ?? [];
             //            $missingValues = array_diff($mappedValues, $foundValues);
@@ -139,7 +138,7 @@ class MapperService
         /** @var CamtStatement $statement */
         foreach ($statements as $statement) { // -> Level B
             $entries = $statement->getEntries();
-            foreach ($entries as $entry) {                       // -> Level C
+            foreach ($entries as $entry) { // -> Level C
                 $count = count($entry->getTransactionDetails()); // count level D entries.
                 // report is a 052 thing
                 if ($statement instanceof CamtReport) {
@@ -168,8 +167,6 @@ class MapperService
                         }
                     }
                 }
-
-
             }
         }
         $mappableFields = self::getMappableFieldsForCamt();
@@ -197,10 +194,7 @@ class MapperService
         }
         // make all values unique for mapping and remove empty vars.
         foreach ($data as $title => $info) {
-            $filtered               = array_filter(
-                $info['values'],
-                static fn (string $value) => '' !== $value
-            );
+            $filtered               = array_filter($info['values'], static fn (string $value) => '' !== $value);
             $info['values']         = array_unique($filtered);
             sort($info['values']);
             $data[$title]['values'] = $info['values'];
@@ -219,6 +213,6 @@ class MapperService
     {
         $fields = config('camt.fields');
 
-        return array_filter($fields, fn (array $field) => $field['mappable']);
+        return array_filter($fields, static fn (array $field) => $field['mappable']);
     }
 }

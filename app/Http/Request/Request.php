@@ -25,9 +25,9 @@ declare(strict_types=1);
 namespace App\Http\Request;
 
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 /**
  * Class Request.

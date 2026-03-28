@@ -38,44 +38,44 @@ use Validator;
  */
 class Transaction
 {
-    public string  $accountIdentifier;
-    public string  $additionalInformation;
-    public string  $additionalInformationStructured;
+    public string $accountIdentifier;
+    public string $additionalInformation;
+    public string $additionalInformationStructured;
     public Balance $balanceAfterTransaction;
-    public string  $bankTransactionCode;
+    public string $bankTransactionCode;
     public ?Carbon $bookingDate = null;
-    public string  $checkId;
-    public string  $creditorAccountBban;
-    public string  $creditorAccountCurrency;
-    public string  $creditorAccountIban; // is an array (see https://github.com/firefly-iii/firefly-iii/issues/5286)
-    public string  $creditorAgent;
-    public string  $creditorId;
-    public string  $creditorName;
-    public string  $currencyCode;
-    public array   $currencyExchange;
-    public string  $debtorAccountBban;
-    public string  $debtorAccountCurrency;
-    public string  $debtorAccountIban;
-    public string  $debtorAgent;
-    public string  $debtorName;
-    public string  $endToEndId;
-    public string  $entryReference;
-    public string  $key;
-    public string  $mandateId;
-    public string  $merchantCategoryCode;
-    public string  $proprietaryBank;
+    public string $checkId;
+    public string $creditorAccountBban;
+    public string $creditorAccountCurrency;
+    public string $creditorAccountIban; // is an array (see https://github.com/firefly-iii/firefly-iii/issues/5286)
+    public string $creditorAgent;
+    public string $creditorId;
+    public string $creditorName;
+    public string $currencyCode;
+    public array $currencyExchange;
+    public string $debtorAccountBban;
+    public string $debtorAccountCurrency;
+    public string $debtorAccountIban;
+    public string $debtorAgent;
+    public string $debtorName;
+    public string $endToEndId;
+    public string $entryReference;
+    public string $key;
+    public string $mandateId;
+    public string $merchantCategoryCode;
+    public string $proprietaryBank;
 
     // debtorAccount is an array, but is saved as strings
     // iban, currency
     public string $purposeCode;
     public string $remittanceInformationStructured;
-    public array  $remittanceInformationStructuredArray;
+    public array $remittanceInformationStructuredArray;
 
     // creditorAccount is an array, but saved as strings:
     // iban, currency
     public string $remittanceInformationUnstructured;
-    public array  $remittanceInformationUnstructuredArray;
-    public array  $tags;
+    public array $remittanceInformationUnstructuredArray;
+    public array $tags;
 
     // transactionAmount is an array, but is saved as strings
     // amount, currency
@@ -104,7 +104,9 @@ class Transaction
         $object->additionalInformation                  = trim($array['additionalInformation'] ?? '');
         $object->additionalInformationStructured        = trim($array['additionalInformationStructured'] ?? '');
         $object->bankTransactionCode                    = trim($array['bankTransactionCode'] ?? '');
-        $object->bookingDate                            = array_key_exists('bookingDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['bookingDate'], config('app.timezone')) : null;
+        $object->bookingDate                            = array_key_exists('bookingDate', $array)
+            ? Carbon::createFromFormat('!Y-m-d', $array['bookingDate'], config('app.timezone'))
+            : null;
 
         // overrule with "bookingDateTime" if present:
         if (array_key_exists('bookingDateTime', $array)) {
@@ -135,7 +137,9 @@ class Transaction
         $object->transactionId                          = trim($array['transactionId'] ?? '');
         $object->ultimateCreditor                       = trim($array['ultimateCreditor'] ?? '');
         $object->ultimateDebtor                         = trim($array['ultimateDebtor'] ?? '');
-        $object->valueDate                              = array_key_exists('valueDate', $array) ? Carbon::createFromFormat('!Y-m-d', $array['valueDate'], config('app.timezone')) : null;
+        $object->valueDate                              = array_key_exists('valueDate', $array)
+            ? Carbon::createFromFormat('!Y-m-d', $array['valueDate'], config('app.timezone'))
+            : null;
 
         // undocumented values
         $object->endToEndId                             = trim($array['endToEndId'] ?? ''); // from Rabobank NL
@@ -157,13 +161,13 @@ class Transaction
         }
 
         // add "pending" or "booked" if it exists.
-        $key                                            = (string)$array['key'];
+        $key                                            = (string) $array['key'];
         if ('' !== $key) {
             $object->tags[] = $key;
         }
 
         // add merchant category code, if it exists:
-        $merchantCode                                   = (string)($array['merchant_category_code'] ?? '');
+        $merchantCode                                   = (string) ($array['merchant_category_code'] ?? '');
         if ('' !== $merchantCode) {
             $object->tags[] = $merchantCode;
         }
@@ -185,7 +189,7 @@ class Transaction
 
         // generate transactionID if empty:
         if ('' === $object->transactionId) {
-            $hash                  = hash('sha256', (string)microtime());
+            $hash                  = hash('sha256', (string) microtime());
 
             try {
                 $hash = hash('sha256', json_encode($array, JSON_THROW_ON_ERROR));
@@ -263,7 +267,7 @@ class Transaction
 
         // generate transactionID if empty:
         if ('' === $object->transactionId) {
-            $hash                  = hash('sha256', (string)microtime());
+            $hash                  = hash('sha256', (string) microtime());
 
             try {
                 $hash = hash('sha256', json_encode($array, JSON_THROW_ON_ERROR));
@@ -342,8 +346,8 @@ class Transaction
     public function getTransactionId(): string
     {
         // #10914 add account ID to transaction ID to make it unique.
-        $accountId     = substr(trim((string)preg_replace('/\s+/', ' ', $this->accountIdentifier)), 0, 125);
-        $transactionId = substr(trim((string)preg_replace('/\s+/', ' ', $this->transactionId)), 0, 125);
+        $accountId     = substr(trim((string) preg_replace('/\s+/', ' ', $this->accountIdentifier)), 0, 125);
+        $transactionId = substr(trim((string) preg_replace('/\s+/', ' ', $this->transactionId)), 0, 125);
 
         Log::debug(sprintf('Returning transaction ID: %s and %s are joined.', $accountId, $transactionId));
 
@@ -358,7 +362,7 @@ class Transaction
         Log::debug(__METHOD__);
         if ('' !== $this->creditorAccountIban) {
             $data      = ['iban' => $this->creditorAccountIban];
-            $rules     = ['iban' => ['required', new Iban()]];
+            $rules     = ['iban'     => ['required', new Iban()]];
             $validator = Validator::make($data, $rules);
             if ($validator->fails()) {
                 Log::warning(sprintf('Destination IBAN is "%s" (creditor), but it is invalid, so ignoring', $this->creditorAccountIban));
@@ -445,17 +449,13 @@ class Transaction
         $info = [];
 
         // Add exchange rate if available and not zero
-        if (isset($this->currencyExchange['exchangeRate']) && 0.0 !== (float)$this->currencyExchange['exchangeRate']) {
+        if (isset($this->currencyExchange['exchangeRate']) && 0.0 !== (float) $this->currencyExchange['exchangeRate']) {
             $info[] = sprintf('- Exchange rate: %s', $this->currencyExchange['exchangeRate']);
         }
 
         // Add source and target currencies if available
         if (isset($this->currencyExchange['sourceCurrency'], $this->currencyExchange['targetCurrency'])) {
-            $info[] = sprintf(
-                '- Currency exchange: %s → %s',
-                $this->currencyExchange['sourceCurrency'],
-                $this->currencyExchange['targetCurrency']
-            );
+            $info[] = sprintf('- Currency exchange: %s → %s', $this->currencyExchange['sourceCurrency'], $this->currencyExchange['targetCurrency']);
         }
 
         return implode("\n", $info);
@@ -469,7 +469,7 @@ class Transaction
         Log::debug(__METHOD__);
         if ('' !== $this->debtorAccountIban) {
             $data      = ['iban' => $this->debtorAccountIban];
-            $rules     = ['iban' => ['required', new Iban()]];
+            $rules     = ['iban'     => ['required', new Iban()]];
             $validator = Validator::make($data, $rules);
             if ($validator->fails()) {
                 Log::warning(sprintf('Source IBAN is "%s" (debtor), but it is invalid, so ignoring', $this->debtorAccountIban));
@@ -571,18 +571,9 @@ class Transaction
             'value_date'                                => $this->valueDate->toW3cString(),
             'account_identifier'                        => $this->accountIdentifier,
             // array values:
-            'debtor_account'                            => [
-                'iban'     => $this->debtorAccountIban,
-                'currency' => $this->debtorAccountCurrency,
-            ],
-            'creditor_account'                          => [
-                'iban'     => $this->creditorAccountIban,
-                'currency' => $this->creditorAccountCurrency,
-            ],
-            'transaction_amount'                        => [
-                'amount'   => $this->transactionAmount,
-                'currency' => $this->currencyCode,
-            ],
+            'debtor_account'                            => ['iban'     => $this->debtorAccountIban, 'currency' => $this->debtorAccountCurrency],
+            'creditor_account'                          => ['iban'     => $this->creditorAccountIban, 'currency' => $this->creditorAccountCurrency],
+            'transaction_amount'                        => ['amount'   => $this->transactionAmount, 'currency' => $this->currencyCode],
 
             // undocumented values:
             'end_to_end_id'                             => $this->endToEndId,

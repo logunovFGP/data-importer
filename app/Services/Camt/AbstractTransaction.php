@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace App\Services\Camt;
 
-use Genkgo\Camt\DTO\DomainBankTransactionCode;
-use Genkgo\Camt\DTO\EntryTransactionDetail;
-use Genkgo\Camt\DTO\UnstructuredRemittanceInformation;
-use Genkgo\Camt\DTO\RelatedParty;
+use App\Exceptions\ImporterErrorException;
+use Genkgo\Camt\DTO\Account;
+use Genkgo\Camt\DTO\Address;
+use Genkgo\Camt\DTO\BBANAccount;
 use Genkgo\Camt\DTO\Creditor;
 use Genkgo\Camt\DTO\Debtor;
-use Genkgo\Camt\DTO\Account;
+use Genkgo\Camt\DTO\DomainBankTransactionCode;
+use Genkgo\Camt\DTO\EntryTransactionDetail;
 use Genkgo\Camt\DTO\IbanAccount;
 use Genkgo\Camt\DTO\OtherAccount;
 use Genkgo\Camt\DTO\ProprietaryAccount;
+use Genkgo\Camt\DTO\RelatedParty;
+use Genkgo\Camt\DTO\UnstructuredRemittanceInformation;
 use Genkgo\Camt\DTO\UPICAccount;
-use Genkgo\Camt\DTO\BBANAccount;
-use Genkgo\Camt\DTO\Address;
-use App\Exceptions\ImporterErrorException;
 use Illuminate\Support\Facades\Log;
 use Money\Currencies\ISOCurrencies;
 use Money\Formatter\DecimalMoneyFormatter;
@@ -34,7 +34,11 @@ abstract class AbstractTransaction
 
     public function getCurrencyCode(int $index): string
     {
-        return (string) $this->levelC->getAmount()->getCurrency()->getCode();
+        return (string) $this->levelC
+            ->getAmount()
+            ->getCurrency()
+            ->getCode()
+        ;
     }
 
     public function getAmount(int $index): string
@@ -131,7 +135,11 @@ abstract class AbstractTransaction
 
             case 'entryAmountCurrency':
                 // always the same, since its level C.
-                return (string) $this->levelC->getAmount()->getCurrency()->getCode();
+                return (string) $this->levelC
+                    ->getAmount()
+                    ->getCurrency()
+                    ->getCode()
+                ;
 
             case 'entryValueDate':
                 // always the same, since its level C.
@@ -144,7 +152,11 @@ abstract class AbstractTransaction
             case 'entryBtcDomainCode':
                 // always the same, since its level C.
                 if ($this->levelC->getBankTransactionCode()->getDomain() instanceof DomainBankTransactionCode) {
-                    return (string) $this->levelC->getBankTransactionCode()->getDomain()->getCode();
+                    return (string) $this->levelC
+                        ->getBankTransactionCode()
+                        ->getDomain()
+                        ->getCode()
+                    ;
                 }
 
                 return '';
@@ -153,7 +165,12 @@ abstract class AbstractTransaction
                 $return          = '';
                 // always the same, since its level C.
                 if ($this->levelC->getBankTransactionCode()->getDomain() instanceof DomainBankTransactionCode) {
-                    $return = (string) $this->levelC->getBankTransactionCode()->getDomain()->getFamily()->getCode();
+                    $return = (string) $this->levelC
+                        ->getBankTransactionCode()
+                        ->getDomain()
+                        ->getFamily()
+                        ->getCode()
+                    ;
                 }
 
                 return '';
@@ -162,7 +179,12 @@ abstract class AbstractTransaction
                 $return          = '';
                 // always the same, since its level C.
                 if ($this->levelC->getBankTransactionCode()->getDomain() instanceof DomainBankTransactionCode) {
-                    return (string) $this->levelC->getBankTransactionCode()->getDomain()->getFamily()->getSubFamilyCode();
+                    return (string) $this->levelC
+                        ->getBankTransactionCode()
+                        ->getDomain()
+                        ->getFamily()
+                        ->getSubFamilyCode()
+                    ;
                 }
 
                 return $return;
@@ -247,6 +269,7 @@ abstract class AbstractTransaction
                 // this is level D, so grab from level C or loop.
                 if (0 === count($this->levelD) || !array_key_exists($index, $this->levelD)) {
                     return ''; // config.-depending fallback handled in mapping
+
                     // return $this->getDecimalAmount($this->levelC->getAmount());
                 }
 
@@ -259,6 +282,7 @@ abstract class AbstractTransaction
                 // this is level D, so grab from level C or loop.
                 if (0 === count($this->levelD) || !array_key_exists($index, $this->levelD)) {
                     return ''; // config.-depending fallback handled in mapping
+
                     // return (string)$this->levelC->getAmount()->getCurrency()->getCode();
                 }
 

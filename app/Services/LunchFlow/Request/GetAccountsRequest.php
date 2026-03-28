@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /*
  * GetAccountsRequest.php
  * Copyright (c) 2025 james@firefly-iii.org
@@ -29,6 +30,7 @@ use App\Services\LunchFlow\Response\GetAccountsResponse;
 use App\Services\Shared\Response\Response;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\Log;
+use SensitiveParameter;
 
 class GetAccountsRequest extends Request
 {
@@ -37,7 +39,7 @@ class GetAccountsRequest extends Request
     /**
      * ListConnectionsRequest constructor.
      */
-    public function __construct(string $apiKey)
+    public function __construct(#[SensitiveParameter] string $apiKey)
     {
         $this->setUrl('accounts');
         $this->setApiKey($apiKey);

@@ -30,7 +30,7 @@ namespace App\Services\SimpleFIN;
 readonly class ValidationResult
 {
     public function __construct(
-        private bool  $isValid,
+        private bool $isValid,
         private array $errors = [],
         private array $warnings = []
     ) {}
@@ -62,20 +62,16 @@ readonly class ValidationResult
 
     public function getErrorMessages(): array
     {
-        return array_map(fn ($error) => $error['message'], $this->errors);
+        return array_map(static fn ($error) => $error['message'], $this->errors);
     }
 
     public function getWarningMessages(): array
     {
-        return array_map(fn ($warning) => $warning['message'], $this->warnings);
+        return array_map(static fn ($warning) => $warning['message'], $this->warnings);
     }
 
     public function toArray(): array
     {
-        return [
-            'valid'    => $this->isValid,
-            'errors'   => $this->errors,
-            'warnings' => $this->warnings,
-        ];
+        return ['valid'    => $this->isValid, 'errors'   => $this->errors, 'warnings' => $this->warnings];
     }
 }

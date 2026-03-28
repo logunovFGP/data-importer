@@ -47,8 +47,8 @@ class AutoUploadController extends Controller
         if (false === config('importer.can_post_files')) {
             throw new ImporterErrorException('Please set CAN_POST_AUTOIMPORT=true for this function to work.');
         }
-        $secret         = (string)($request->get('secret') ?? '');
-        $systemSecret   = (string)config('importer.auto_import_secret');
+        $secret         = (string) ($request->get('secret') ?? '');
+        $systemSecret   = (string) config('importer.auto_import_secret');
         if ('' === $secret || '' === $systemSecret || $secret !== config('importer.auto_import_secret') || strlen($systemSecret) < 16) {
             throw new ImporterErrorException('Please make sure your secret value matches whatever is in AUTO_IMPORT_SECRET.');
         }
@@ -59,10 +59,10 @@ class AutoUploadController extends Controller
         }
         $json           = $request->file('json');
         $importable     = $request->file('importable');
-        $importablePath = (string)$importable?->getPathname();
+        $importablePath = (string) $importable?->getPathname();
 
         try {
-            $this->importUpload((string)$json?->getPathname(), $importablePath);
+            $this->importUpload((string) $json?->getPathname(), $importablePath);
         } catch (ImporterErrorException $e) {
             $message = sprintf('[%s]: %s', config('importer.version'), $e->getMessage());
             Log::error($message);

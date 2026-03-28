@@ -27,6 +27,7 @@ namespace App\Services\Spectre\Request;
 use App\Exceptions\ImporterErrorException;
 use App\Services\Shared\Response\Response;
 use App\Services\Spectre\Response\PostConnectSessionResponse;
+use SensitiveParameter;
 
 /**
  * Class PostConnectSessionsRequest
@@ -39,7 +40,7 @@ class PostConnectSessionsRequest extends Request
     /**
      * PostConnectSessionsRequest constructor.
      */
-    public function __construct(string $url, string $appId, string $secret)
+    public function __construct(string $url, string $appId, #[SensitiveParameter] string $secret)
     {
         $this->setBase($url);
         $this->setAppId($appId);
@@ -57,21 +58,17 @@ class PostConnectSessionsRequest extends Request
      */
     public function post(): Response
     {
-        $body     = [
-            'data' => [
-                'customer_id' => $this->customer,
-                'consent'     => [
-                    'scopes'                    => ['account_details', 'transactions_details'],
-                    'daily_refresh'             => true,
-                    'include_fake_providers'    => true,
-                    'show_consent_confirmation' => true,
-                    'credentials_strategy'      => 'ask',
-                ],
-                'attempt'     => [
-                    'return_to' => $this->url,
-                ],
+        $body     = ['data' => [
+            'customer_id' => $this->customer,
+            'consent'     => [
+                'scopes'                    => ['account_details', 'transactions_details'],
+                'daily_refresh'             => true,
+                'include_fake_providers'    => true,
+                'show_consent_confirmation' => true,
+                'credentials_strategy'      => 'ask',
             ],
-        ];
+            'attempt'     => ['return_to' => $this->url],
+        ]];
 
         $response = $this->sendUnsignedSpectrePost($body);
 
