@@ -1,0 +1,249 @@
+{
+    "identifier": "307344d3-39f2-4cc7-85c1-1f1379e41053",
+    "instance_identifier": "e2fd58ad-41f8-4e6e-9ee6-915391dbd369",
+    "instance_counter": 7,
+    "initialized": true,
+    "created_at": "2026-03-27T23:38:21+01:00",
+    "state": "ready_for_submission",
+    "flow": "trc20",
+    "configuration_string": "",
+    "sophtron_institutions": [],
+    "authentication_details": [],
+    "provider_auth": {
+        "provider": "trc20",
+        "api_key": "96ea9db8-42fc-43ba-acc5-830f9df4c25b",
+        "wallets": "TT65LRAugcF2RzAfdHaEvtVTwTnzoV8Mhd"
+    },
+    "importable_file_string": "",
+    "configuration": {
+        "version": 3,
+        "source": "ff3-importer-2.0.5",
+        "created_at": "2026-03-27T23:50:01+01:00",
+        "date": "",
+        "default_account": 368,
+        "delimiter": "comma",
+        "headers": false,
+        "rules": true,
+        "skip_form": false,
+        "add_import_tag": true,
+        "roles": [],
+        "do_mapping": [],
+        "mapping": [],
+        "duplicate_detection_method": "cell",
+        "ignore_duplicate_lines": false,
+        "unique_column_index": 0,
+        "unique_column_type": "",
+        "pseudo_identifier": {
+            "source_columns": [
+                0
+            ],
+            "separator": "|",
+            "role": ""
+        },
+        "flow": "trc20",
+        "content_type": "csv",
+        "camt_type": "",
+        "custom_tag": "",
+        "identifier": "0",
+        "connection": "0",
+        "ignore_spectre_categories": false,
+        "grouped_transaction_handling": "",
+        "use_entire_opposing_address": false,
+        "map_all_data": false,
+        "pending_transactions": false,
+        "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzIiwianRpIjoiMTdkYmE5Y2RmMmZkNWZhMDJlY2NmN2NjMzQ2YTYyY2IxYmZkZGYyODNhMWI3MTFlYzljNTE1N2U3YmE5YjhlOGZmOTQzODVmYTA4MThjNWEiLCJpYXQiOjE3NzQ2NTEwMTguOTgxOTI1LCJuYmYiOjE3NzQ2NTEwMTguOTgxOTMxLCJleHAiOjE3NzU4NTcwMTguNjEzNTA1LCJzdWIiOiIxIiwic2NvcGVzIjpbXX0.O4_pEu5jb-OEj0EGB7S0PiQfmmQWEzb8WdTE257xYZ45FLSE2rIk8_RXd5YBgMhLw3wxXSr6tLDyUOU0qo3YFx6qccSVAcjS47hbZiIyhRbooROgijVXuDOa9t60WcSROXxM7uOj11mBkCSl83KKu3Sufo33p9d0_2CZvCZHeL-THf1x4G7YSQHGUE3LXMY1TGy7OcCfm6DD_s0pc3qTqYnm9o3_yX4kHNjSw0mB4QcdY0QhK9KUknChXlZ_IYvLR1kpcjf3k3ccAFrhdeAyz-KiqVA7UUMTopB_b6VqanQ2gjtLSPmQ8WcbeI3z5-PDFaHGwkZ_Rmy7dNVxq2VXq-O4y7wbHsIY8rZmrrbvkkZBdseSR7CRPyLDNbtSTWxnA9nw7GrwkkgDpPc7QboIWIwH4NGTedWfC1x4c1EvLpZ2cyzSSQDEjI32Y3oYnG6k2DifEECnS2PJAJvZhXIEQ1BQaNa4mVLRGchsTDF3OOCOYQharRp0CcyqA2dT4M35hpEYNi1cLrbQGTzdOIdBGSKxJS113Sj7u_mvSZHhI8S5d9fMFEeMqi1B-zLUXZ3iwC_aQ0VMpfUg2mC3Sr6lnlxLMQJCPe8veHahze89XS67LesLI3kbirOirKo9vcKqWif30BWwU1j2wpyFY1ioAcK98Wg7lyI7kyhnR9SMz9g",
+        "accounts": [],
+        "new_accounts": [],
+        "date_range": "all",
+        "date_range_number": 30,
+        "date_range_unit": "d",
+        "date_range_not_after_unit": "",
+        "date_range_not_after_number": 0,
+        "date_not_before": "",
+        "date_not_after": "",
+        "nordigen_country": "",
+        "nordigen_bank": "",
+        "nordigen_requisitions": [],
+        "nordigen_max_days": "90",
+        "lunch_flow_api_key": "",
+        "basis_bank_login": "",
+        "basis_bank_password": "",
+        "basis_bank_auth_state": "",
+        "basis_bank_request_sms_code": false,
+        "basis_bank_trust_device": false,
+        "basis_bank_session_artifact": "",
+        "t_bank_api_token": "",
+        "incremental_sync_enabled": false,
+        "incremental_lookback_days": 3,
+        "trc20_api_key": "96ea9db8-42fc-43ba-acc5-830f9df4c25b",
+        "trc20_wallets": "TT65LRAugcF2RzAfdHaEvtVTwTnzoV8Mhd",
+        "conversion": false,
+        "ignore_duplicate_transactions": false
+    },
+    "conversion_status": {
+        "status": "conv_done",
+        "errors": [
+            [
+                "No transactions were downloaded from TRC20."
+            ]
+        ],
+        "warnings": [],
+        "messages": [
+            [
+                "No transactions found for the selected date range and wallets. You can go back to adjust your settings or proceed to the submit step."
+            ]
+        ],
+        "rate_limits": [],
+        "pull_checklist": [],
+        "pull_progress": {
+            "total": 0,
+            "done": 0,
+            "status": "pending"
+        },
+        "pull_cursor_candidates": []
+    },
+    "submission_status": {
+        "status": "waiting_to_start",
+        "errors": [],
+        "warnings": [],
+        "messages": [],
+        "currentTransaction": 0,
+        "totalTransactions": 0,
+        "uniqueTransactions": 0,
+        "duplicateTransactions": 0,
+        "progressPercentage": 0,
+        "performance": {
+            "duplicate_checks": {
+                "count": 0,
+                "milliseconds": 0,
+                "average_ms": 0
+            },
+            "firefly_submissions": {
+                "count": 0,
+                "milliseconds": 0,
+                "average_ms": 0
+            },
+            "tag_updates": {
+                "count": 0,
+                "milliseconds": 0,
+                "average_ms": 0
+            },
+            "disk_saves": {
+                "count": 0,
+                "milliseconds": 0,
+                "average_ms": 0
+            },
+            "duplicate_index_preload": {
+                "count": 0,
+                "milliseconds": 0,
+                "average_ms": 0,
+                "meta": []
+            }
+        }
+    },
+    "converted_transactions": [],
+    "application_accounts": {
+        "assets": [
+            {
+                "id": 368,
+                "name": "BasisBank account 1608513 (GEL)",
+                "type": "asset",
+                "iban": null,
+                "account_number": null,
+                "bic": null,
+                "currency_code": "GEL",
+                "current_balance": "1688.07",
+                "current_balance_date": "2026-03-27T23:45:34+01:00"
+            },
+            {
+                "id": 369,
+                "name": "BasisBank account 1608514 (USD)",
+                "type": "asset",
+                "iban": null,
+                "account_number": null,
+                "bic": null,
+                "currency_code": "USD",
+                "current_balance": "1830.15",
+                "current_balance_date": "2026-03-27T23:45:34+01:00"
+            },
+            {
+                "id": 370,
+                "name": "BasisBank account 1608515 (EUR)",
+                "type": "asset",
+                "iban": null,
+                "account_number": null,
+                "bic": null,
+                "currency_code": "EUR",
+                "current_balance": "1490.55",
+                "current_balance_date": "2026-03-27T23:45:34+01:00"
+            },
+            {
+                "id": 371,
+                "name": "\u10db\u10d0\u10e1\u10e2\u10d4\u10e0\u10e5\u10d0\u10e0\u10d3 \u10e1\u10e2\u10d0\u10dc\u10d3\u10d0\u10e0\u10e2\u10d8 (GEL)",
+                "type": "asset",
+                "iban": null,
+                "account_number": null,
+                "bic": null,
+                "currency_code": "GEL",
+                "current_balance": "3214.46",
+                "current_balance_date": "2026-03-27T23:45:34+01:00"
+            },
+            {
+                "id": 372,
+                "name": "\u10db\u10d0\u10e1\u10e2\u10d4\u10e0\u10e5\u10d0\u10e0\u10d3 \u10e1\u10e2\u10d0\u10dc\u10d3\u10d0\u10e0\u10e2\u10d8 (USD)",
+                "type": "asset",
+                "iban": null,
+                "account_number": null,
+                "bic": null,
+                "currency_code": "USD",
+                "current_balance": "114.09",
+                "current_balance_date": "2026-03-27T23:45:34+01:00"
+            }
+        ],
+        "liabilities": []
+    },
+    "service_accounts": [],
+    "currencies": {
+        "17": "Argentinian Peso (ARS)",
+        "22": "Australian dollar (AUD)",
+        "13": "Brazilian real (BRL)",
+        "3": "British Pound (GBP)",
+        "14": "Canadian dollar (CAD)",
+        "19": "Chilean Peso (CLP)",
+        "28": "Chinese yuan (CNY)",
+        "18": "Colombian Peso (COP)",
+        "34": "Croatian kuna (HRK)",
+        "41": "Currency GEL (GEL)",
+        "36": "Czech koruna (CZK)",
+        "7": "Dansk krone (DKK)",
+        "24": "Egyptian pound (EGP)",
+        "1": "Euro (EUR)",
+        "35": "Hong Kong dollar (HKD)",
+        "2": "Hungarian forint (HUF)",
+        "31": "Indian rupee (INR)",
+        "21": "Indonesian rupiah (IDR)",
+        "32": "Israeli new shekel (ILS)",
+        "27": "Japanese yen (JPY)",
+        "37": "Kazakhstani tenge (KZT)",
+        "15": "Mexican peso (MXN)",
+        "25": "Moroccan dirham (MAD)",
+        "40": "New Taiwan Dollar (TWD)",
+        "23": "New Zealand dollar (NZD)",
+        "9": "Norsk krone (NOK)",
+        "16": "Peruvian Sol (PEN)",
+        "5": "Polish z\u0142oty (PLN)",
+        "11": "Romanian leu (RON)",
+        "30": "Russian ruble (RUB)",
+        "38": "Saudi Riyal (SAR)",
+        "39": "Serbian Dinar (RSD)",
+        "26": "South African rand (ZAR)",
+        "29": "South Korean won (KRW)",
+        "10": "Svensk krona (SEK)",
+        "33": "Swiss franc (CHF)",
+        "6": "Turkish lira (TRY)",
+        "12": "US Dollar (USD)",
+        "4": "Ukrainian hryvnia (UAH)",
+        "20": "Uruguayan Peso (UYU)",
+        "8": "\u00cdslensk kr\u00f3na (ISK)"
+    }
+}

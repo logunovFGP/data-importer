@@ -1,0 +1,200 @@
+128513:[2026-02-17 10:18:57] local.DEBUG: Now submitting transaction 1241/1937  
+128515:[2026-02-17 10:18:57] local.DEBUG: Going to search for external_id:OD436516978 using query external_id_is:"OD436516978"  
+128524:[2026-02-17 10:18:58] local.DEBUG: Now submitting transaction 1242/1937  
+128526:[2026-02-17 10:18:58] local.DEBUG: Going to search for external_id:OD436516974 using query external_id_is:"OD436516974"  
+128544:[2026-02-17 10:19:03] local.DEBUG: Now submitting transaction 1243/1939  
+128546:[2026-02-17 10:19:03] local.DEBUG: Going to search for external_id:OD436516974 using query external_id_is:"OD436516974"  
+128561:[2026-02-17 10:19:04] local.DEBUG: Now submitting transaction 1244/1939  
+128563:[2026-02-17 10:19:04] local.DEBUG: Going to search for external_id:OD436289191 using query external_id_is:"OD436289191"  
+128575:[2026-02-17 10:19:11] local.DEBUG: Now submitting transaction 1243/1937  
+128577:[2026-02-17 10:19:11] local.DEBUG: Going to search for external_id:OD436289191 using query external_id_is:"OD436289191"  
+128592:[2026-02-17 10:19:12] local.DEBUG: Now submitting transaction 1244/1937  
+128594:[2026-02-17 10:19:12] local.DEBUG: Going to search for external_id:OD436289190 using query external_id_is:"OD436289190"  
+128613:[2026-02-17 10:19:16] local.DEBUG: Now submitting transaction 1245/1939  
+128615:[2026-02-17 10:19:16] local.DEBUG: Going to search for external_id:OD436289190 using query external_id_is:"OD436289190"  
+128624:[2026-02-17 10:19:17] local.DEBUG: Now submitting transaction 1246/1939  
+128626:[2026-02-17 10:19:17] local.DEBUG: Going to search for external_id:OD436241192 using query external_id_is:"OD436241192"  
+128638:[2026-02-17 10:19:25] local.DEBUG: Now submitting transaction 1245/1937  
+128640:[2026-02-17 10:19:25] local.DEBUG: Going to search for external_id:OD436241192 using query external_id_is:"OD436241192"  
+128655:[2026-02-17 10:19:26] local.DEBUG: Now submitting transaction 1246/1937  
+128657:[2026-02-17 10:19:26] local.DEBUG: Going to search for external_id:OC436241190 using query external_id_is:"OC436241190"  
+128669:[2026-02-17 10:19:30] local.DEBUG: Now submitting transaction 1247/1939  
+128671:[2026-02-17 10:19:30] local.DEBUG: Going to search for external_id:OC436241190 using query external_id_is:"OC436241190"  
+128680:[2026-02-17 10:19:31] local.DEBUG: Now submitting transaction 1248/1939  
+128682:[2026-02-17 10:19:31] local.DEBUG: Going to search for external_id:OD436241186 using query external_id_is:"OD436241186"  
+128706:[2026-02-17 10:19:36] local.DEBUG: Now submitting transaction 1247/1937  
+128708:[2026-02-17 10:19:36] local.DEBUG: Going to search for external_id:OD436241186 using query external_id_is:"OD436241186"  
+128717:[2026-02-17 10:19:37] local.DEBUG: Now submitting transaction 1248/1937  
+128719:[2026-02-17 10:19:37] local.DEBUG: Going to search for external_id:OD436241182 using query external_id_is:"OD436241182"  
+128731:[2026-02-17 10:19:44] local.DEBUG: Now submitting transaction 1249/1939  
+128733:[2026-02-17 10:19:44] local.DEBUG: Going to search for external_id:OD436241182 using query external_id_is:"OD436241182"  
+128742:[2026-02-17 10:19:45] local.DEBUG: Now submitting transaction 1250/1939  
+128744:[2026-02-17 10:19:45] local.DEBUG: Going to search for external_id:OD436241178 using query external_id_is:"OD436241178"  
+128762:[2026-02-17 10:19:52] local.DEBUG: Now submitting transaction 1249/1937  
+128764:[2026-02-17 10:19:52] local.DEBUG: Going to search for external_id:OD436241178 using query external_id_is:"OD436241178"  
+128779:[2026-02-17 10:19:53] local.DEBUG: Now submitting transaction 1250/1937  
+128781:[2026-02-17 10:19:53] local.DEBUG: Going to search for external_id:OD433015818 using query external_id_is:"OD433015818"  
+128793:[2026-02-17 10:19:58] local.DEBUG: Now submitting transaction 1251/1939  
+128795:[2026-02-17 10:19:58] local.DEBUG: Going to search for external_id:OD433015818 using query external_id_is:"OD433015818"  
+128804:[2026-02-17 10:19:58] local.DEBUG: Now submitting transaction 1252/1939  
+128806:[2026-02-17 10:19:58] local.DEBUG: Going to search for external_id:OD435960862 using query external_id_is:"OD435960862"  
+128824:[2026-02-17 10:20:06] local.DEBUG: Now submitting transaction 1251/1937  
+128826:[2026-02-17 10:20:06] local.DEBUG: Going to search for external_id:OD435960862 using query external_id_is:"OD435960862"  
+128841:[2026-02-17 10:20:06] local.DEBUG: Now submitting transaction 1252/1937  
+128843:[2026-02-17 10:20:06] local.DEBUG: Going to search for external_id:OD435960856 using query external_id_is:"OD435960856"  
+128855:[2026-02-17 10:20:13] local.DEBUG: Now submitting transaction 1253/1939  
+128857:[2026-02-17 10:20:13] local.DEBUG: Going to search for external_id:OD435960856 using query external_id_is:"OD435960856"  
+128866:[2026-02-17 10:20:14] local.DEBUG: Now submitting transaction 1254/1939  
+128868:[2026-02-17 10:20:14] local.DEBUG: Going to search for external_id:OD435960846 using query external_id_is:"OD435960846"  
+128887:[2026-02-17 10:20:22] local.DEBUG: Now submitting transaction 1253/1937  
+128889:[2026-02-17 10:20:22] local.DEBUG: Going to search for external_id:OD435960846 using query external_id_is:"OD435960846"  
+128904:[2026-02-17 10:20:23] local.DEBUG: Now submitting transaction 1254/1937  
+128906:[2026-02-17 10:20:23] local.DEBUG: Going to search for external_id:OD435960842 using query external_id_is:"OD435960842"  
+128918:[2026-02-17 10:20:27] local.DEBUG: Now submitting transaction 1255/1939  
+128920:[2026-02-17 10:20:27] local.DEBUG: Going to search for external_id:OD435960842 using query external_id_is:"OD435960842"  
+128929:[2026-02-17 10:20:27] local.DEBUG: Now submitting transaction 1256/1939  
+128931:[2026-02-17 10:20:27] local.DEBUG: Going to search for external_id:OD435960838 using query external_id_is:"OD435960838"  
+128949:[2026-02-17 10:20:35] local.DEBUG: Now submitting transaction 1255/1937  
+128951:[2026-02-17 10:20:35] local.DEBUG: Going to search for external_id:OD435960838 using query external_id_is:"OD435960838"  
+128966:[2026-02-17 10:20:36] local.DEBUG: Now submitting transaction 1256/1937  
+128968:[2026-02-17 10:20:36] local.DEBUG: Going to search for external_id:OD435599926 using query external_id_is:"OD435599926"  
+128980:[2026-02-17 10:20:42] local.DEBUG: Now submitting transaction 1257/1939  
+128982:[2026-02-17 10:20:42] local.DEBUG: Going to search for external_id:OD435599926 using query external_id_is:"OD435599926"  
+128991:[2026-02-17 10:20:43] local.DEBUG: Now submitting transaction 1258/1939  
+128993:[2026-02-17 10:20:43] local.DEBUG: Going to search for external_id:OD435599922 using query external_id_is:"OD435599922"  
+129011:[2026-02-17 10:20:48] local.DEBUG: Now submitting transaction 1257/1937  
+129013:[2026-02-17 10:20:48] local.DEBUG: Going to search for external_id:OD435599922 using query external_id_is:"OD435599922"  
+129028:[2026-02-17 10:20:49] local.DEBUG: Now submitting transaction 1258/1937  
+129030:[2026-02-17 10:20:49] local.DEBUG: Going to search for external_id:OD435599918 using query external_id_is:"OD435599918"  
+129042:[2026-02-17 10:20:56] local.DEBUG: Now submitting transaction 1259/1939  
+129044:[2026-02-17 10:20:56] local.DEBUG: Going to search for external_id:OD435599918 using query external_id_is:"OD435599918"  
+129053:[2026-02-17 10:20:57] local.DEBUG: Now submitting transaction 1260/1939  
+129055:[2026-02-17 10:20:57] local.DEBUG: Going to search for external_id:OD435599914 using query external_id_is:"OD435599914"  
+129073:[2026-02-17 10:21:04] local.DEBUG: Now submitting transaction 1259/1937  
+129075:[2026-02-17 10:21:04] local.DEBUG: Going to search for external_id:OD435599914 using query external_id_is:"OD435599914"  
+129090:[2026-02-17 10:21:05] local.DEBUG: Now submitting transaction 1260/1937  
+129092:[2026-02-17 10:21:05] local.DEBUG: Going to search for external_id:OD435599910 using query external_id_is:"OD435599910"  
+129104:[2026-02-17 10:21:12] local.DEBUG: Now submitting transaction 1261/1939  
+129106:[2026-02-17 10:21:12] local.DEBUG: Going to search for external_id:OD435599910 using query external_id_is:"OD435599910"  
+129115:[2026-02-17 10:21:12] local.DEBUG: Now submitting transaction 1262/1939  
+129117:[2026-02-17 10:21:12] local.DEBUG: Going to search for external_id:OD435160642 using query external_id_is:"OD435160642"  
+129136:[2026-02-17 10:21:18] local.DEBUG: Now submitting transaction 1261/1937  
+129138:[2026-02-17 10:21:18] local.DEBUG: Going to search for external_id:OD435160642 using query external_id_is:"OD435160642"  
+129153:[2026-02-17 10:21:19] local.DEBUG: Now submitting transaction 1262/1937  
+129155:[2026-02-17 10:21:19] local.DEBUG: Going to search for external_id:OD434875732 using query external_id_is:"OD434875732"  
+129167:[2026-02-17 10:21:26] local.DEBUG: Now submitting transaction 1263/1939  
+129169:[2026-02-17 10:21:26] local.DEBUG: Going to search for external_id:OD434875732 using query external_id_is:"OD434875732"  
+129178:[2026-02-17 10:21:27] local.DEBUG: Now submitting transaction 1264/1939  
+129180:[2026-02-17 10:21:27] local.DEBUG: Going to search for external_id:OD432598354 using query external_id_is:"OD432598354"  
+129198:[2026-02-17 10:21:35] local.DEBUG: Now submitting transaction 1263/1937  
+129200:[2026-02-17 10:21:35] local.DEBUG: Going to search for external_id:OD432598354 using query external_id_is:"OD432598354"  
+129215:[2026-02-17 10:21:36] local.DEBUG: Now submitting transaction 1264/1937  
+129217:[2026-02-17 10:21:36] local.DEBUG: Going to search for external_id:OD432176448 using query external_id_is:"OD432176448"  
+129229:[2026-02-17 10:21:43] local.DEBUG: Now submitting transaction 1265/1939  
+129231:[2026-02-17 10:21:43] local.DEBUG: Going to search for external_id:OD432176448 using query external_id_is:"OD432176448"  
+129240:[2026-02-17 10:21:44] local.DEBUG: Now submitting transaction 1266/1939  
+129242:[2026-02-17 10:21:44] local.DEBUG: Going to search for external_id:OD431203784 using query external_id_is:"OD431203784"  
+129260:[2026-02-17 10:21:49] local.DEBUG: Now submitting transaction 1265/1937  
+129262:[2026-02-17 10:21:49] local.DEBUG: Going to search for external_id:OD431203784 using query external_id_is:"OD431203784"  
+129277:[2026-02-17 10:21:50] local.DEBUG: Now submitting transaction 1266/1937  
+129279:[2026-02-17 10:21:50] local.DEBUG: Going to search for external_id:OD431203780 using query external_id_is:"OD431203780"  
+129291:[2026-02-17 10:21:57] local.DEBUG: Now submitting transaction 1267/1939  
+129293:[2026-02-17 10:21:57] local.DEBUG: Going to search for external_id:OD431203780 using query external_id_is:"OD431203780"  
+129302:[2026-02-17 10:21:58] local.DEBUG: Now submitting transaction 1268/1939  
+129304:[2026-02-17 10:21:58] local.DEBUG: Going to search for external_id:OD431203776 using query external_id_is:"OD431203776"  
+129322:[2026-02-17 10:22:06] local.DEBUG: Now submitting transaction 1267/1937  
+129324:[2026-02-17 10:22:06] local.DEBUG: Going to search for external_id:OD431203776 using query external_id_is:"OD431203776"  
+129339:[2026-02-17 10:22:06] local.DEBUG: Now submitting transaction 1268/1937  
+129341:[2026-02-17 10:22:06] local.DEBUG: Going to search for external_id:OD431203772 using query external_id_is:"OD431203772"  
+129353:[2026-02-17 10:22:11] local.DEBUG: Now submitting transaction 1269/1939  
+129355:[2026-02-17 10:22:11] local.DEBUG: Going to search for external_id:OD431203772 using query external_id_is:"OD431203772"  
+129364:[2026-02-17 10:22:11] local.DEBUG: Now submitting transaction 1270/1939  
+129366:[2026-02-17 10:22:11] local.DEBUG: Going to search for external_id:OD431203768 using query external_id_is:"OD431203768"  
+129391:[2026-02-17 10:22:16] local.DEBUG: Now submitting transaction 1269/1937  
+129393:[2026-02-17 10:22:16] local.DEBUG: Going to search for external_id:OD431203768 using query external_id_is:"OD431203768"  
+129402:[2026-02-17 10:22:17] local.DEBUG: Now submitting transaction 1270/1937  
+129404:[2026-02-17 10:22:17] local.DEBUG: Going to search for external_id:OD430774008 using query external_id_is:"OD430774008"  
+129416:[2026-02-17 10:22:24] local.DEBUG: Now submitting transaction 1271/1939  
+129418:[2026-02-17 10:22:24] local.DEBUG: Going to search for external_id:OD430774008 using query external_id_is:"OD430774008"  
+129427:[2026-02-17 10:22:24] local.DEBUG: Now submitting transaction 1272/1939  
+129429:[2026-02-17 10:22:24] local.DEBUG: Going to search for external_id:OC430494062 using query external_id_is:"OC430494062"  
+129447:[2026-02-17 10:22:32] local.DEBUG: Now submitting transaction 1271/1937  
+129449:[2026-02-17 10:22:32] local.DEBUG: Going to search for external_id:OC430494062 using query external_id_is:"OC430494062"  
+129458:[2026-02-17 10:22:33] local.DEBUG: Now submitting transaction 1272/1937  
+129460:[2026-02-17 10:22:33] local.DEBUG: Going to search for external_id:OC429456829 using query external_id_is:"OC429456829"  
+129484:[2026-02-17 10:22:39] local.DEBUG: Now submitting transaction 1273/1939  
+129486:[2026-02-17 10:22:39] local.DEBUG: Going to search for external_id:OC429456829 using query external_id_is:"OC429456829"  
+129495:[2026-02-17 10:22:39] local.DEBUG: Now submitting transaction 1274/1939  
+129497:[2026-02-17 10:22:39] local.DEBUG: Going to search for external_id:OC429005751 using query external_id_is:"OC429005751"  
+129509:[2026-02-17 10:22:48] local.DEBUG: Now submitting transaction 1273/1937  
+129511:[2026-02-17 10:22:48] local.DEBUG: Going to search for external_id:OC429005751 using query external_id_is:"OC429005751"  
+129520:[2026-02-17 10:22:49] local.DEBUG: Now submitting transaction 1274/1937  
+129522:[2026-02-17 10:22:49] local.DEBUG: Going to search for external_id:OC429000559 using query external_id_is:"OC429000559"  
+129546:[2026-02-17 10:22:54] local.DEBUG: Now submitting transaction 1275/1939  
+129548:[2026-02-17 10:22:54] local.DEBUG: Going to search for external_id:OC429000559 using query external_id_is:"OC429000559"  
+129557:[2026-02-17 10:22:55] local.DEBUG: Now submitting transaction 1276/1939  
+129559:[2026-02-17 10:22:55] local.DEBUG: Going to search for external_id:OD430223162 using query external_id_is:"OD430223162"  
+129577:[2026-02-17 10:23:03] local.DEBUG: Now submitting transaction 1275/1937  
+129579:[2026-02-17 10:23:03] local.DEBUG: Going to search for external_id:OD430223162 using query external_id_is:"OD430223162"  
+129588:[2026-02-17 10:23:03] local.DEBUG: Now submitting transaction 1276/1937  
+129590:[2026-02-17 10:23:03] local.DEBUG: Going to search for external_id:OD430223158 using query external_id_is:"OD430223158"  
+129602:[2026-02-17 10:23:08] local.DEBUG: Now submitting transaction 1277/1939  
+129604:[2026-02-17 10:23:08] local.DEBUG: Going to search for external_id:OD430223158 using query external_id_is:"OD430223158"  
+129613:[2026-02-17 10:23:08] local.DEBUG: Now submitting transaction 1278/1939  
+129615:[2026-02-17 10:23:08] local.DEBUG: Going to search for external_id:OD429950642 using query external_id_is:"OD429950642"  
+129634:[2026-02-17 10:23:16] local.DEBUG: Now submitting transaction 1277/1937  
+129636:[2026-02-17 10:23:16] local.DEBUG: Going to search for external_id:OD429950642 using query external_id_is:"OD429950642"  
+129651:[2026-02-17 10:23:17] local.DEBUG: Now submitting transaction 1278/1937  
+129653:[2026-02-17 10:23:17] local.DEBUG: Going to search for external_id:OD429950636 using query external_id_is:"OD429950636"  
+129665:[2026-02-17 10:23:24] local.DEBUG: Now submitting transaction 1279/1939  
+129667:[2026-02-17 10:23:24] local.DEBUG: Going to search for external_id:OD429950636 using query external_id_is:"OD429950636"  
+129676:[2026-02-17 10:23:25] local.DEBUG: Now submitting transaction 1280/1939  
+129678:[2026-02-17 10:23:25] local.DEBUG: Going to search for external_id:OD429950632 using query external_id_is:"OD429950632"  
+129696:[2026-02-17 10:23:33] local.DEBUG: Now submitting transaction 1279/1937  
+129698:[2026-02-17 10:23:33] local.DEBUG: Going to search for external_id:OD429950632 using query external_id_is:"OD429950632"  
+129713:[2026-02-17 10:23:33] local.DEBUG: Now submitting transaction 1280/1937  
+129715:[2026-02-17 10:23:33] local.DEBUG: Going to search for external_id:OD429682032 using query external_id_is:"OD429682032"  
+129727:[2026-02-17 10:23:38] local.DEBUG: Now submitting transaction 1281/1939  
+129729:[2026-02-17 10:23:38] local.DEBUG: Going to search for external_id:OD429682032 using query external_id_is:"OD429682032"  
+129738:[2026-02-17 10:23:38] local.DEBUG: Now submitting transaction 1282/1939  
+129740:[2026-02-17 10:23:38] local.DEBUG: Going to search for external_id:OD429682024 using query external_id_is:"OD429682024"  
+129758:[2026-02-17 10:23:46] local.DEBUG: Now submitting transaction 1281/1937  
+129760:[2026-02-17 10:23:46] local.DEBUG: Going to search for external_id:OD429682024 using query external_id_is:"OD429682024"  
+129775:[2026-02-17 10:23:47] local.DEBUG: Now submitting transaction 1282/1937  
+129777:[2026-02-17 10:23:47] local.DEBUG: Going to search for external_id:OD429440667 using query external_id_is:"OD429440667"  
+129789:[2026-02-17 10:23:54] local.DEBUG: Now submitting transaction 1283/1939  
+129791:[2026-02-17 10:23:54] local.DEBUG: Going to search for external_id:OD429440667 using query external_id_is:"OD429440667"  
+129800:[2026-02-17 10:23:55] local.DEBUG: Now submitting transaction 1284/1939  
+129802:[2026-02-17 10:23:55] local.DEBUG: Going to search for external_id:OD429440666 using query external_id_is:"OD429440666"  
+129820:[2026-02-17 10:24:00] local.DEBUG: Now submitting transaction 1283/1937  
+129822:[2026-02-17 10:24:00] local.DEBUG: Going to search for external_id:OD429440666 using query external_id_is:"OD429440666"  
+129837:[2026-02-17 10:24:01] local.DEBUG: Now submitting transaction 1284/1937  
+129839:[2026-02-17 10:24:01] local.DEBUG: Going to search for external_id:OC428203519 using query external_id_is:"OC428203519"  
+129851:[2026-02-17 10:24:09] local.DEBUG: Now submitting transaction 1285/1939  
+129853:[2026-02-17 10:24:09] local.DEBUG: Going to search for external_id:OC428203519 using query external_id_is:"OC428203519"  
+129862:[2026-02-17 10:24:09] local.DEBUG: Now submitting transaction 1286/1939  
+129864:[2026-02-17 10:24:09] local.DEBUG: Going to search for external_id:OC427947035 using query external_id_is:"OC427947035"  
+129889:[2026-02-17 10:24:19] local.DEBUG: Now submitting transaction 1285/1937  
+129891:[2026-02-17 10:24:19] local.DEBUG: Going to search for external_id:OC427947035 using query external_id_is:"OC427947035"  
+129900:[2026-02-17 10:24:19] local.DEBUG: Now submitting transaction 1286/1937  
+129902:[2026-02-17 10:24:19] local.DEBUG: Going to search for external_id:OD429365046 using query external_id_is:"OD429365046"  
+129914:[2026-02-17 10:24:28] local.DEBUG: Now submitting transaction 1287/1939  
+129916:[2026-02-17 10:24:28] local.DEBUG: Going to search for external_id:OD429365046 using query external_id_is:"OD429365046"  
+129931:[2026-02-17 10:24:29] local.DEBUG: Now submitting transaction 1288/1939  
+129933:[2026-02-17 10:24:29] local.DEBUG: Going to search for external_id:OD429365042 using query external_id_is:"OD429365042"  
+129945:[2026-02-17 10:24:33] local.DEBUG: Now submitting transaction 1287/1937  
+129947:[2026-02-17 10:24:33] local.DEBUG: Going to search for external_id:OD429365042 using query external_id_is:"OD429365042"  
+129956:[2026-02-17 10:24:34] local.DEBUG: Now submitting transaction 1288/1937  
+129958:[2026-02-17 10:24:34] local.DEBUG: Going to search for external_id:OD429365034 using query external_id_is:"OD429365034"  
+129976:[2026-02-17 10:24:42] local.DEBUG: Now submitting transaction 1289/1939  
+129978:[2026-02-17 10:24:42] local.DEBUG: Going to search for external_id:OD429365034 using query external_id_is:"OD429365034"  
+129993:[2026-02-17 10:24:43] local.DEBUG: Now submitting transaction 1290/1939  
+129995:[2026-02-17 10:24:43] local.DEBUG: Going to search for external_id:OD429365030 using query external_id_is:"OD429365030"  
+130007:[2026-02-17 10:24:50] local.DEBUG: Now submitting transaction 1289/1937  
+130009:[2026-02-17 10:24:50] local.DEBUG: Going to search for external_id:OD429365030 using query external_id_is:"OD429365030"  
+130018:[2026-02-17 10:24:51] local.DEBUG: Now submitting transaction 1290/1937  
+130020:[2026-02-17 10:24:51] local.DEBUG: Going to search for external_id:OD429365026 using query external_id_is:"OD429365026"  
+130038:[2026-02-17 10:24:56] local.DEBUG: Now submitting transaction 1291/1939  
+130040:[2026-02-17 10:24:56] local.DEBUG: Going to search for external_id:OD429365026 using query external_id_is:"OD429365026"  
+130055:[2026-02-17 10:24:57] local.DEBUG: Now submitting transaction 1292/1939  
+130057:[2026-02-17 10:24:57] local.DEBUG: Going to search for external_id:OD429365022 using query external_id_is:"OD429365022"  

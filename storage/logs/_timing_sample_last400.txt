@@ -1,0 +1,400 @@
+[2026-02-17 10:18:02] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-14T00:00:00+01:00","datetime":"2025-02-14T00:00:00+01:00","amount":"26.660000000000","description":"MC 3646 2025-02-13 11:17:16 GE Tbilisi Glovoapp.com (MCC 4215) 26.66 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436790578","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-13 11:17:16 GE Tbilisi Glovoapp.com (MCC 4215) 26.66 GEL"}]}  
+[2026-02-17 10:18:07] local.DEBUG: Added import tag to transaction group #1794  
+[2026-02-17 10:18:07] local.DEBUG: Now submitting transaction 1235/1939  
+[2026-02-17 10:18:07] local.DEBUG: Going to search for external_id:OD436790578 using query external_id_is:"OD436790578"  
+[2026-02-17 10:18:07] local.DEBUG: Going to add import tag to transaction group #1795  
+[2026-02-17 10:18:07] local.DEBUG: Now submitting transaction 1236/1939  
+[2026-02-17 10:18:07] local.DEBUG: Going to search for external_id:OD436790574 using query external_id_is:"OD436790574"  
+[2026-02-17 10:18:08] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-14T00:00:00+01:00","datetime":"2025-02-14T00:00:00+01:00","amount":"55.100000000000","description":"MC 3646 2025-02-13 10:21:47 GE Tbilisi Glovoapp.com (MCC 4215) 55.10 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436790574","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-13 10:21:47 GE Tbilisi Glovoapp.com (MCC 4215) 55.10 GEL"}]}  
+[2026-02-17 10:18:15] local.DEBUG: Added import tag to transaction group #1795  
+[2026-02-17 10:18:15] local.DEBUG: Now submitting transaction 1235/1937  
+[2026-02-17 10:18:15] local.DEBUG: Going to search for external_id:OD436790574 using query external_id_is:"OD436790574"  
+[2026-02-17 10:18:16] local.DEBUG: Now submitting transaction 1236/1937  
+[2026-02-17 10:18:16] local.DEBUG: Going to search for external_id:OD436790570 using query external_id_is:"OD436790570"  
+[2026-02-17 10:18:16] local.DEBUG: Going to add import tag to transaction group #1796  
+[2026-02-17 10:18:16] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-14T00:00:00+01:00","datetime":"2025-02-14T00:00:00+01:00","amount":"25.000000000000","description":"MC 3646 2025-02-12 20:16:33 GE Tbilisi Glovoapp.com (MCC 4215) 25.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436790570","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-12 20:16:33 GE Tbilisi Glovoapp.com (MCC 4215) 25.00 GEL"}]}  
+[2026-02-17 10:18:23] local.DEBUG: Added import tag to transaction group #1796  
+[2026-02-17 10:18:23] local.DEBUG: Now submitting transaction 1237/1939  
+[2026-02-17 10:18:23] local.DEBUG: Going to search for external_id:OD436790570 using query external_id_is:"OD436790570"  
+[2026-02-17 10:18:24] local.DEBUG: Going to add import tag to transaction group #1797  
+[2026-02-17 10:18:24] local.DEBUG: Now submitting transaction 1238/1939  
+[2026-02-17 10:18:24] local.DEBUG: Going to search for external_id:OD436790566 using query external_id_is:"OD436790566"  
+[2026-02-17 10:18:24] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-14T00:00:00+01:00","datetime":"2025-02-14T00:00:00+01:00","amount":"7.500000000000","description":"MC 3646 2025-02-12 21:47:50 GE Batumi Dunkin (DUNGEORGIA) (MCC 5812) 7.50 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436790566","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-12 21:47:50 GE Batumi Dunkin (DUNGEORGIA) (MCC 5812) 7.50 GEL"}]}  
+[2026-02-17 10:18:31] local.DEBUG: Added import tag to transaction group #1797  
+[2026-02-17 10:18:31] local.DEBUG: Now submitting transaction 1237/1937  
+[2026-02-17 10:18:31] local.DEBUG: Going to search for external_id:OD436790566 using query external_id_is:"OD436790566"  
+[2026-02-17 10:18:32] local.DEBUG: Now submitting transaction 1238/1937  
+[2026-02-17 10:18:32] local.DEBUG: Going to search for external_id:OD436587995 using query external_id_is:"OD436587995"  
+[2026-02-17 10:18:32] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-13T00:00:00+01:00","datetime":"2025-02-13T00:00:00+01:00","amount":"1.000000000000","description":"75.00 GEL \u10d2\u10d0\u10d3\u10d0\u10e0\u10d8\u10ea\u10ee\u10d5\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436587995","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"75.00 GEL \u10d2\u10d0\u10d3\u10d0\u10e0\u10d8\u10ea\u10ee\u10d5\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd"}]}  
+[2026-02-17 10:18:32] local.DEBUG: Going to add import tag to transaction group #1798  
+[2026-02-17 10:18:37] local.DEBUG: Added import tag to transaction group #1798  
+[2026-02-17 10:18:37] local.DEBUG: Now submitting transaction 1239/1939  
+[2026-02-17 10:18:37] local.DEBUG: Going to search for external_id:OD436587995 using query external_id_is:"OD436587995"  
+[2026-02-17 10:18:37] local.DEBUG: Going to add import tag to transaction group #1799  
+[2026-02-17 10:18:37] local.DEBUG: Now submitting transaction 1240/1939  
+[2026-02-17 10:18:37] local.DEBUG: Going to search for external_id:OD436587994 using query external_id_is:"OD436587994"  
+[2026-02-17 10:18:38] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-13T00:00:00+01:00","datetime":"2025-02-13T00:00:00+01:00","amount":"75.000000000000","description":"Private Transfer","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436587994","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"Private Transfer"}]}  
+[2026-02-17 10:18:44] local.DEBUG: Added import tag to transaction group #1799  
+[2026-02-17 10:18:44] local.DEBUG: Now submitting transaction 1239/1937  
+[2026-02-17 10:18:44] local.DEBUG: Going to search for external_id:OD436587994 using query external_id_is:"OD436587994"  
+[2026-02-17 10:18:45] local.DEBUG: Now submitting transaction 1240/1937  
+[2026-02-17 10:18:45] local.DEBUG: Going to search for external_id:OD436516982 using query external_id_is:"OD436516982"  
+[2026-02-17 10:18:45] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-13T00:00:00+01:00","datetime":"2025-02-13T00:00:00+01:00","amount":"21.550000000000","description":"MC 3646 2025-02-13 01:41:07 AU Sydney Canva* 04425-44330531 (MCC 7333) 7.50 USD  2.8735","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436516982","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-13 01:41:07 AU Sydney Canva* 04425-44330531 (MCC 7333) 7.50 USD  2.8735"}]}  
+[2026-02-17 10:18:45] local.DEBUG: Going to add import tag to transaction group #1800  
+[2026-02-17 10:18:50] local.DEBUG: Going to add import tag to transaction group #1801  
+[2026-02-17 10:18:50] local.DEBUG: Added import tag to transaction group #1800  
+[2026-02-17 10:18:50] local.DEBUG: Now submitting transaction 1241/1939  
+[2026-02-17 10:18:50] local.DEBUG: Going to search for external_id:OD436516982 using query external_id_is:"OD436516982"  
+[2026-02-17 10:18:50] local.DEBUG: Now submitting transaction 1242/1939  
+[2026-02-17 10:18:50] local.DEBUG: Going to search for external_id:OD436516978 using query external_id_is:"OD436516978"  
+[2026-02-17 10:18:50] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-13T00:00:00+01:00","datetime":"2025-02-13T00:00:00+01:00","amount":"2090.000000000000","description":"MC 3646 2025-02-11 15:53:29 GE BATUMI LTD GABILDI (MCC 5211) 2090.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436516978","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-11 15:53:29 GE BATUMI LTD GABILDI (MCC 5211) 2090.00 GEL"}]}  
+[2026-02-17 10:18:57] local.DEBUG: Added import tag to transaction group #1801  
+[2026-02-17 10:18:57] local.DEBUG: Now submitting transaction 1241/1937  
+[2026-02-17 10:18:57] local.DEBUG: Going to search for external_id:OD436516978 using query external_id_is:"OD436516978"  
+[2026-02-17 10:18:58] local.DEBUG: Now submitting transaction 1242/1937  
+[2026-02-17 10:18:58] local.DEBUG: Going to search for external_id:OD436516974 using query external_id_is:"OD436516974"  
+[2026-02-17 10:18:58] local.DEBUG: Going to add import tag to transaction group #1802  
+[2026-02-17 10:18:58] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-13T00:00:00+01:00","datetime":"2025-02-13T00:00:00+01:00","amount":"60.000000000000","description":"MC 3646 2025-02-11 16:32:55 GE BATUMI KAPE BARA COFFE (MCC 5812) 60.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436516974","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-11 16:32:55 GE BATUMI KAPE BARA COFFE (MCC 5812) 60.00 GEL"}]}  
+[2026-02-17 10:19:03] local.DEBUG: Added import tag to transaction group #1802  
+[2026-02-17 10:19:03] local.DEBUG: Now submitting transaction 1243/1939  
+[2026-02-17 10:19:03] local.DEBUG: Going to search for external_id:OD436516974 using query external_id_is:"OD436516974"  
+[2026-02-17 10:19:04] local.DEBUG: Going to add import tag to transaction group #1803  
+[2026-02-17 10:19:04] local.DEBUG: Now submitting transaction 1244/1939  
+[2026-02-17 10:19:04] local.DEBUG: Going to search for external_id:OD436289191 using query external_id_is:"OD436289191"  
+[2026-02-17 10:19:04] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-12T00:00:00+01:00","datetime":"2025-02-12T00:00:00+01:00","amount":"1.000000000000","description":"120.00 GEL \u10d2\u10d0\u10d3\u10d0\u10e0\u10d8\u10ea\u10ee\u10d5\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436289191","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"120.00 GEL \u10d2\u10d0\u10d3\u10d0\u10e0\u10d8\u10ea\u10ee\u10d5\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd"}]}  
+[2026-02-17 10:19:11] local.DEBUG: Added import tag to transaction group #1803  
+[2026-02-17 10:19:11] local.DEBUG: Now submitting transaction 1243/1937  
+[2026-02-17 10:19:11] local.DEBUG: Going to search for external_id:OD436289191 using query external_id_is:"OD436289191"  
+[2026-02-17 10:19:12] local.DEBUG: Going to add import tag to transaction group #1804  
+[2026-02-17 10:19:12] local.DEBUG: Now submitting transaction 1244/1937  
+[2026-02-17 10:19:12] local.DEBUG: Going to search for external_id:OD436289190 using query external_id_is:"OD436289190"  
+[2026-02-17 10:19:12] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-12T00:00:00+01:00","datetime":"2025-02-12T00:00:00+01:00","amount":"120.000000000000","description":"Private Transfer","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436289190","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"Private Transfer"}]}  
+[2026-02-17 10:19:16] local.DEBUG: Added import tag to transaction group #1804  
+[2026-02-17 10:19:16] local.DEBUG: Going to add import tag to transaction group #1805  
+[2026-02-17 10:19:16] local.DEBUG: Now submitting transaction 1245/1939  
+[2026-02-17 10:19:16] local.DEBUG: Going to search for external_id:OD436289190 using query external_id_is:"OD436289190"  
+[2026-02-17 10:19:17] local.DEBUG: Now submitting transaction 1246/1939  
+[2026-02-17 10:19:17] local.DEBUG: Going to search for external_id:OD436241192 using query external_id_is:"OD436241192"  
+[2026-02-17 10:19:17] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-12T00:00:00+01:00","datetime":"2025-02-12T00:00:00+01:00","amount":"11.150000000000","description":"\u10d1\u10d0\u10e0\u10d0\u10d7\u10d8\u10d7 \u10db\u10dd\u10db\u10e1\u10d0\u10ee\u10e3\u10e0\u10d4\u10d1\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436241192","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"\u10d1\u10d0\u10e0\u10d0\u10d7\u10d8\u10d7 \u10db\u10dd\u10db\u10e1\u10d0\u10ee\u10e3\u10e0\u10d4\u10d1\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd"}]}  
+[2026-02-17 10:19:25] local.DEBUG: Added import tag to transaction group #1805  
+[2026-02-17 10:19:25] local.DEBUG: Now submitting transaction 1245/1937  
+[2026-02-17 10:19:25] local.DEBUG: Going to search for external_id:OD436241192 using query external_id_is:"OD436241192"  
+[2026-02-17 10:19:26] local.DEBUG: Going to add import tag to transaction group #1806  
+[2026-02-17 10:19:26] local.DEBUG: Now submitting transaction 1246/1937  
+[2026-02-17 10:19:26] local.DEBUG: Going to search for external_id:OC436241190 using query external_id_is:"OC436241190"  
+[2026-02-17 10:19:26] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"deposit","date":"2025-02-12T00:00:00+01:00","datetime":"2025-02-12T00:00:00+01:00","amount":"1115","description":"MC 3646 2025-02-11 15:18:33 IE Dublin STARLINK INTERNET (MCC 4816) 1115.00 GEL REFUND \/ CREDIT","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OC436241190","bonus_tags":[],"destination_id":371,"source_number":"","source_name":""}]}  
+[2026-02-17 10:19:30] local.DEBUG: Added import tag to transaction group #1806  
+[2026-02-17 10:19:30] local.DEBUG: Now submitting transaction 1247/1939  
+[2026-02-17 10:19:30] local.DEBUG: Going to search for external_id:OC436241190 using query external_id_is:"OC436241190"  
+[2026-02-17 10:19:31] local.DEBUG: Now submitting transaction 1248/1939  
+[2026-02-17 10:19:31] local.DEBUG: Going to search for external_id:OD436241186 using query external_id_is:"OD436241186"  
+[2026-02-17 10:19:31] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-12T00:00:00+01:00","datetime":"2025-02-12T00:00:00+01:00","amount":"7.600000000000","description":"MC 3646 2025-02-10 21:01:43 GE BATUMI MAIA LABADZE I\/E (MCC 5411) 7.60 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436241186","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-10 21:01:43 GE BATUMI MAIA LABADZE I\/E (MCC 5411) 7.60 GEL"}]}  
+[2026-02-17 10:19:32] local.DEBUG: Going to add import tag to transaction group #1807  
+[2026-02-17 10:19:36] local.DEBUG: Going to add import tag to transaction group #1808  
+[2026-02-17 10:19:36] local.DEBUG: Added import tag to transaction group #1807  
+[2026-02-17 10:19:36] local.DEBUG: Now submitting transaction 1247/1937  
+[2026-02-17 10:19:36] local.DEBUG: Going to search for external_id:OD436241186 using query external_id_is:"OD436241186"  
+[2026-02-17 10:19:37] local.DEBUG: Now submitting transaction 1248/1937  
+[2026-02-17 10:19:37] local.DEBUG: Going to search for external_id:OD436241182 using query external_id_is:"OD436241182"  
+[2026-02-17 10:19:37] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-12T00:00:00+01:00","datetime":"2025-02-12T00:00:00+01:00","amount":"86.660000000000","description":"MC 3646 2025-02-10 22:25:51 GE Tbilisi Glovoapp.com (MCC 4215) 86.66 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436241182","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-10 22:25:51 GE Tbilisi Glovoapp.com (MCC 4215) 86.66 GEL"}]}  
+[2026-02-17 10:19:44] local.DEBUG: Added import tag to transaction group #1808  
+[2026-02-17 10:19:44] local.DEBUG: Now submitting transaction 1249/1939  
+[2026-02-17 10:19:44] local.DEBUG: Going to search for external_id:OD436241182 using query external_id_is:"OD436241182"  
+[2026-02-17 10:19:45] local.DEBUG: Now submitting transaction 1250/1939  
+[2026-02-17 10:19:45] local.DEBUG: Going to search for external_id:OD436241178 using query external_id_is:"OD436241178"  
+[2026-02-17 10:19:45] local.DEBUG: Going to add import tag to transaction group #1809  
+[2026-02-17 10:19:45] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-12T00:00:00+01:00","datetime":"2025-02-12T00:00:00+01:00","amount":"81.200000000000","description":"MC 3646 2025-02-10 23:45:44 GE Tbilisi Glovoapp.com (MCC 4215) 81.20 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD436241178","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-10 23:45:44 GE Tbilisi Glovoapp.com (MCC 4215) 81.20 GEL"}]}  
+[2026-02-17 10:19:52] local.DEBUG: Added import tag to transaction group #1809  
+[2026-02-17 10:19:52] local.DEBUG: Now submitting transaction 1249/1937  
+[2026-02-17 10:19:52] local.DEBUG: Going to search for external_id:OD436241178 using query external_id_is:"OD436241178"  
+[2026-02-17 10:19:52] local.DEBUG: Going to add import tag to transaction group #1810  
+[2026-02-17 10:19:53] local.DEBUG: Now submitting transaction 1250/1937  
+[2026-02-17 10:19:53] local.DEBUG: Going to search for external_id:OD433015818 using query external_id_is:"OD433015818"  
+[2026-02-17 10:19:53] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-01T00:00:00+01:00","datetime":"2025-02-01T00:00:00+01:00","amount":"2.000000000000","description":"\u10de\u10d0\u10d9\u10d4\u10e2\u10e3\u10e0\u10d8 \u10e1\u10d4\u10e0\u10d5\u10d8\u10e1\u10d4\u10d1\u10d8 \u10db\u10dd\u10db\u10e1\u10d0\u10ee\u10e3\u10e0\u10d4\u10d1\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD433015818","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"\u10de\u10d0\u10d9\u10d4\u10e2\u10e3\u10e0\u10d8 \u10e1\u10d4\u10e0\u10d5\u10d8\u10e1\u10d4\u10d1\u10d8 \u10db\u10dd\u10db\u10e1\u10d0\u10ee\u10e3\u10e0\u10d4\u10d1\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd"}]}  
+[2026-02-17 10:19:57] local.DEBUG: Added import tag to transaction group #1810  
+[2026-02-17 10:19:58] local.DEBUG: Now submitting transaction 1251/1939  
+[2026-02-17 10:19:58] local.DEBUG: Going to search for external_id:OD433015818 using query external_id_is:"OD433015818"  
+[2026-02-17 10:19:58] local.DEBUG: Now submitting transaction 1252/1939  
+[2026-02-17 10:19:58] local.DEBUG: Going to search for external_id:OD435960862 using query external_id_is:"OD435960862"  
+[2026-02-17 10:19:58] local.DEBUG: Going to add import tag to transaction group #1811  
+[2026-02-17 10:19:58] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-11T00:00:00+01:00","datetime":"2025-02-11T00:00:00+01:00","amount":"375.650000000000","description":"MC 3646 2025-02-10 18:52:00 GE Batumi Jysk (Batumi) (MCC 5200) 375.65 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435960862","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-10 18:52:00 GE Batumi Jysk (Batumi) (MCC 5200) 375.65 GEL"}]}  
+[2026-02-17 10:20:06] local.DEBUG: Added import tag to transaction group #1811  
+[2026-02-17 10:20:06] local.DEBUG: Now submitting transaction 1251/1937  
+[2026-02-17 10:20:06] local.DEBUG: Going to search for external_id:OD435960862 using query external_id_is:"OD435960862"  
+[2026-02-17 10:20:06] local.DEBUG: Going to add import tag to transaction group #1812  
+[2026-02-17 10:20:06] local.DEBUG: Now submitting transaction 1252/1937  
+[2026-02-17 10:20:06] local.DEBUG: Going to search for external_id:OD435960856 using query external_id_is:"OD435960856"  
+[2026-02-17 10:20:07] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-11T00:00:00+01:00","datetime":"2025-02-11T00:00:00+01:00","amount":"88.000000000000","description":"MC 3646 2025-02-09 15:29:31 GE BATUMI KAPE BARA COFFE (MCC 5812) 88.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435960856","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-09 15:29:31 GE BATUMI KAPE BARA COFFE (MCC 5812) 88.00 GEL"}]}  
+[2026-02-17 10:20:13] local.DEBUG: Added import tag to transaction group #1812  
+[2026-02-17 10:20:13] local.DEBUG: Now submitting transaction 1253/1939  
+[2026-02-17 10:20:13] local.DEBUG: Going to search for external_id:OD435960856 using query external_id_is:"OD435960856"  
+[2026-02-17 10:20:14] local.DEBUG: Now submitting transaction 1254/1939  
+[2026-02-17 10:20:14] local.DEBUG: Going to search for external_id:OD435960846 using query external_id_is:"OD435960846"  
+[2026-02-17 10:20:14] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-11T00:00:00+01:00","datetime":"2025-02-11T00:00:00+01:00","amount":"1115.000000000000","description":"MC 3646 2025-02-10 12:30:10 IE Dublin STARLINK INTERNET (MCC 4816) 1115.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435960846","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-10 12:30:10 IE Dublin STARLINK INTERNET (MCC 4816) 1115.00 GEL"}]}  
+[2026-02-17 10:20:14] local.DEBUG: Going to add import tag to transaction group #1813  
+[2026-02-17 10:20:22] local.DEBUG: Added import tag to transaction group #1813  
+[2026-02-17 10:20:22] local.DEBUG: Now submitting transaction 1253/1937  
+[2026-02-17 10:20:22] local.DEBUG: Going to search for external_id:OD435960846 using query external_id_is:"OD435960846"  
+[2026-02-17 10:20:22] local.DEBUG: Going to add import tag to transaction group #1814  
+[2026-02-17 10:20:23] local.DEBUG: Now submitting transaction 1254/1937  
+[2026-02-17 10:20:23] local.DEBUG: Going to search for external_id:OD435960842 using query external_id_is:"OD435960842"  
+[2026-02-17 10:20:23] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-11T00:00:00+01:00","datetime":"2025-02-11T00:00:00+01:00","amount":"7.300000000000","description":"MC 3646 2025-02-09 14:20:42 GE Tbilisi BoltTaxi (MCC 4121) 7.30 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435960842","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-09 14:20:42 GE Tbilisi BoltTaxi (MCC 4121) 7.30 GEL"}]}  
+[2026-02-17 10:20:27] local.DEBUG: Added import tag to transaction group #1814  
+[2026-02-17 10:20:27] local.DEBUG: Now submitting transaction 1255/1939  
+[2026-02-17 10:20:27] local.DEBUG: Going to search for external_id:OD435960842 using query external_id_is:"OD435960842"  
+[2026-02-17 10:20:27] local.DEBUG: Now submitting transaction 1256/1939  
+[2026-02-17 10:20:27] local.DEBUG: Going to search for external_id:OD435960838 using query external_id_is:"OD435960838"  
+[2026-02-17 10:20:28] local.DEBUG: Going to add import tag to transaction group #1815  
+[2026-02-17 10:20:28] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-11T00:00:00+01:00","datetime":"2025-02-11T00:00:00+01:00","amount":"15.580000000000","description":"MC 3646 2025-02-10 20:39:25 GE Batumi DAILY (MCC 5411) 15.58 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435960838","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-10 20:39:25 GE Batumi DAILY (MCC 5411) 15.58 GEL"}]}  
+[2026-02-17 10:20:35] local.DEBUG: Added import tag to transaction group #1815  
+[2026-02-17 10:20:35] local.DEBUG: Now submitting transaction 1255/1937  
+[2026-02-17 10:20:35] local.DEBUG: Going to search for external_id:OD435960838 using query external_id_is:"OD435960838"  
+[2026-02-17 10:20:35] local.DEBUG: Going to add import tag to transaction group #1816  
+[2026-02-17 10:20:36] local.DEBUG: Now submitting transaction 1256/1937  
+[2026-02-17 10:20:36] local.DEBUG: Going to search for external_id:OD435599926 using query external_id_is:"OD435599926"  
+[2026-02-17 10:20:36] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-10T00:00:00+01:00","datetime":"2025-02-10T00:00:00+01:00","amount":"41.800000000000","description":"MC 3646 2025-02-09 13:14:05 GE Batumi Smart pudi (MCC 5812) 41.80 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435599926","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-09 13:14:05 GE Batumi Smart pudi (MCC 5812) 41.80 GEL"}]}  
+[2026-02-17 10:20:42] local.DEBUG: Added import tag to transaction group #1816  
+[2026-02-17 10:20:42] local.DEBUG: Now submitting transaction 1257/1939  
+[2026-02-17 10:20:42] local.DEBUG: Going to search for external_id:OD435599926 using query external_id_is:"OD435599926"  
+[2026-02-17 10:20:43] local.DEBUG: Now submitting transaction 1258/1939  
+[2026-02-17 10:20:43] local.DEBUG: Going to search for external_id:OD435599922 using query external_id_is:"OD435599922"  
+[2026-02-17 10:20:43] local.DEBUG: Going to add import tag to transaction group #1817  
+[2026-02-17 10:20:43] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-10T00:00:00+01:00","datetime":"2025-02-10T00:00:00+01:00","amount":"225.320000000000","description":"MC 3646 2025-02-09 01:52:09 GE Tbilisi Glovoapp.com (MCC 4215) 225.32 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435599922","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-09 01:52:09 GE Tbilisi Glovoapp.com (MCC 4215) 225.32 GEL"}]}  
+[2026-02-17 10:20:48] local.DEBUG: Added import tag to transaction group #1817  
+[2026-02-17 10:20:48] local.DEBUG: Now submitting transaction 1257/1937  
+[2026-02-17 10:20:48] local.DEBUG: Going to search for external_id:OD435599922 using query external_id_is:"OD435599922"  
+[2026-02-17 10:20:48] local.DEBUG: Going to add import tag to transaction group #1818  
+[2026-02-17 10:20:49] local.DEBUG: Now submitting transaction 1258/1937  
+[2026-02-17 10:20:49] local.DEBUG: Going to search for external_id:OD435599918 using query external_id_is:"OD435599918"  
+[2026-02-17 10:20:49] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-10T00:00:00+01:00","datetime":"2025-02-10T00:00:00+01:00","amount":"50.300000000000","description":"MC 3646 2025-02-08 10:37:54 GE BATUMI TARIELI LTD (MCC 5411) 50.30 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435599918","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-08 10:37:54 GE BATUMI TARIELI LTD (MCC 5411) 50.30 GEL"}]}  
+[2026-02-17 10:20:56] local.DEBUG: Added import tag to transaction group #1818  
+[2026-02-17 10:20:56] local.DEBUG: Now submitting transaction 1259/1939  
+[2026-02-17 10:20:56] local.DEBUG: Going to search for external_id:OD435599918 using query external_id_is:"OD435599918"  
+[2026-02-17 10:20:57] local.DEBUG: Now submitting transaction 1260/1939  
+[2026-02-17 10:20:57] local.DEBUG: Going to search for external_id:OD435599914 using query external_id_is:"OD435599914"  
+[2026-02-17 10:20:57] local.DEBUG: Going to add import tag to transaction group #1819  
+[2026-02-17 10:20:57] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-10T00:00:00+01:00","datetime":"2025-02-10T00:00:00+01:00","amount":"199.000000000000","description":"MC 3646 2025-02-09 13:09:14 GE Batumi zoommer (khimshiashvil (MCC 5732) 199.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435599914","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-09 13:09:14 GE Batumi zoommer (khimshiashvil (MCC 5732) 199.00 GEL"}]}  
+[2026-02-17 10:21:04] local.DEBUG: Added import tag to transaction group #1819  
+[2026-02-17 10:21:04] local.DEBUG: Now submitting transaction 1259/1937  
+[2026-02-17 10:21:04] local.DEBUG: Going to search for external_id:OD435599914 using query external_id_is:"OD435599914"  
+[2026-02-17 10:21:04] local.DEBUG: Going to add import tag to transaction group #1820  
+[2026-02-17 10:21:05] local.DEBUG: Now submitting transaction 1260/1937  
+[2026-02-17 10:21:05] local.DEBUG: Going to search for external_id:OD435599910 using query external_id_is:"OD435599910"  
+[2026-02-17 10:21:05] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-10T00:00:00+01:00","datetime":"2025-02-10T00:00:00+01:00","amount":"34.000000000000","description":"MC 3646 2025-02-07 13:59:58 GE BATUMI KAPE BARA COFFE (MCC 5812) 34.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435599910","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-07 13:59:58 GE BATUMI KAPE BARA COFFE (MCC 5812) 34.00 GEL"}]}  
+[2026-02-17 10:21:12] local.DEBUG: Added import tag to transaction group #1820  
+[2026-02-17 10:21:12] local.DEBUG: Now submitting transaction 1261/1939  
+[2026-02-17 10:21:12] local.DEBUG: Going to search for external_id:OD435599910 using query external_id_is:"OD435599910"  
+[2026-02-17 10:21:12] local.DEBUG: Now submitting transaction 1262/1939  
+[2026-02-17 10:21:12] local.DEBUG: Going to search for external_id:OD435160642 using query external_id_is:"OD435160642"  
+[2026-02-17 10:21:13] local.DEBUG: Going to add import tag to transaction group #1821  
+[2026-02-17 10:21:13] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-08T00:00:00+01:00","datetime":"2025-02-08T00:00:00+01:00","amount":"82.890000000000","description":"MC 3646 2025-02-07 13:53:39 US PLEASANTON FIREFLIES.AI (MCC 5734) 29.00 USD  2.8583","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD435160642","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-07 13:53:39 US PLEASANTON FIREFLIES.AI (MCC 5734) 29.00 USD  2.8583"}]}  
+[2026-02-17 10:21:18] local.DEBUG: Added import tag to transaction group #1821  
+[2026-02-17 10:21:18] local.DEBUG: Now submitting transaction 1261/1937  
+[2026-02-17 10:21:18] local.DEBUG: Going to search for external_id:OD435160642 using query external_id_is:"OD435160642"  
+[2026-02-17 10:21:18] local.DEBUG: Going to add import tag to transaction group #1822  
+[2026-02-17 10:21:19] local.DEBUG: Now submitting transaction 1262/1937  
+[2026-02-17 10:21:19] local.DEBUG: Going to search for external_id:OD434875732 using query external_id_is:"OD434875732"  
+[2026-02-17 10:21:19] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-02-07T00:00:00+01:00","datetime":"2025-02-07T00:00:00+01:00","amount":"39.000000000000","description":"MC 3646 2025-02-05 11:38:11 GE BATUMI OMNI (MCC 5812) 39.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD434875732","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-02-05 11:38:11 GE BATUMI OMNI (MCC 5812) 39.00 GEL"}]}  
+[2026-02-17 10:21:26] local.DEBUG: Added import tag to transaction group #1822  
+[2026-02-17 10:21:26] local.DEBUG: Now submitting transaction 1263/1939  
+[2026-02-17 10:21:26] local.DEBUG: Going to search for external_id:OD434875732 using query external_id_is:"OD434875732"  
+[2026-02-17 10:21:27] local.DEBUG: Now submitting transaction 1264/1939  
+[2026-02-17 10:21:27] local.DEBUG: Going to search for external_id:OD432598354 using query external_id_is:"OD432598354"  
+[2026-02-17 10:21:27] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-31T00:00:00+01:00","datetime":"2025-01-31T00:00:00+01:00","amount":"8.990000000000","description":"MC 3646 2025-01-30 09:22:55 GE Tbilisi Glovoapp.com (MCC 4215) 8.99 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD432598354","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-30 09:22:55 GE Tbilisi Glovoapp.com (MCC 4215) 8.99 GEL"}]}  
+[2026-02-17 10:21:27] local.DEBUG: Going to add import tag to transaction group #1823  
+[2026-02-17 10:21:35] local.DEBUG: Added import tag to transaction group #1823  
+[2026-02-17 10:21:35] local.DEBUG: Now submitting transaction 1263/1937  
+[2026-02-17 10:21:35] local.DEBUG: Going to search for external_id:OD432598354 using query external_id_is:"OD432598354"  
+[2026-02-17 10:21:35] local.DEBUG: Going to add import tag to transaction group #1824  
+[2026-02-17 10:21:36] local.DEBUG: Now submitting transaction 1264/1937  
+[2026-02-17 10:21:36] local.DEBUG: Going to search for external_id:OD432176448 using query external_id_is:"OD432176448"  
+[2026-02-17 10:21:36] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-30T00:00:00+01:00","datetime":"2025-01-30T00:00:00+01:00","amount":"9.410000000000","description":"MC 3646 2025-01-29 08:45:19 NL Amsterdam CEB\/donationalerts.com (MCC 8999) 3.20 USD  2.9391","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD432176448","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-29 08:45:19 NL Amsterdam CEB\/donationalerts.com (MCC 8999) 3.20 USD  2.9391"}]}  
+[2026-02-17 10:21:43] local.DEBUG: Added import tag to transaction group #1824  
+[2026-02-17 10:21:43] local.DEBUG: Now submitting transaction 1265/1939  
+[2026-02-17 10:21:43] local.DEBUG: Going to search for external_id:OD432176448 using query external_id_is:"OD432176448"  
+[2026-02-17 10:21:44] local.DEBUG: Now submitting transaction 1266/1939  
+[2026-02-17 10:21:44] local.DEBUG: Going to search for external_id:OD431203784 using query external_id_is:"OD431203784"  
+[2026-02-17 10:21:44] local.DEBUG: Going to add import tag to transaction group #1825  
+[2026-02-17 10:21:44] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-27T00:00:00+01:00","datetime":"2025-01-27T00:00:00+01:00","amount":"66.600000000000","description":"MC 3646 2025-01-26 19:55:02 GE Tbilisi Glovoapp.com (MCC 4215) 66.60 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD431203784","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-26 19:55:02 GE Tbilisi Glovoapp.com (MCC 4215) 66.60 GEL"}]}  
+[2026-02-17 10:21:49] local.DEBUG: Added import tag to transaction group #1825  
+[2026-02-17 10:21:49] local.DEBUG: Now submitting transaction 1265/1937  
+[2026-02-17 10:21:49] local.DEBUG: Going to search for external_id:OD431203784 using query external_id_is:"OD431203784"  
+[2026-02-17 10:21:49] local.DEBUG: Going to add import tag to transaction group #1826  
+[2026-02-17 10:21:50] local.DEBUG: Now submitting transaction 1266/1937  
+[2026-02-17 10:21:50] local.DEBUG: Going to search for external_id:OD431203780 using query external_id_is:"OD431203780"  
+[2026-02-17 10:21:50] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-27T00:00:00+01:00","datetime":"2025-01-27T00:00:00+01:00","amount":"44.850000000000","description":"MC 3646 2025-01-26 15:58:35 GE Tbilisi Glovoapp.com (MCC 4215) 44.85 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD431203780","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-26 15:58:35 GE Tbilisi Glovoapp.com (MCC 4215) 44.85 GEL"}]}  
+[2026-02-17 10:21:57] local.DEBUG: Added import tag to transaction group #1826  
+[2026-02-17 10:21:57] local.DEBUG: Now submitting transaction 1267/1939  
+[2026-02-17 10:21:57] local.DEBUG: Going to search for external_id:OD431203780 using query external_id_is:"OD431203780"  
+[2026-02-17 10:21:58] local.DEBUG: Now submitting transaction 1268/1939  
+[2026-02-17 10:21:58] local.DEBUG: Going to search for external_id:OD431203776 using query external_id_is:"OD431203776"  
+[2026-02-17 10:21:58] local.DEBUG: Going to add import tag to transaction group #1827  
+[2026-02-17 10:21:58] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-27T00:00:00+01:00","datetime":"2025-01-27T00:00:00+01:00","amount":"56.000000000000","description":"MC 3646 2025-01-25 20:17:13 GE Tbilisi Glovoapp.com (MCC 4215) 56.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD431203776","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-25 20:17:13 GE Tbilisi Glovoapp.com (MCC 4215) 56.00 GEL"}]}  
+[2026-02-17 10:22:06] local.DEBUG: Added import tag to transaction group #1827  
+[2026-02-17 10:22:06] local.DEBUG: Now submitting transaction 1267/1937  
+[2026-02-17 10:22:06] local.DEBUG: Going to search for external_id:OD431203776 using query external_id_is:"OD431203776"  
+[2026-02-17 10:22:06] local.DEBUG: Going to add import tag to transaction group #1828  
+[2026-02-17 10:22:06] local.DEBUG: Now submitting transaction 1268/1937  
+[2026-02-17 10:22:06] local.DEBUG: Going to search for external_id:OD431203772 using query external_id_is:"OD431203772"  
+[2026-02-17 10:22:07] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-27T00:00:00+01:00","datetime":"2025-01-27T00:00:00+01:00","amount":"28.800000000000","description":"MC 3646 2025-01-25 19:07:36 GE Batumi P\/E KIRILL FILIPPOVICH (MCC 5812) 28.80 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD431203772","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-25 19:07:36 GE Batumi P\/E KIRILL FILIPPOVICH (MCC 5812) 28.80 GEL"}]}  
+[2026-02-17 10:22:11] local.DEBUG: Added import tag to transaction group #1828  
+[2026-02-17 10:22:11] local.DEBUG: Now submitting transaction 1269/1939  
+[2026-02-17 10:22:11] local.DEBUG: Going to search for external_id:OD431203772 using query external_id_is:"OD431203772"  
+[2026-02-17 10:22:11] local.DEBUG: Now submitting transaction 1270/1939  
+[2026-02-17 10:22:11] local.DEBUG: Going to search for external_id:OD431203768 using query external_id_is:"OD431203768"  
+[2026-02-17 10:22:12] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-27T00:00:00+01:00","datetime":"2025-01-27T00:00:00+01:00","amount":"190.630000000000","description":"MC 3646 2025-01-26 17:08:08 GE Tbilisi Glovoapp.com (MCC 5814) 190.63 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD431203768","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-26 17:08:08 GE Tbilisi Glovoapp.com (MCC 5814) 190.63 GEL"}]}  
+[2026-02-17 10:22:12] local.DEBUG: Going to add import tag to transaction group #1829  
+[2026-02-17 10:22:16] local.DEBUG: Added import tag to transaction group #1829  
+[2026-02-17 10:22:16] local.DEBUG: Going to add import tag to transaction group #1830  
+[2026-02-17 10:22:16] local.DEBUG: Now submitting transaction 1269/1937  
+[2026-02-17 10:22:16] local.DEBUG: Going to search for external_id:OD431203768 using query external_id_is:"OD431203768"  
+[2026-02-17 10:22:17] local.DEBUG: Now submitting transaction 1270/1937  
+[2026-02-17 10:22:17] local.DEBUG: Going to search for external_id:OD430774008 using query external_id_is:"OD430774008"  
+[2026-02-17 10:22:17] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-25T00:00:00+01:00","datetime":"2025-01-25T00:00:00+01:00","amount":"45.730000000000","description":"MC 3646 2025-01-24 16:01:03 US BELLEVUE STEAMGAMES.COM 4259522 (MCC 5816) 15.56 USD  2.9391","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD430774008","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-24 16:01:03 US BELLEVUE STEAMGAMES.COM 4259522 (MCC 5816) 15.56 USD  2.9391"}]}  
+[2026-02-17 10:22:24] local.DEBUG: Added import tag to transaction group #1830  
+[2026-02-17 10:22:24] local.DEBUG: Now submitting transaction 1271/1939  
+[2026-02-17 10:22:24] local.DEBUG: Going to search for external_id:OD430774008 using query external_id_is:"OD430774008"  
+[2026-02-17 10:22:24] local.DEBUG: Now submitting transaction 1272/1939  
+[2026-02-17 10:22:24] local.DEBUG: Going to search for external_id:OC430494062 using query external_id_is:"OC430494062"  
+[2026-02-17 10:22:24] local.DEBUG: Going to add import tag to transaction group #1831  
+[2026-02-17 10:22:25] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"deposit","date":"2025-01-24T00:00:00+01:00","datetime":"2025-01-24T00:00:00+01:00","amount":"85","description":"MC 3646 2025-01-16 22:13:03 KZ ALMATY OZON.COM (MCC 5262) 28.82 USD  2.9492 DEBIT REVERSAL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OC430494062","bonus_tags":[],"destination_id":371,"source_number":"","source_name":""}]}  
+[2026-02-17 10:22:32] local.DEBUG: Added import tag to transaction group #1831  
+[2026-02-17 10:22:32] local.DEBUG: Now submitting transaction 1271/1937  
+[2026-02-17 10:22:32] local.DEBUG: Going to search for external_id:OC430494062 using query external_id_is:"OC430494062"  
+[2026-02-17 10:22:33] local.DEBUG: Now submitting transaction 1272/1937  
+[2026-02-17 10:22:33] local.DEBUG: Going to search for external_id:OC429456829 using query external_id_is:"OC429456829"  
+[2026-02-17 10:22:33] local.DEBUG: Going to add import tag to transaction group #1832  
+[2026-02-17 10:22:33] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"deposit","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"519.91","description":"Transfer to the own account","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OC429456829","bonus_tags":[],"destination_id":371,"source_number":"","source_name":""}]}  
+[2026-02-17 10:22:39] local.DEBUG: Added import tag to transaction group #1832  
+[2026-02-17 10:22:39] local.DEBUG: Going to add import tag to transaction group #1833  
+[2026-02-17 10:22:39] local.DEBUG: Now submitting transaction 1273/1939  
+[2026-02-17 10:22:39] local.DEBUG: Going to search for external_id:OC429456829 using query external_id_is:"OC429456829"  
+[2026-02-17 10:22:39] local.DEBUG: Now submitting transaction 1274/1939  
+[2026-02-17 10:22:39] local.DEBUG: Going to search for external_id:OC429005751 using query external_id_is:"OC429005751"  
+[2026-02-17 10:22:40] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"deposit","date":"2025-01-18T00:00:00+01:00","datetime":"2025-01-18T00:00:00+01:00","amount":"1275.75","description":"Transfer to the own account","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OC429005751","bonus_tags":[],"destination_id":371,"source_number":"","source_name":""}]}  
+[2026-02-17 10:22:48] local.DEBUG: Added import tag to transaction group #1833  
+[2026-02-17 10:22:48] local.DEBUG: Now submitting transaction 1273/1937  
+[2026-02-17 10:22:48] local.DEBUG: Going to search for external_id:OC429005751 using query external_id_is:"OC429005751"  
+[2026-02-17 10:22:49] local.DEBUG: Now submitting transaction 1274/1937  
+[2026-02-17 10:22:49] local.DEBUG: Going to search for external_id:OC429000559 using query external_id_is:"OC429000559"  
+[2026-02-17 10:22:49] local.DEBUG: Going to add import tag to transaction group #1834  
+[2026-02-17 10:22:49] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"deposit","date":"2025-01-18T00:00:00+01:00","datetime":"2025-01-18T00:00:00+01:00","amount":"850.5","description":"Transfer to the own account","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OC429000559","bonus_tags":[],"destination_id":371,"source_number":"","source_name":""}]}  
+[2026-02-17 10:22:54] local.DEBUG: Added import tag to transaction group #1834  
+[2026-02-17 10:22:54] local.DEBUG: Going to add import tag to transaction group #1835  
+[2026-02-17 10:22:54] local.DEBUG: Now submitting transaction 1275/1939  
+[2026-02-17 10:22:54] local.DEBUG: Going to search for external_id:OC429000559 using query external_id_is:"OC429000559"  
+[2026-02-17 10:22:55] local.DEBUG: Now submitting transaction 1276/1939  
+[2026-02-17 10:22:55] local.DEBUG: Going to search for external_id:OD430223162 using query external_id_is:"OD430223162"  
+[2026-02-17 10:22:55] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-23T00:00:00+01:00","datetime":"2025-01-23T00:00:00+01:00","amount":"160.000000000000","description":"MC 3646 2025-01-21 20:41:33 GE Batumi KRIVIS AKADEMIA LTD (MCC 7298) 160.00 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD430223162","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-21 20:41:33 GE Batumi KRIVIS AKADEMIA LTD (MCC 7298) 160.00 GEL"}]}  
+[2026-02-17 10:23:03] local.DEBUG: Added import tag to transaction group #1835  
+[2026-02-17 10:23:03] local.DEBUG: Going to add import tag to transaction group #1836  
+[2026-02-17 10:23:03] local.DEBUG: Now submitting transaction 1275/1937  
+[2026-02-17 10:23:03] local.DEBUG: Going to search for external_id:OD430223162 using query external_id_is:"OD430223162"  
+[2026-02-17 10:23:03] local.DEBUG: Now submitting transaction 1276/1937  
+[2026-02-17 10:23:03] local.DEBUG: Going to search for external_id:OD430223158 using query external_id_is:"OD430223158"  
+[2026-02-17 10:23:04] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-23T00:00:00+01:00","datetime":"2025-01-23T00:00:00+01:00","amount":"226.850000000000","description":"MC 3646 2025-01-21 22:31:53 GE Batumi TARIEL LTD (MCC 5411) 226.85 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD430223158","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-21 22:31:53 GE Batumi TARIEL LTD (MCC 5411) 226.85 GEL"}]}  
+[2026-02-17 10:23:08] local.DEBUG: Added import tag to transaction group #1836  
+[2026-02-17 10:23:08] local.DEBUG: Now submitting transaction 1277/1939  
+[2026-02-17 10:23:08] local.DEBUG: Going to search for external_id:OD430223158 using query external_id_is:"OD430223158"  
+[2026-02-17 10:23:08] local.DEBUG: Now submitting transaction 1278/1939  
+[2026-02-17 10:23:08] local.DEBUG: Going to search for external_id:OD429950642 using query external_id_is:"OD429950642"  
+[2026-02-17 10:23:09] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-22T00:00:00+01:00","datetime":"2025-01-22T00:00:00+01:00","amount":"77.550000000000","description":"MC 3646 2025-01-21 03:04:02 GE Tbilisi Glovoapp.com (MCC 4215) 77.55 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429950642","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-21 03:04:02 GE Tbilisi Glovoapp.com (MCC 4215) 77.55 GEL"}]}  
+[2026-02-17 10:23:09] local.DEBUG: Going to add import tag to transaction group #1837  
+[2026-02-17 10:23:16] local.DEBUG: Added import tag to transaction group #1837  
+[2026-02-17 10:23:16] local.DEBUG: Now submitting transaction 1277/1937  
+[2026-02-17 10:23:16] local.DEBUG: Going to search for external_id:OD429950642 using query external_id_is:"OD429950642"  
+[2026-02-17 10:23:16] local.DEBUG: Going to add import tag to transaction group #1838  
+[2026-02-17 10:23:17] local.DEBUG: Now submitting transaction 1278/1937  
+[2026-02-17 10:23:17] local.DEBUG: Going to search for external_id:OD429950636 using query external_id_is:"OD429950636"  
+[2026-02-17 10:23:17] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-22T00:00:00+01:00","datetime":"2025-01-22T00:00:00+01:00","amount":"49.100000000000","description":"MC 3646 2025-01-21 02:47:56 GE Tbilisi Glovoapp.com (MCC 5814) 49.10 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429950636","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-21 02:47:56 GE Tbilisi Glovoapp.com (MCC 5814) 49.10 GEL"}]}  
+[2026-02-17 10:23:24] local.DEBUG: Added import tag to transaction group #1838  
+[2026-02-17 10:23:24] local.DEBUG: Now submitting transaction 1279/1939  
+[2026-02-17 10:23:24] local.DEBUG: Going to search for external_id:OD429950636 using query external_id_is:"OD429950636"  
+[2026-02-17 10:23:25] local.DEBUG: Now submitting transaction 1280/1939  
+[2026-02-17 10:23:25] local.DEBUG: Going to search for external_id:OD429950632 using query external_id_is:"OD429950632"  
+[2026-02-17 10:23:25] local.DEBUG: Going to add import tag to transaction group #1839  
+[2026-02-17 10:23:25] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-22T00:00:00+01:00","datetime":"2025-01-22T00:00:00+01:00","amount":"55.990000000000","description":"MC 3646 2025-01-21 02:31:00 GE Tbilisi Glovoapp.com (MCC 4215) 55.99 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429950632","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-21 02:31:00 GE Tbilisi Glovoapp.com (MCC 4215) 55.99 GEL"}]}  
+[2026-02-17 10:23:33] local.DEBUG: Added import tag to transaction group #1839  
+[2026-02-17 10:23:33] local.DEBUG: Now submitting transaction 1279/1937  
+[2026-02-17 10:23:33] local.DEBUG: Going to search for external_id:OD429950632 using query external_id_is:"OD429950632"  
+[2026-02-17 10:23:33] local.DEBUG: Going to add import tag to transaction group #1840  
+[2026-02-17 10:23:33] local.DEBUG: Now submitting transaction 1280/1937  
+[2026-02-17 10:23:33] local.DEBUG: Going to search for external_id:OD429682032 using query external_id_is:"OD429682032"  
+[2026-02-17 10:23:34] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-21T00:00:00+01:00","datetime":"2025-01-21T00:00:00+01:00","amount":"102.600000000000","description":"MC 3646 2025-01-20 21:42:13 GE Tbilisi Glovoapp.com (MCC 4215) 102.60 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429682032","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-20 21:42:13 GE Tbilisi Glovoapp.com (MCC 4215) 102.60 GEL"}]}  
+[2026-02-17 10:23:38] local.DEBUG: Added import tag to transaction group #1840  
+[2026-02-17 10:23:38] local.DEBUG: Now submitting transaction 1281/1939  
+[2026-02-17 10:23:38] local.DEBUG: Going to search for external_id:OD429682032 using query external_id_is:"OD429682032"  
+[2026-02-17 10:23:38] local.DEBUG: Now submitting transaction 1282/1939  
+[2026-02-17 10:23:38] local.DEBUG: Going to search for external_id:OD429682024 using query external_id_is:"OD429682024"  
+[2026-02-17 10:23:39] local.DEBUG: Going to add import tag to transaction group #1841  
+[2026-02-17 10:23:39] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-21T00:00:00+01:00","datetime":"2025-01-21T00:00:00+01:00","amount":"231.040000000000","description":"MC 3646 2025-01-20 09:16:59 UA Kyiv SUNFLOWER (MCC 5992) 3275.00 UAH 79.29 USD 2.9139","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429682024","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-20 09:16:59 UA Kyiv SUNFLOWER (MCC 5992) 3275.00 UAH 79.29 USD 2.9139"}]}  
+[2026-02-17 10:23:46] local.DEBUG: Added import tag to transaction group #1841  
+[2026-02-17 10:23:46] local.DEBUG: Now submitting transaction 1281/1937  
+[2026-02-17 10:23:46] local.DEBUG: Going to search for external_id:OD429682024 using query external_id_is:"OD429682024"  
+[2026-02-17 10:23:47] local.DEBUG: Going to add import tag to transaction group #1842  
+[2026-02-17 10:23:47] local.DEBUG: Now submitting transaction 1282/1937  
+[2026-02-17 10:23:47] local.DEBUG: Going to search for external_id:OD429440667 using query external_id_is:"OD429440667"  
+[2026-02-17 10:23:47] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"1.000000000000","description":"100.00 GEL \u10d2\u10d0\u10d3\u10d0\u10e0\u10d8\u10ea\u10ee\u10d5\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429440667","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"100.00 GEL \u10d2\u10d0\u10d3\u10d0\u10e0\u10d8\u10ea\u10ee\u10d5\u10d8\u10e1 \u10e1\u10d0\u10d9\u10dd\u10db\u10d8\u10e1\u10d8\u10dd"}]}  
+[2026-02-17 10:23:54] local.DEBUG: Added import tag to transaction group #1842  
+[2026-02-17 10:23:54] local.DEBUG: Now submitting transaction 1283/1939  
+[2026-02-17 10:23:54] local.DEBUG: Going to search for external_id:OD429440667 using query external_id_is:"OD429440667"  
+[2026-02-17 10:23:55] local.DEBUG: Now submitting transaction 1284/1939  
+[2026-02-17 10:23:55] local.DEBUG: Going to search for external_id:OD429440666 using query external_id_is:"OD429440666"  
+[2026-02-17 10:23:55] local.DEBUG: Going to add import tag to transaction group #1843  
+[2026-02-17 10:23:55] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"100.000000000000","description":"Private Transfer","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429440666","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"Private Transfer"}]}  
+[2026-02-17 10:24:00] local.DEBUG: Added import tag to transaction group #1843  
+[2026-02-17 10:24:00] local.DEBUG: Now submitting transaction 1283/1937  
+[2026-02-17 10:24:00] local.DEBUG: Going to search for external_id:OD429440666 using query external_id_is:"OD429440666"  
+[2026-02-17 10:24:01] local.DEBUG: Going to add import tag to transaction group #1844  
+[2026-02-17 10:24:01] local.DEBUG: Now submitting transaction 1284/1937  
+[2026-02-17 10:24:01] local.DEBUG: Going to search for external_id:OC428203519 using query external_id_is:"OC428203519"  
+[2026-02-17 10:24:01] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"deposit","date":"2025-01-15T00:00:00+01:00","datetime":"2025-01-15T00:00:00+01:00","amount":"1415","description":"Transfer to the own account","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OC428203519","bonus_tags":[],"destination_id":371,"source_number":"","source_name":""}]}  
+[2026-02-17 10:24:09] local.DEBUG: Added import tag to transaction group #1844  
+[2026-02-17 10:24:09] local.DEBUG: Now submitting transaction 1285/1939  
+[2026-02-17 10:24:09] local.DEBUG: Going to search for external_id:OC428203519 using query external_id_is:"OC428203519"  
+[2026-02-17 10:24:09] local.DEBUG: Now submitting transaction 1286/1939  
+[2026-02-17 10:24:09] local.DEBUG: Going to search for external_id:OC427947035 using query external_id_is:"OC427947035"  
+[2026-02-17 10:24:09] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"deposit","date":"2025-01-14T00:00:00+01:00","datetime":"2025-01-14T00:00:00+01:00","amount":"1134","description":"Transfer to the own account","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OC427947035","bonus_tags":[],"destination_id":371,"source_number":"","source_name":""}]}  
+[2026-02-17 10:24:10] local.DEBUG: Going to add import tag to transaction group #1845  
+[2026-02-17 10:24:19] local.DEBUG: Added import tag to transaction group #1845  
+[2026-02-17 10:24:19] local.DEBUG: Going to add import tag to transaction group #1846  
+[2026-02-17 10:24:19] local.DEBUG: Now submitting transaction 1285/1937  
+[2026-02-17 10:24:19] local.DEBUG: Going to search for external_id:OC427947035 using query external_id_is:"OC427947035"  
+[2026-02-17 10:24:19] local.DEBUG: Now submitting transaction 1286/1937  
+[2026-02-17 10:24:19] local.DEBUG: Going to search for external_id:OD429365046 using query external_id_is:"OD429365046"  
+[2026-02-17 10:24:20] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"51.050000000000","description":"MC 3646 2025-01-18 23:49:13 GE Tbilisi Glovoapp.com (MCC 5814) 51.05 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429365046","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-18 23:49:13 GE Tbilisi Glovoapp.com (MCC 5814) 51.05 GEL"}]}  
+[2026-02-17 10:24:28] local.DEBUG: Added import tag to transaction group #1846  
+[2026-02-17 10:24:28] local.DEBUG: Now submitting transaction 1287/1939  
+[2026-02-17 10:24:28] local.DEBUG: Going to search for external_id:OD429365046 using query external_id_is:"OD429365046"  
+[2026-02-17 10:24:28] local.DEBUG: Going to add import tag to transaction group #1847  
+[2026-02-17 10:24:29] local.DEBUG: Now submitting transaction 1288/1939  
+[2026-02-17 10:24:29] local.DEBUG: Going to search for external_id:OD429365042 using query external_id_is:"OD429365042"  
+[2026-02-17 10:24:26] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"24.180000000000","description":"MC 3646 2025-01-18 23:06:52 GE Batumi 3 t.t.t ltd (MCC 5411) 24.18 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429365042","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-18 23:06:52 GE Batumi 3 t.t.t ltd (MCC 5411) 24.18 GEL"}]}  
+[2026-02-17 10:24:33] local.DEBUG: Added import tag to transaction group #1847  
+[2026-02-17 10:24:33] local.DEBUG: Now submitting transaction 1287/1937  
+[2026-02-17 10:24:33] local.DEBUG: Going to search for external_id:OD429365042 using query external_id_is:"OD429365042"  
+[2026-02-17 10:24:34] local.DEBUG: Now submitting transaction 1288/1937  
+[2026-02-17 10:24:34] local.DEBUG: Going to search for external_id:OD429365034 using query external_id_is:"OD429365034"  
+[2026-02-17 10:24:34] local.DEBUG: Going to add import tag to transaction group #1848  
+[2026-02-17 10:24:35] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"139.990000000000","description":"MC 3646 2025-01-16 22:13:03 KZ ALMATY OZON.COM (MCC 5262) 48.21 USD  2.9038","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429365034","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-16 22:13:03 KZ ALMATY OZON.COM (MCC 5262) 48.21 USD  2.9038"}]}  
+[2026-02-17 10:24:42] local.DEBUG: Added import tag to transaction group #1848  
+[2026-02-17 10:24:42] local.DEBUG: Now submitting transaction 1289/1939  
+[2026-02-17 10:24:42] local.DEBUG: Going to search for external_id:OD429365034 using query external_id_is:"OD429365034"  
+[2026-02-17 10:24:43] local.DEBUG: Going to add import tag to transaction group #1849  
+[2026-02-17 10:24:43] local.DEBUG: Now submitting transaction 1290/1939  
+[2026-02-17 10:24:43] local.DEBUG: Going to search for external_id:OD429365030 using query external_id_is:"OD429365030"  
+[2026-02-17 10:24:43] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"46.150000000000","description":"MC 3646 2025-01-18 17:00:39 GE Tbilisi Glovoapp.com (MCC 4215) 46.15 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429365030","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-18 17:00:39 GE Tbilisi Glovoapp.com (MCC 4215) 46.15 GEL"}]}  
+[2026-02-17 10:24:50] local.DEBUG: Added import tag to transaction group #1849  
+[2026-02-17 10:24:50] local.DEBUG: Now submitting transaction 1289/1937  
+[2026-02-17 10:24:50] local.DEBUG: Going to search for external_id:OD429365030 using query external_id_is:"OD429365030"  
+[2026-02-17 10:24:51] local.DEBUG: Now submitting transaction 1290/1937  
+[2026-02-17 10:24:51] local.DEBUG: Going to search for external_id:OD429365026 using query external_id_is:"OD429365026"  
+[2026-02-17 10:24:51] local.DEBUG: Going to add import tag to transaction group #1850  
+[2026-02-17 10:24:51] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"30.660000000000","description":"MC 3646 2025-01-19 23:08:48 GE Tbilisi Glovoapp.com (MCC 4215) 30.66 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429365026","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-19 23:08:48 GE Tbilisi Glovoapp.com (MCC 4215) 30.66 GEL"}]}  
+[2026-02-17 10:24:56] local.DEBUG: Added import tag to transaction group #1850  
+[2026-02-17 10:24:56] local.DEBUG: Now submitting transaction 1291/1939  
+[2026-02-17 10:24:56] local.DEBUG: Going to search for external_id:OD429365026 using query external_id_is:"OD429365026"  
+[2026-02-17 10:24:56] local.DEBUG: Going to add import tag to transaction group #1851  
+[2026-02-17 10:24:57] local.DEBUG: Now submitting transaction 1292/1939  
+[2026-02-17 10:24:57] local.DEBUG: Going to search for external_id:OD429365022 using query external_id_is:"OD429365022"  
+[2026-02-17 10:24:57] local.DEBUG: Submitting to Firefly III: {"apply_rules":true,"error_if_duplicate_hash":false,"transactions":[{"type":"withdrawal","date":"2025-01-20T00:00:00+01:00","datetime":"2025-01-20T00:00:00+01:00","amount":"54.600000000000","description":"MC 3646 2025-01-19 23:06:45 GE Tbilisi Glovoapp.com (MCC 4215) 54.60 GEL","order":0,"currency_code":"GEL","category_name":null,"category_id":null,"external_id":"OD429365022","bonus_tags":[],"source_id":371,"destination_number":"","destination_name":"MC 3646 2025-01-19 23:06:45 GE Tbilisi Glovoapp.com (MCC 4215) 54.60 GEL"}]}  

@@ -1,0 +1,84 @@
+{
+  "../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2": {
+    "file": "assets/fa-brands-400-BfBXV7Mm.woff2",
+    "src": "../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2"
+  },
+  "../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2": {
+    "file": "assets/fa-regular-400-BVHPE7da.woff2",
+    "src": "../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2"
+  },
+  "../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2": {
+    "file": "assets/fa-solid-900-8GirhLYJ.woff2",
+    "src": "../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
+  },
+  "_bootstrap-DuPZ7kMt.js": {
+    "file": "assets/bootstrap-DuPZ7kMt.js",
+    "name": "bootstrap",
+    "imports": [
+      "_vendor-DhbAiBEp.js"
+    ]
+  },
+  "_vendor-DhbAiBEp.js": {
+    "file": "assets/vendor-DhbAiBEp.js",
+    "name": "vendor"
+  },
+  "src/pages/configuration/index.js": {
+    "file": "assets/index-DdY0OxR-.js",
+    "name": "index",
+    "src": "src/pages/configuration/index.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap-DuPZ7kMt.js",
+      "_vendor-DhbAiBEp.js"
+    ]
+  },
+  "src/pages/conversion/index.js": {
+    "file": "assets/index-bw00D2xc.js",
+    "name": "index",
+    "src": "src/pages/conversion/index.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap-DuPZ7kMt.js",
+      "_vendor-DhbAiBEp.js"
+    ]
+  },
+  "src/pages/index/index.js": {
+    "file": "assets/index-DoVMUxMw.js",
+    "name": "index",
+    "src": "src/pages/index/index.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap-DuPZ7kMt.js",
+      "_vendor-DhbAiBEp.js"
+    ]
+  },
+  "src/pages/selection/gocardless.js": {
+    "file": "assets/gocardless-BYfHjeTE.js",
+    "name": "gocardless",
+    "src": "src/pages/selection/gocardless.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap-DuPZ7kMt.js",
+      "_vendor-DhbAiBEp.js"
+    ]
+  },
+  "src/pages/submit/index.js": {
+    "file": "assets/index-ByLiTOne.js",
+    "name": "index",
+    "src": "src/pages/submit/index.js",
+    "isEntry": true,
+    "imports": [
+      "_bootstrap-DuPZ7kMt.js",
+      "_vendor-DhbAiBEp.js"
+    ]
+  },
+  "src/sass/app.scss": {
+    "file": "assets/app-Dnz58IrD.css",
+    "src": "src/sass/app.scss",
+    "isEntry": true,
+    "name": "app",
+    "names": [
+      "app.css"
+    ]
+  }
+}
