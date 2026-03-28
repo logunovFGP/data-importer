@@ -31,7 +31,7 @@ use Override;
 /**
  * Class Authenticate
  */
-final class Authenticate extends Middleware
+class Authenticate extends Middleware
 {
     /**
      * Get the path the user should be redirected to when they are not authenticated.

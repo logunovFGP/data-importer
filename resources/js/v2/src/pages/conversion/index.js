@@ -38,6 +38,8 @@ let index = function () {
             done: false,
         },
         transactionCount: -1,
+        activityLog: [],
+        activityExpanded: true,
         messages: {
             messages: [],
             warnings: [],
@@ -449,6 +451,13 @@ let index = function () {
                 this.messages.messages = response.data.messages;
                 this.pull.checklist    = response.data.pull_checklist || {};
                 this.pull.progress     = response.data.pull_progress || {};
+                if (Array.isArray(response.data.activity_log)) {
+                    this.activityLog = response.data.activity_log;
+                    this.$nextTick(() => {
+                        const el = this.$refs.activityPre;
+                        if (el) el.scrollTop = el.scrollHeight;
+                    });
+                }
                 if ('conv_running' === this.pageStatus.status && 0 === this.runtime.runningStartedAt) {
                     this.runtime.runningStartedAt = this.runtime.lastSeenAt;
                 }

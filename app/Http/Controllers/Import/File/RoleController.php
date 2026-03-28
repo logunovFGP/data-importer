@@ -128,7 +128,8 @@ class RoleController extends Controller
             'pseudoExamples',
             'roles',
             'configuredRoles',
-            'configuredDoMapping'
+            'configuredDoMapping',
+            'flow'
         ));
     }
 
@@ -223,7 +224,8 @@ class RoleController extends Controller
             'levels',
             'doMapping',
             'examples',
-            'roles'
+            'roles',
+            'flow'
         ));
     }
 

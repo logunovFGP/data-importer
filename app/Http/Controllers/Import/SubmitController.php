@@ -87,7 +87,7 @@ class SubmitController extends Controller
 
         Log::debug(sprintf('Submit (import) routine manager identifier is "%s"', $identifier));
 
-        return view('import.008-submit.index', compact('mainTitle', 'identifier', 'jobBackUrl'));
+        return view('import.008-submit.index', compact('mainTitle', 'identifier', 'jobBackUrl', 'flow'));
     }
 
     public function start(Request $request, string $identifier): JsonResponse

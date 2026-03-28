@@ -29,7 +29,7 @@ use Exception;
 /**
  * Class AgreementExpiredException
  */
-final class AgreementExpiredException extends Exception
+class AgreementExpiredException extends Exception
 {
     public array $json = [];
 }

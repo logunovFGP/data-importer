@@ -116,7 +116,9 @@ class MapController extends Controller
             ? route('configure-roles.index', [$identifier])
             : route('configure-import.index', [$identifier]);
 
-        return view('import.006-mapping.index', compact('mainTitle', 'subTitle', 'identifier', 'roles', 'data', 'jobBackUrl'));
+        $flow = $importJob->getFlow();
+
+        return view('import.006-mapping.index', compact('mainTitle', 'subTitle', 'identifier', 'roles', 'data', 'jobBackUrl', 'flow'));
     }
 
     /**

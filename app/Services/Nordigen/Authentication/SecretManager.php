@@ -31,7 +31,7 @@ use Psr\Container\NotFoundExceptionInterface;
 /**
  * Class SecretManager
  */
-final class SecretManager
+class SecretManager
 {
     public const string NORDIGEN_ID  = 'nordigen_id';
     public const string NORDIGEN_KEY = 'nordigen_key';

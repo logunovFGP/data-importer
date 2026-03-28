@@ -7,14 +7,32 @@ namespace App\Services\TRC20\Support;
 class TRC20TokenFilter
 {
     /**
-     * Check if a TronGrid transaction row is a USDT transfer.
+     * Check if a TronGrid transaction row contains a supported token.
      *
-     * Reads TronGrid's `token_info.symbol` and `token_info.address` fields.
-     * Falls back to flat fields for backward compatibility.
+     * Checks against the `trc20.supported_tokens` config list.
+     * If the list is empty or '*', all tokens are accepted.
      */
-    public static function isUSDT(array $row): bool
+    public static function isSupported(array $row): bool
     {
-        $symbol = strtoupper(trim((string)(
+        $symbol = self::extractSymbol($row);
+        if ('' === $symbol) {
+            return true;
+        }
+
+        $supportedTokens = self::getSupportedTokens();
+        if ([] === $supportedTokens) {
+            return true;
+        }
+
+        return in_array($symbol, $supportedTokens, true);
+    }
+
+    /**
+     * Extract the token symbol from a TronGrid TRC20 transaction row.
+     */
+    public static function extractSymbol(array $row): string
+    {
+        return strtoupper(trim((string)(
             $row['token_info']['symbol']
             ?? $row['token_symbol']
             ?? $row['currency']
@@ -22,29 +40,26 @@ class TRC20TokenFilter
             ?? $row['symbol']
             ?? ''
         )));
+    }
 
-        if ('' !== $symbol && $symbol !== TRC20Constants::CURRENCY_USDT) {
-            return false;
-        }
-
-        $contract = strtolower(trim((string)(
-            $row['token_info']['address']
-            ?? $row['token_contract']
-            ?? $row['token_id']
-            ?? $row['contract_address']
+    /**
+     * Extract the token name from a TronGrid TRC20 transaction row.
+     */
+    public static function extractName(array $row): string
+    {
+        return trim((string)(
+            $row['token_info']['name']
+            ?? $row['token_name']
             ?? ''
-        )));
+        ));
+    }
 
-        $configuredContract = strtolower(trim((string)config('trc20.usdt_contract_address', '')));
-
-        if ('' === $configuredContract) {
-            return true;
-        }
-        if ('' === $contract) {
-            return '' === $symbol || $symbol === TRC20Constants::CURRENCY_USDT;
-        }
-
-        return $contract === $configuredContract;
+    /**
+     * Extract the token decimals from a TronGrid TRC20 transaction row.
+     */
+    public static function extractDecimals(array $row): int
+    {
+        return (int)($row['token_info']['decimals'] ?? $row['decimals'] ?? TRC20Constants::USDT_DECIMALS);
     }
 
     /**
@@ -65,5 +80,24 @@ class TRC20TokenFilter
             ?? $row['contract_address']
             ?? ''
         )));
+    }
+
+    /**
+     * Get the list of supported token symbols from config.
+     *
+     * @return array<string> Uppercase symbols, or empty array for "accept all"
+     */
+    private static function getSupportedTokens(): array
+    {
+        $raw = (string)config('trc20.supported_tokens', '');
+        if ('' === trim($raw) || '*' === trim($raw)) {
+            return [];
+        }
+
+        $tokens = array_map('trim', explode(',', $raw));
+        $tokens = array_filter($tokens, static fn(string $t): bool => '' !== $t);
+        $tokens = array_map('strtoupper', $tokens);
+
+        return array_values($tokens);
     }
 }

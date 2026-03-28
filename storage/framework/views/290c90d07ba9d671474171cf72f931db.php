@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row mt-4">

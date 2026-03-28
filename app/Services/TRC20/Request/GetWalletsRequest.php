@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\Log;
 
 class GetWalletsRequest extends BearerJsonRequest
 {
-    private const string CURRENCY = 'USDT';
-
     public function __construct(
         private readonly string $apiKey,
         private readonly array $wallets,
@@ -23,7 +21,7 @@ class GetWalletsRequest extends BearerJsonRequest
 
     public function get(): GetAccountsResponse
     {
-        $wallets = $this->normalizeWallets($this->wallets);
+        $wallets = TRC20AddressValidator::normalizeAndValidate($this->wallets);
         if (0 === count($wallets)) {
             return new GetAccountsResponse([]);
         }
@@ -32,63 +30,25 @@ class GetWalletsRequest extends BearerJsonRequest
 
         if (true === config('importer.fake_data')) {
             $first = $wallets[0];
+            $request = new GetWalletRequest($this->apiKey, $first);
 
-            return new GetAccountsResponse(
-                [
-                    [
-                        'id'                => $first,
-                        'name'              => $first,
-                        'institution_name'  => 'TRC20',
-                        'institution_logo'  => '',
-                        'provider'          => 'trc20',
-                        'currency'          => self::CURRENCY,
-                        'status'            => 'active',
-                    ],
-                ]
-            );
+            return new GetAccountsResponse($request->getAccounts());
         }
 
-        // TronGrid requires per-wallet queries (address in path)
-        $resultWallets = [];
+        // Each wallet returns multiple accounts (one per token type)
+        $allAccounts = [];
         foreach ($wallets as $wallet) {
-            $request = new GetWalletRequest($this->apiKey, $wallet);
+            $request  = new GetWalletRequest($this->apiKey, $wallet);
             $request->setTimeOut((float)config('importer.connection.timeout'));
-            $single  = $request->get();
-            if ([] !== $single) {
-                $resultWallets[] = $single;
-                Log::debug(sprintf('TRC20: wallet %s fetched successfully.', $wallet));
-            } else {
-                Log::warning(sprintf('TRC20: wallet %s returned empty from TronGrid.', $wallet));
+            $accounts = $request->getAccounts();
+            foreach ($accounts as $account) {
+                $allAccounts[] = $account;
+                Log::debug(sprintf('TRC20: discovered account [%s] %s on wallet %s.', $account['currency'] ?? '?', $account['id'] ?? '?', $wallet));
             }
         }
 
-        Log::debug(sprintf('TRC20 collectAccounts: fetched %d account(s).', count($resultWallets)));
+        Log::debug(sprintf('TRC20 collectAccounts: fetched %d token account(s) across %d wallet(s).', count($allAccounts), count($wallets)));
 
-        return new GetAccountsResponse($resultWallets);
-    }
-
-    private function normalizeWallets(array $wallets): array
-    {
-        $normalized = [];
-        $invalid    = [];
-        foreach ($wallets as $wallet) {
-            $value = trim((string)$wallet);
-            if (!TRC20AddressValidator::isValid($value)) {
-                $invalid[] = $value;
-                continue;
-            }
-            if ('' !== $value && !in_array($value, $normalized, true)) {
-                $normalized[] = $value;
-            }
-        }
-
-        if (0 !== count($invalid)) {
-            $invalid = array_values(array_unique(array_filter($invalid, static fn(string $value): bool => '' !== $value)));
-            if (0 !== count($invalid)) {
-                throw new ImporterHttpException(sprintf('Invalid TRC20 wallet format(s): %s', implode(', ', $invalid)));
-            }
-        }
-
-        return $normalized;
+        return new GetAccountsResponse($allAccounts);
     }
 }

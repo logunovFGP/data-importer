@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Class AccountsRequest
  */
-final class AccountsRequest extends SimpleFINRequest
+class AccountsRequest extends SimpleFINRequest
 {
     /**
      * @throws ImporterHttpException

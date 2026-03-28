@@ -29,13 +29,12 @@ use App\Support\RequestCache;
 use GrumpyDictator\FFIIIApiSupport\Exceptions\ApiHttpException;
 use GrumpyDictator\FFIIIApiSupport\Model\Account;
 use GrumpyDictator\FFIIIApiSupport\Request\GetAccountsRequest;
-use GrumpyDictator\FFIIIApiSupport\Response\GetAccountsResponse;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Class InfoCollector
  */
-final class InfoCollector
+class InfoCollector
 {
     /**
      * Collect various accounts from Firefly III and save the account type.
@@ -61,8 +60,6 @@ final class InfoCollector
             $request->setType(GetAccountsRequest::ALL);
             $request->setVerify(config('importer.connection.verify'));
             $request->setTimeOut(config('importer.connection.timeout'));
-
-            /** @var GetAccountsResponse $response */
             $response = $request->get();
         }
         if ($inCache) {

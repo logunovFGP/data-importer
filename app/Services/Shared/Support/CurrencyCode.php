@@ -32,7 +32,9 @@ class CurrencyCode
             return '';
         }
 
-        if (3 === strlen($value) && ctype_alpha($value)) {
+        // Accept 3-5 character alphabetic codes (ISO 4217 + crypto symbols like USDT, WTRX)
+        $len = strlen($value);
+        if ($len >= 3 && $len <= 5 && ctype_alpha($value)) {
             return $value;
         }
 

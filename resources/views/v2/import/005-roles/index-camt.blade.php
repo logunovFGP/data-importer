@@ -6,6 +6,18 @@
                 <h1>{{ $mainTitle }}</h1>
             </div>
         </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                @include('components.step-navigation', [
+                    'backUrl' => route('configure-import.index', [$identifier]),
+                    'backLabel' => 'Go back to configuration',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => false,
+                    'currentStep' => 'Define roles',
+                ])
+            </div>
+        </div>
         <div class="row">
             <div class="col-lg-10 offset-lg-1">
                 <div class="card">
@@ -133,16 +145,14 @@
         </div>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ route('configure-import.index', [$identifier]) }}" class="btn btn-secondary"><span
-                                    class="fas fa-arrow-left"></span> Go back to configuration</a>
-                            <a href="{{ route('flush') }}" class="btn btn-danger btn-sm"><span
-                                    class="fas fa-redo-alt"></span> Start over</a>
-                        </div>
-                    </div>
-                </div>
+                @include('components.step-navigation', [
+                    'backUrl' => route('configure-import.index', [$identifier]),
+                    'backLabel' => 'Go back to configuration',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => false,
+                    'currentStep' => 'Define roles',
+                ])
             </div>
         </div>
     </div>

@@ -6,12 +6,11 @@ namespace App\Services\TRC20\Request;
 
 use App\Services\Shared\Request\BearerJsonRequest;
 use App\Services\TRC20\Support\TRC20AddressValidator;
+use App\Services\TRC20\Support\TRC20Constants;
 use Illuminate\Support\Facades\Log;
 
 class GetWalletRequest extends BearerJsonRequest
 {
-    private const string CURRENCY = 'USDT';
-
     public function __construct(
         private readonly string $apiKey,
         private string $wallet
@@ -21,11 +20,14 @@ class GetWalletRequest extends BearerJsonRequest
     }
 
     /**
-     * Fetch details for one wallet from TronGrid.
+     * Fetch wallet details from TronGrid and return one service account per token.
      *
-     * @return array<string, mixed>
+     * Returns: array of accounts, one per token type found on the wallet.
+     * Naming: [SYMBOL] wallet_address
+     *
+     * @return array<int, array<string, mixed>>
      */
-    public function get(): array
+    public function getAccounts(): array
     {
         $wallet = trim($this->wallet);
         if (!TRC20AddressValidator::isValid($wallet)) {
@@ -33,17 +35,13 @@ class GetWalletRequest extends BearerJsonRequest
         }
 
         if (true === config('importer.fake_data')) {
-            return $this->normalizeWallet(
-                [
-                    'address' => $wallet,
-                    'name'    => $wallet,
-                ]
-            ) ?? [];
+            return [
+                $this->buildAccount($wallet, TRC20Constants::CURRENCY_TRX, 'TRON', TRC20Constants::TRX_DECIMALS, '0'),
+                $this->buildAccount($wallet, TRC20Constants::CURRENCY_USDT, 'Tether USD', TRC20Constants::USDT_DECIMALS, '0'),
+            ];
         }
 
-        // TronGrid: GET /v1/accounts/{address}
         $endpoint = sprintf((string)config('trc20.wallets_endpoint'), $wallet);
-
         Log::debug(sprintf('TRC20: fetching wallet info for %s from TronGrid endpoint: %s', $wallet, $endpoint));
 
         $payload = $this->getJson($endpoint, $this->requestHeaders(), []);
@@ -55,59 +53,155 @@ class GetWalletRequest extends BearerJsonRequest
             return [];
         }
 
-        // TronGrid returns { data: [ { address: ..., balance: ..., trc20: [...] } ] }
         $data = $payload['data'] ?? [];
         if (!is_array($data) || 0 === count($data)) {
-            // Account exists on chain but has no activity — still valid
-            Log::info(sprintf('TRC20: wallet %s returned empty data from TronGrid — treating as valid with zero balance.', $wallet));
+            Log::info(sprintf('TRC20: wallet %s returned empty data from TronGrid — creating default TRX account.', $wallet));
 
-            return $this->normalizeWallet(['address' => $wallet]) ?? [];
+            return [$this->buildAccount($wallet, TRC20Constants::CURRENCY_TRX, 'TRON', TRC20Constants::TRX_DECIMALS, '0')];
         }
 
         $accountData = is_array($data[0] ?? null) ? $data[0] : $data;
 
-        return $this->normalizeWallet($accountData) ?? [];
+        return $this->extractTokenAccounts($wallet, $accountData);
     }
 
-    private function requestHeaders(): array
+    /**
+     * Parse the TronGrid account response and create one service account per token.
+     */
+    private function extractTokenAccounts(string $wallet, array $accountData): array
     {
-        return [
-            'TRON-PRO-API-KEY' => $this->apiKey,
-        ];
-    }
+        $accounts      = [];
+        $supportedList = $this->getSupportedTokens();
 
-    private function normalizeWallet(array $row): ?array
-    {
-        $walletId = trim((string)($row['address'] ?? ''));
-        if ('' === $walletId) {
-            return null;
+        // 1. Native TRX balance
+        if ($this->isTokenSupported(TRC20Constants::CURRENCY_TRX, $supportedList)) {
+            $trxSun  = (string)($accountData['balance'] ?? '0');
+            $trxBalance = bcdiv($trxSun, bcpow('10', (string)TRC20Constants::TRX_DECIMALS), TRC20Constants::TRX_DECIMALS);
+            $accounts[] = $this->buildAccount($wallet, TRC20Constants::CURRENCY_TRX, 'TRON', TRC20Constants::TRX_DECIMALS, $trxBalance);
         }
 
-        // Extract USDT balance from TronGrid trc20 array if available
-        $usdtBalance = '0';
-        $trc20Tokens = $row['trc20'] ?? [];
+        // 2. TRC20 tokens — resolve contract addresses to symbols via TronGrid
+        $trc20Tokens = $accountData['trc20'] ?? [];
         if (is_array($trc20Tokens)) {
-            $usdtContract = strtolower(trim((string)config('trc20.usdt_contract_address', '')));
-            foreach ($trc20Tokens as $token) {
-                if (is_array($token)) {
-                    foreach ($token as $contractAddr => $balance) {
-                        if ('' !== $usdtContract && strtolower($contractAddr) === $usdtContract) {
-                            $usdtBalance = (string)$balance;
-                        }
+            foreach ($trc20Tokens as $tokenEntry) {
+                if (!is_array($tokenEntry)) {
+                    continue;
+                }
+                foreach ($tokenEntry as $contractAddr => $balanceSun) {
+                    $tokenInfo = $this->resolveTokenInfo($wallet, (string)$contractAddr);
+                    if (null === $tokenInfo) {
+                        continue;
                     }
+
+                    $symbol   = $tokenInfo['symbol'];
+                    $name     = $tokenInfo['name'];
+                    $decimals = $tokenInfo['decimals'];
+
+                    if (!$this->isTokenSupported($symbol, $supportedList)) {
+                        continue;
+                    }
+
+                    $balance = bcdiv((string)$balanceSun, bcpow('10', (string)$decimals), $decimals);
+                    $accounts[] = $this->buildAccount($wallet, $symbol, $name, $decimals, $balance);
                 }
             }
         }
 
+        if ([] === $accounts) {
+            $accounts[] = $this->buildAccount($wallet, TRC20Constants::CURRENCY_TRX, 'TRON', TRC20Constants::TRX_DECIMALS, '0');
+        }
+
+        Log::debug(sprintf('TRC20: wallet %s has %d token account(s).', $wallet, count($accounts)));
+
+        return $accounts;
+    }
+
+    /**
+     * Resolve a TRC20 contract address to symbol/name/decimals by fetching one transaction.
+     *
+     * TronGrid's /v1/accounts/{address} returns TRC20 balances as {contract: balance}
+     * but does NOT include symbol or decimals. We fetch one transaction for this contract
+     * to get the token_info metadata.
+     */
+    private function resolveTokenInfo(string $wallet, string $contractAddress): ?array
+    {
+        $endpoint = sprintf((string)config('trc20.transactions_endpoint'), $wallet);
+        try {
+            $payload = $this->getJson($endpoint, $this->requestHeaders(), [
+                'only_confirmed'   => 'true',
+                'limit'            => 1,
+                'contract_address' => $contractAddress,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning(sprintf('TRC20: could not resolve token info for contract %s: %s', $contractAddress, $e->getMessage()));
+
+            return null;
+        }
+
+        $rows = $payload['data'] ?? [];
+        if (!is_array($rows) || 0 === count($rows)) {
+            return null;
+        }
+
+        $tokenInfo = $rows[0]['token_info'] ?? null;
+        if (!is_array($tokenInfo) || !isset($tokenInfo['symbol'])) {
+            return null;
+        }
+
         return [
-            'id'                => $walletId,
-            'name'              => (string)($row['name'] ?? $walletId),
+            'symbol'   => strtoupper(trim((string)$tokenInfo['symbol'])),
+            'name'     => trim((string)($tokenInfo['name'] ?? $tokenInfo['symbol'])),
+            'decimals' => (int)($tokenInfo['decimals'] ?? 6),
+        ];
+    }
+
+    private function buildAccount(string $wallet, string $symbol, string $name, int $decimals, string $balance): array
+    {
+        return [
+            'id'                => sprintf('%s|%s', $wallet, $symbol),
+            'name'              => sprintf('[%s] %s', $symbol, $wallet),
             'institution_name'  => 'TRC20',
             'institution_logo'  => '',
             'provider'          => 'trc20',
-            'currency'          => self::CURRENCY,
+            'currency'          => $symbol,
+            'currency_code'     => $symbol,
+            'currency_name'     => $name,
+            'currency_decimals' => $decimals,
             'status'            => 'active',
-            'balance'           => $usdtBalance,
+            'balance'           => $balance,
+            'wallet'            => $wallet,
         ];
+    }
+
+    private function requestHeaders(): array
+    {
+        $headers = [];
+        if ('' !== trim($this->apiKey)) {
+            $headers['TRON-PRO-API-KEY'] = $this->apiKey;
+        }
+
+        return $headers;
+    }
+
+    private function getSupportedTokens(): array
+    {
+        $raw = (string)config('trc20.supported_tokens', '');
+        if ('' === trim($raw) || '*' === trim($raw)) {
+            return [];
+        }
+
+        $tokens = array_map('trim', explode(',', $raw));
+        $tokens = array_filter($tokens, static fn(string $t): bool => '' !== $t);
+
+        return array_values(array_map('strtoupper', $tokens));
+    }
+
+    private function isTokenSupported(string $symbol, array $supportedList): bool
+    {
+        if ([] === $supportedList) {
+            return true;
+        }
+
+        return in_array(strtoupper($symbol), $supportedList, true);
     }
 }

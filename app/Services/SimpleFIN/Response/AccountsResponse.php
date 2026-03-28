@@ -31,7 +31,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Class AccountsResponse
  */
-final class AccountsResponse extends SimpleFINResponse
+class AccountsResponse extends SimpleFINResponse
 {
     private array $accounts = [];
 
@@ -67,7 +67,7 @@ final class AccountsResponse extends SimpleFINResponse
         }
 
         // SimpleFIN API returns accounts in the 'accounts' array
-        if (array_key_exists('accounts', $data) && is_array($data['accounts'])) {
+        if (isset($data['accounts']) && is_array($data['accounts'])) {
             foreach ($data['accounts'] as $account) {
                 $this->accounts[] = Account::fromArray($account);
             }

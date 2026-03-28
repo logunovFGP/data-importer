@@ -70,6 +70,18 @@
                 <h1>{{ $mainTitle }}</h1>
             </div>
         </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                @include('components.step-navigation', [
+                    'backUrl' => $jobBackUrl,
+                    'backLabel' => 'Go back to previous step',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => true,
+                    'currentStep' => 'Submit',
+                ])
+            </div>
+        </div>
         <div id="app">
             <div class="row mt-3">
                 <div class="col-lg-10 offset-lg-1">
@@ -225,24 +237,34 @@
 
         </div>
 
-        <div class="row mt-3">
+        <div class="row mt-3" x-show="activityLog.length > 0">
             <div class="col-lg-10 offset-lg-1">
                 <div class="card">
-                    <div class="card-body">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ $jobBackUrl }}" class="btn btn-secondary"><span class="fas fa-arrow-left"></span>
-                                Go back to the previous step</a>
-                            <a class="btn btn-danger text-white btn-sm" href="{{ route('flush') }}" data-bs-toggle="tooltip"
-                               data-bs-placement="top" title="If the submission seems stuck, you can reset it."><span
-                                    class="fas fa-redo-alt"></span> Start over</a>
-                            <a class="btn btn-info text-white btn-sm" href="{{ route('configure-import.download', [$identifier]) }}"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="You can download a configuration file of your import, so you can make a quick start the next time you import.">
-                                <span class="fas fa-download"></span> Download configuration file
-                            </a>
-                        </div>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Activity log</span>
+                        <button class="btn btn-sm btn-outline-secondary" type="button"
+                                @click="activityExpanded = !activityExpanded"
+                                x-text="activityExpanded ? 'Collapse' : 'Expand'">
+                        </button>
+                    </div>
+                    <div class="card-body p-0" x-show="activityExpanded" x-transition>
+                        <pre class="mb-0 p-2" style="max-height: 250px; overflow-y: auto; font-size: 0.8rem; background: var(--bs-body-bg);"
+                             x-ref="activityPre"><template x-for="entry in activityLog"><span class="text-muted" x-text="'[' + entry.time + '] '"></span><span x-text="entry.message + '\n'"></span></template></pre>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                @include('components.step-navigation', [
+                    'backUrl' => $jobBackUrl,
+                    'backLabel' => 'Go back to previous step',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => true,
+                    'currentStep' => 'Submit',
+                ])
             </div>
         </div>
 

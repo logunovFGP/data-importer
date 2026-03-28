@@ -127,6 +127,7 @@ class ApiSubmitter
         $duplicateCount   = 0;
         Log::info(sprintf('Going to submit %d transactions to your Firefly III instance.', $count));
         $this->importJob->submissionStatus->setTotals($count, 0, 0);
+        $this->importJob->submissionStatus->addActivity(sprintf('Starting submission of %d transaction(s) to Firefly III...', $count));
 
         if (0 === $count) {
             $this->importJob->submissionStatus->addWarning(0, 'There are no transactions to be imported. Perhaps all your accounts are empty?');
@@ -158,10 +159,20 @@ class ApiSubmitter
          * @var int   $index
          * @var array $line
          */
-        $position = 0;
+        $position       = 0;
+        $batchSize      = 10;
+        $batchImported  = 0;
+        $batchDuplicates = 0;
         foreach ($lines as $index => $line) {
             ++$position;
             Log::debug(sprintf('Now submitting transaction %d/%d', $position, $count));
+
+            if (1 === $position || ($position % $batchSize) === 1) {
+                $batchEnd = min($position + $batchSize - 1, $count);
+                $this->importJob->submissionStatus->addActivity(sprintf('Processing transactions %d-%d of %d...', $position, $batchEnd, $count));
+                $batchImported   = 0;
+                $batchDuplicates = 0;
+            }
 
             // Update progress tracking using sequential iteration position instead of sparse line index.
             $this->importJob->submissionStatus->updateProgress($position, $count);
@@ -175,6 +186,7 @@ class ApiSubmitter
             if (false === $unique) {
                 Log::debug(sprintf('Transaction #%d is NOT unique.', $index + 1));
                 ++$duplicateCount;
+                ++$batchDuplicates;
                 $this->importJob->submissionStatus->setTotals($count, $importedCount, $duplicateCount);
                 if ($this->shouldPersistProgress($position, $count)) {
                     $this->persistImportJob();
@@ -187,6 +199,7 @@ class ApiSubmitter
             $this->importJob->submissionStatus->addPerformanceSample('firefly_submissions', (microtime(true) - $submissionStartedAt) * 1000.0);
             if ([] !== $groupInfo) {
                 ++$importedCount;
+                ++$batchImported;
             }
             $this->rememberExternalIdsFromLine($line, $groupInfo);
             $tagStartedAt = microtime(true);
@@ -197,8 +210,21 @@ class ApiSubmitter
                 $this->persistImportJob();
             }
 
+            if (($position % $batchSize) === 0 || $position === $count) {
+                $avgMs = 0.0;
+                $submissionPerf = $this->importJob->submissionStatus->performance['firefly_submissions'] ?? [];
+                if (($submissionPerf['count'] ?? 0) > 0) {
+                    $avgMs = round((float)($submissionPerf['average_ms'] ?? 0.0), 1);
+                }
+                $this->importJob->submissionStatus->addActivity(sprintf(
+                    'Batch done: %d imported, %d duplicates (avg %.1fms/tx) — %d/%d total',
+                    $batchImported, $batchDuplicates, $avgMs, $position, $count
+                ));
+            }
+
         }
         $this->importJob->submissionStatus->setTotals($count, $importedCount, $duplicateCount);
+        $this->importJob->submissionStatus->addActivity(sprintf('Import complete: %d imported, %d duplicate(s) out of %d total', $importedCount, $duplicateCount, $count));
         $this->persistImportJob();
 
         Log::info(sprintf('Done submitting %d transactions to your Firefly III instance.', $count));

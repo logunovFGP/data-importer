@@ -87,27 +87,39 @@ class TransactionProcessor
             throw new ImporterErrorException('TRC-20 preflight currency validation failed. Resolve account currency mismatches and retry import.');
         }
 
+        // Deduplicate wallets: multiple accounts (e.g., wallet|TRX, wallet|USDT) share the same raw wallet
+        $walletAccountMap = [];
         foreach ($accounts as $importServiceAccountId => $fireflyIIIAccountId) {
-            $wallet = $this->normalizeWallet((string)$importServiceAccountId);
-            if ('' === $wallet) {
+            $compositeId = $this->normalizeWallet((string)$importServiceAccountId);
+            if ('' === $compositeId) {
                 continue;
             }
 
+            // Extract raw wallet from composite "wallet|SYMBOL" ID
+            $rawWallet = str_contains($compositeId, '|') ? explode('|', $compositeId, 2)[0] : $compositeId;
+
             if (0 === (int)$fireflyIIIAccountId) {
-                $createdAccount = $this->createOrFindExistingAccount($wallet);
+                $createdAccount = $this->createOrFindExistingAccount($compositeId);
                 $updated        = $configuration->getAccounts();
-                $updated[$wallet] = $createdAccount->id;
+                $updated[$compositeId] = $createdAccount->id;
                 $configuration->setAccounts($updated);
-                $this->accounts[$wallet] = $createdAccount->id;
+                $this->accounts[$compositeId] = $createdAccount->id;
             } else {
-                $this->accounts[$wallet] = (int)$fireflyIIIAccountId;
+                $this->accounts[$compositeId] = (int)$fireflyIIIAccountId;
             }
 
+            $walletAccountMap[$rawWallet][] = $compositeId;
+        }
+
+        // Fetch transactions once per raw wallet (not per token account)
+        foreach ($walletAccountMap as $rawWallet => $compositeIds) {
             $apiKey  = SecretManager::getApiKey($configuration);
-            $request = new GetTransactionsRequest($apiKey, [$wallet]);
+            $request = new GetTransactionsRequest($apiKey, [$rawWallet]);
             $request->setTimeOut((float)config('importer.connection.timeout'));
+            $shortWallet = substr($rawWallet, 0, 8) . '...' . substr($rawWallet, -4);
+            $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Starting transaction fetch from TronGrid...', $shortWallet));
             $this->importJob->conversionStatus->setPullChecklistItem(
-                $wallet,
+                $rawWallet,
                 ConversionStatus::PULL_STEP_RUNNING,
                 'Fetching transactions...'
             );
@@ -116,35 +128,36 @@ class TransactionProcessor
             try {
                 $dateFrom = $this->notBefore?->format('Y-m-d');
                 if (null === $dateFrom && $configuration->isIncrementalSyncEnabled()) {
-                    $dateFrom = $this->resolveIncrementalDateFromCursor($wallet);
+                    $dateFrom = $this->resolveIncrementalDateFromCursor($rawWallet);
                 }
                 $transactions = $this->downloadWalletTransactions(
                     $request,
-                    $wallet,
+                    $rawWallet,
                     $dateFrom,
                     $this->notAfter?->format('Y-m-d')
                 );
             } catch (ImporterHttpException $e) {
                 $this->importJob->conversionStatus->addWarning(0, $e->getMessage());
                 $this->importJob->conversionStatus->setPullChecklistItem(
-                    $wallet,
+                    $rawWallet,
                     ConversionStatus::PULL_STEP_ERROR,
                     sprintf('Could not fetch transactions from TRC20: %s', $e->getMessage())
                 );
-                $return[$wallet] = [];
+                $return[$rawWallet] = [];
                 $this->importJob->conversionStatus->incrementPullProgress();
                 $this->saveConversionStatus();
 
                 continue;
             }
 
-            $return[$wallet] = $transactions;
+            $return[$rawWallet] = $transactions;
+            $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Fetched %d transaction(s)', $shortWallet, count($transactions)));
             $this->importJob->conversionStatus->addPullCursorCandidate(
-                $wallet,
+                $rawWallet,
                 $this->resolveLatestTransactionDate($transactions)
             );
             $this->importJob->conversionStatus->setPullChecklistItem(
-                $wallet,
+                $rawWallet,
                 ConversionStatus::PULL_STEP_DONE,
                 sprintf('Fetched %d transaction(s)', count($transactions))
             );
@@ -188,9 +201,17 @@ class TransactionProcessor
             }
 
             ++$page;
+            $shortWallet  = substr($wallet, 0, 8) . '...' . substr($wallet, -4);
+            $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Fetching page %d from TronGrid...', $shortWallet, $page));
+            $this->saveConversionStatus();
+
             $response     = $request->get($dateFrom, $dateTo, $cursor);
             $rowCount     = count($response->getRawData());
             $transactions = $this->extractWalletTransactions($response, $wallet);
+
+            $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Received %d rows, %d valid transactions (page %d)', $shortWallet, $rowCount, count($transactions), $page));
+            $this->saveConversionStatus();
+
             if (0 === $rowCount && false === $response->hasNextCursor()) {
                 break;
             }
@@ -255,13 +276,15 @@ class TransactionProcessor
      */
     private function normalizeTransactionRow(array $row, string $wallet): ?array
     {
-        $rowWallet = $this->normalizeWallet((string)($row['accountId'] ?? ''));
-        if ('' === $rowWallet || ! TRC20AddressValidator::addressesMatch($rowWallet, $wallet)) {
+        // accountId may be "wallet|SYMBOL" format from GetTransactionsRequest
+        $rowAccountId = $this->normalizeWallet((string)($row['accountId'] ?? ''));
+        $rowWallet    = str_contains($rowAccountId, '|') ? explode('|', $rowAccountId, 2)[0] : $rowAccountId;
+        if ('' === $rowWallet || !TRC20AddressValidator::addressesMatch($rowWallet, $wallet)) {
             return null;
         }
 
-        if (!TRC20TokenFilter::isUSDT($row)) {
-            Log::debug(sprintf('TRC20: skipped non-USDT transaction row for wallet %s.', $wallet));
+        if (!TRC20TokenFilter::isSupported($row)) {
+            Log::debug(sprintf('TRC20: skipped unsupported token transaction for wallet %s.', $wallet));
 
             return null;
         }
@@ -339,19 +362,17 @@ class TransactionProcessor
             $description = sprintf('TRC20 %s transfer %s', $isOutgoing ? 'outgoing' : 'incoming', $txId);
         }
 
-        $symbol = strtoupper(trim((string)($row['token_symbol'] ?? $row['currency'] ?? TRC20Constants::CURRENCY_USDT)));
+        $symbol = TRC20TokenFilter::extractSymbol($row);
         if ('' === $symbol) {
             $symbol = TRC20Constants::CURRENCY_USDT;
         }
-        if (TRC20Constants::CURRENCY_USDT !== $symbol) {
-            $this->importJob->conversionStatus->addWarning(0, sprintf('TRC20 transaction %s for %s was ignored due to non-USDT symbol.', $txId, $wallet));
 
-            return null;
-        }
+        // Use per-token account ID (wallet|SYMBOL) to route to correct Firefly III account
+        $perTokenAccountId = sprintf('%s|%s', $wallet, $symbol);
 
         return [
             'id'             => $externalId,
-            'accountId'      => $wallet,
+            'accountId'      => $perTokenAccountId,
             'amount'         => (string)$amount,
             'currency'       => $symbol,
             'date'           => $date->format('Y-m-d'),

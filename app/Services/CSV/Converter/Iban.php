@@ -24,14 +24,13 @@ declare(strict_types=1);
 
 namespace App\Services\CSV\Converter;
 
-use DivisionByZeroError;
 use Illuminate\Support\Facades\Log;
 use ValueError;
 
 /**
  * Class Iban
  */
-final class Iban implements ConverterInterface
+class Iban implements ConverterInterface
 {
     /**
      * Convert a value.
@@ -93,7 +92,7 @@ final class Iban implements ConverterInterface
 
         try {
             $checksum = bcmod($iban, '97');
-        } catch (DivisionByZeroError|ValueError $e) {
+        } catch (ValueError $e) { // @phpstan-ignore-line
             Log::error(sprintf('Bad IBAN: %s', $e->getMessage()));
             $checksum = 2;
         }

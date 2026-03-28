@@ -30,7 +30,7 @@ use UnexpectedValueException;
 /**
  * Class ConverterService
  */
-final class ConverterService
+class ConverterService
 {
     /**
      * @param mixed $value

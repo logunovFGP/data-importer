@@ -430,11 +430,21 @@ class ProviderCurrencyPreflightService
     /**
      * @throws ImporterHttpException
      */
-    private function sampleTRC20Currencies(Configuration $configuration, string $wallet): array
+    private function sampleTRC20Currencies(Configuration $configuration, string $accountId): array
     {
+        // TRC20 account IDs are "wallet|SYMBOL" — extract currency directly from the ID
+        if (str_contains($accountId, '|')) {
+            $parts  = explode('|', $accountId, 2);
+            $symbol = strtoupper(trim($parts[1] ?? ''));
+            if ('' !== $symbol) {
+                return [$symbol];
+            }
+            $accountId = $parts[0];
+        }
+
         $request = new TRC20GetTransactionsRequest(
             TRC20SecretManager::getApiKey($configuration),
-            [$wallet],
+            [$accountId],
             self::SAMPLE_SIZE
         );
         $request->setTimeOut((float)config('importer.connection.timeout'));
@@ -625,11 +635,11 @@ class ProviderCurrencyPreflightService
     private function splitCompositeSourceId(string $sourceId): array
     {
         $raw = trim($sourceId);
-        if ('' === $raw || !str_contains($raw, '#')) {
+        if ('' === $raw || !str_contains($raw, '|')) {
             return [$raw, ''];
         }
 
-        [$baseId, $currency] = explode('#', $raw, 2);
+        [$baseId, $currency] = explode('|', $raw, 2);
 
         return [trim((string)$baseId), $this->normalizeCurrency((string)$currency)];
     }

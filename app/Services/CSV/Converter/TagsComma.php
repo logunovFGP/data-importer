@@ -27,7 +27,7 @@ namespace App\Services\CSV\Converter;
 /**
  * Class TagsComma
  */
-final class TagsComma implements ConverterInterface
+class TagsComma implements ConverterInterface
 {
     /**
      * Convert a value.

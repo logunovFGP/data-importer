@@ -30,9 +30,9 @@ use ValueError;
 /**
  * Class Steam
  */
-final class Steam
+class Steam
 {
-    public function cleanStringAndNewlines(mixed $value): string
+    public function cleanStringAndNewlines($value): string
     {
         $string = $this->cleanString($value);
 
@@ -44,9 +44,6 @@ final class Steam
      */
     public function cleanString(mixed $value): string
     {
-        if (is_array($value)) {
-            $value = implode('', $value);
-        }
         $value  = (string) $value;
         $search = [
             "\u{0001}", // start of heading

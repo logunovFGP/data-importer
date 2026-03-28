@@ -47,6 +47,8 @@ let index = function () {
             duplicateTransactions: 0,
         },
         performance: {},
+        activityLog: [],
+        activityExpanded: true,
         checkCount: 0,
         maxCheckCount: 1200,
         longRunningNotice: false,
@@ -246,6 +248,13 @@ let index = function () {
                 this.progress.uniqueTransactions = response.data.uniqueTransactions || 0;
                 this.progress.duplicateTransactions = response.data.duplicateTransactions || 0;
                 this.performance = response.data.performance || {};
+                if (Array.isArray(response.data.activity_log)) {
+                    this.activityLog = response.data.activity_log;
+                    this.$nextTick(() => {
+                        const el = this.$refs.activityPre;
+                        if (el) el.scrollTop = el.scrollHeight;
+                    });
+                }
 
                 // job has not started yet. Let's wait.
                 if (false === this.pageStatus.triedToStart && 'waiting_to_start' === this.pageStatus.status) {

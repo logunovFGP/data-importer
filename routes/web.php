@@ -93,7 +93,8 @@ Route::get('/callback', 'TokenController@callback')->name('token.callback');
 Route::get('/validate/{provider}', 'ServiceController@validateProvider')->name('validate.provider');
 
 // clear session
-Route::get('/flush', 'IndexController@flush')->name('flush');
+Route::match(['get', 'post'], '/flush', 'IndexController@flush')->name('flush');
+Route::delete('/abort-import/{identifier}', 'IndexController@abortImport')->name('abort-import');
 
 // step 2: Authenticate Nordigen / Spectre manually if necessary.
 // check : must not be CSV flow. If so redirect to upload.

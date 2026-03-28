@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Class CleanId
  */
-final class CleanId implements ConverterInterface
+class CleanId implements ConverterInterface
 {
     /**
      * Convert a value.

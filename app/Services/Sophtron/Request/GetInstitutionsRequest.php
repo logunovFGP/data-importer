@@ -34,7 +34,7 @@ use App\Services\Sophtron\Response\GetInstitutionsResponse;
 /**
  * Class GetTransactionsRequest
  */
-final class GetInstitutionsRequest extends Request
+class GetInstitutionsRequest extends Request
 {
     public function __construct(string $userId, string $accessKey)
     {
@@ -61,11 +61,11 @@ final class GetInstitutionsRequest extends Request
 
     public function post(): Response
     {
-        throw new ImporterHttpException('Method not implemented');
+        //  Implement post() method.
     }
 
     public function put(): Response
     {
-        throw new ImporterHttpException('Method not implemented');
+        // Implement put() method.
     }
 }

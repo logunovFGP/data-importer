@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('content'); ?>
     <div class="container" x-data="index">
         <div class="row mt-3">
@@ -182,7 +181,7 @@
                         Extra information
                     </div>
                     <div class="card-body">
-                        <p>If you change your settings, you may need to press <strong>start over</strong> for the
+                        <p>If you change your settings, you may need to press <strong>Full reset session</strong> for the
                             settings to be recognized. If you are in doubt if the button works: your session identifier
                             is "<?php echo e($identifier); ?>" and should change every time you
                             press the <?php if(!$isDocker): ?>
@@ -194,7 +193,9 @@
                         <p>
                             <a class="btn btn-danger text-white btn-sm" href="<?php echo e(route('flush')); ?>"
                                data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="This button resets your progress">Start over</a>
+                               title="Clear all session data including authentication and start fresh"
+                               onclick="return confirm('This will clear ALL session data including your Firefly III authentication. Continue?')">
+                                <span class="fas fa-redo-alt" aria-hidden="true"></span> Full reset session</a>
                             <a class="btn btn-secondary btn-sm" onclick="window.location.reload(true)">Only refresh the
                                 page</a>
                         </p>

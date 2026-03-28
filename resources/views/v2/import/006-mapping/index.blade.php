@@ -8,6 +8,18 @@
         </div>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
+                @include('components.step-navigation', [
+                    'backUrl' => $jobBackUrl,
+                    'backLabel' => 'Go back to previous step',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => true,
+                    'currentStep' => 'Map data',
+                ])
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
                 <div class="card">
                     <div class="card-header">
                         {{ $subTitle }}
@@ -111,22 +123,14 @@
         </div>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ $jobBackUrl }}" class="btn btn-secondary"><span
-                                    class="fas fa-arrow-left"></span> Go back to the previous step</a>
-                            <a href="{{ route('flush') }}" class="btn btn-danger text-white btn-sm"><span
-                                    class="fas fa-redo-alt"></span> Start over</a>
-                            <a class="btn btn-info text-white btn-sm"
-                               href="{{ route('configure-import.download', [$identifier]) }}"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="You can download a configuration file of your import, so you can make a quick start the next time you import.">
-                                <span class="fas fa-download"></span> Download configuration file
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                @include('components.step-navigation', [
+                    'backUrl' => $jobBackUrl,
+                    'backLabel' => 'Go back to previous step',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => true,
+                    'currentStep' => 'Map data',
+                ])
             </div>
         </div>
     </div>

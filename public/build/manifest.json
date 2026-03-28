@@ -33,7 +33,7 @@
     ]
   },
   "src/pages/conversion/index.js": {
-    "file": "assets/index-bw00D2xc.js",
+    "file": "assets/index-D2EajrIJ.js",
     "name": "index",
     "src": "src/pages/conversion/index.js",
     "isEntry": true,
@@ -52,10 +52,10 @@
       "_vendor-DhbAiBEp.js"
     ]
   },
-  "src/pages/selection/gocardless.js": {
-    "file": "assets/gocardless-BYfHjeTE.js",
-    "name": "gocardless",
-    "src": "src/pages/selection/gocardless.js",
+  "src/pages/selection/bank-selection.js": {
+    "file": "assets/bank-selection-DMXP2hh6.js",
+    "name": "bank-selection",
+    "src": "src/pages/selection/bank-selection.js",
     "isEntry": true,
     "imports": [
       "_bootstrap-DuPZ7kMt.js",
@@ -63,7 +63,7 @@
     ]
   },
   "src/pages/submit/index.js": {
-    "file": "assets/index-ByLiTOne.js",
+    "file": "assets/index-B7W3bgSp.js",
     "name": "index",
     "src": "src/pages/submit/index.js",
     "isEntry": true,

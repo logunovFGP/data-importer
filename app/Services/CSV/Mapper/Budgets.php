@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Class Budgets
  */
-final class Budgets implements MapperInterface
+class Budgets implements MapperInterface
 {
     /**
      * Get map of objects.

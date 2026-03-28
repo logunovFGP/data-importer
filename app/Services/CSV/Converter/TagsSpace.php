@@ -27,7 +27,7 @@ namespace App\Services\CSV\Converter;
 /**
  * Class TagsSpace
  */
-final class TagsSpace implements ConverterInterface
+class TagsSpace implements ConverterInterface
 {
     /**
      * Convert a value.

@@ -52,6 +52,7 @@ class ConversionStatus
     public array   $pullChecklist           = [];
     public array   $pullProgress            = [];
     public array   $pullCursorCandidates    = [];
+    public array   $activityLog             = [];
 
     /**
      * ConversionStatus constructor.
@@ -89,6 +90,7 @@ class ConversionStatus
         $config->pullChecklist        = $array['pull_checklist'] ?? [];
         $config->pullProgress         = $array['pull_progress'] ?? [];
         $config->pullCursorCandidates = $array['pull_cursor_candidates'] ?? [];
+        $config->activityLog          = $array['activity_log'] ?? [];
 
         return $config;
     }
@@ -104,7 +106,19 @@ class ConversionStatus
             'pull_checklist' => $this->pullChecklist,
             'pull_progress' => $this->pullProgress,
             'pull_cursor_candidates' => $this->pullCursorCandidates,
+            'activity_log' => $this->activityLog,
         ];
+    }
+
+    public function addActivity(string $message): void
+    {
+        $this->activityLog[] = [
+            'time'    => date('H:i:s'),
+            'message' => $message,
+        ];
+        if (count($this->activityLog) > 200) {
+            $this->activityLog = array_slice($this->activityLog, -200);
+        }
     }
 
     public function setPullProgress(int $total, int $done = 0, string $status = self::PULL_STEP_PENDING): void

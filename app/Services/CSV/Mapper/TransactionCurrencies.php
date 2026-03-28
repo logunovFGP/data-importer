@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Class TransactionCurrencies
  */
-final class TransactionCurrencies implements MapperInterface
+class TransactionCurrencies implements MapperInterface
 {
     /**
      * Get map of objects.

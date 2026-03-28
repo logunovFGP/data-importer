@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Symfony\Component\Mailer\Exception\TransportException;
 
-final class ImportedTransactionsEventHandler
+class ImportedTransactionsEventHandler
 {
     public function sendReportOverMail(ImportedTransactions $event): void
     {

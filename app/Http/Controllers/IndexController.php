@@ -84,6 +84,35 @@ class IndexController extends Controller
         return redirect(route('index'));
     }
 
+    public function abortImport(string $identifier): RedirectResponse
+    {
+        if (!preg_match('/^[a-zA-Z0-9_-]{1,64}$/', $identifier)) {
+            return redirect(route('index'));
+        }
+
+        Log::debug(sprintf('Aborting import job: %s', $identifier));
+
+        $jobPath = storage_path(sprintf('import-jobs/%s.json', $identifier));
+        if (!file_exists($jobPath)) {
+            session()->flash('warning', 'Import job not found.');
+
+            return redirect(route('index'));
+        }
+
+        if (!@unlink($jobPath)) {
+            Log::error(sprintf('Failed to delete import job file: %s', $jobPath));
+            session()->flash('warning', 'Could not delete import job file.');
+
+            return redirect(route('index'));
+        }
+
+        Log::info(sprintf('Deleted import job file: %s', $jobPath));
+        ImportStateManager::clearActiveImport();
+        session()->flash('success', 'Import job deleted.');
+
+        return redirect(route('index'));
+    }
+
     public function index(Request $request): mixed
     {
         Log::debug(sprintf('[%s] Now in %s', config('importer.version'), __METHOD__));

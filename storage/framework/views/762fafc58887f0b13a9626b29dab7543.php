@@ -1,9 +1,20 @@
-
 <?php $__env->startSection('content'); ?>
     <div class="container">
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
                 <h1><?php echo e($mainTitle); ?></h1>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <?php echo $__env->make('components.step-navigation', [
+                    'backUrl' => route('index'),
+                    'backLabel' => 'Go back to index',
+                    'identifier' => null,
+                    'flow' => $flow,
+                    'showDownloadConfig' => false,
+                    'currentStep' => 'Upload',
+                ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
         </div>
         <div class="row mt-3">
@@ -110,15 +121,18 @@
                         </form>
                     </div>
                 </div>
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <div class="btn-group btn-group-sm">
-                            <a href="<?php echo e(route('index')); ?>" class="btn btn-secondary"><span class="fas fa-arrow-left"></span> Go back to the index</a>
-                            <a href="<?php echo e(route('flush')); ?>" class="btn btn-danger text-white"><span class="fas fa-redo-alt"></span>
-                                Start over entirely</a>
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <?php echo $__env->make('components.step-navigation', [
+                    'backUrl' => route('index'),
+                    'backLabel' => 'Go back to index',
+                    'identifier' => null,
+                    'flow' => $flow,
+                    'showDownloadConfig' => false,
+                    'currentStep' => 'Upload',
+                ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
         </div>
     </div>

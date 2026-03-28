@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Class Categories
  */
-final class Categories implements MapperInterface
+class Categories implements MapperInterface
 {
     /**
      * Get map of objects.

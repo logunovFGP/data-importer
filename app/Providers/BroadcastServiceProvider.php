@@ -30,7 +30,7 @@ use Illuminate\Support\ServiceProvider;
 /**
  * Class BroadcastServiceProvider
  */
-final class BroadcastServiceProvider extends ServiceProvider
+class BroadcastServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any application services.

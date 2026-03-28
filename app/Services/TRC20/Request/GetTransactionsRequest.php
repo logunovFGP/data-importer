@@ -158,9 +158,12 @@ class GetTransactionsRequest extends BearerJsonRequest
 
     private function requestHeaders(): array
     {
-        return [
-            'TRON-PRO-API-KEY' => $this->apiKey,
-        ];
+        $headers = [];
+        if ('' !== trim($this->apiKey)) {
+            $headers['TRON-PRO-API-KEY'] = $this->apiKey;
+        }
+
+        return $headers;
     }
 
     private function buildQuery(?string $dateFrom, ?string $dateTo, ?string $fingerprint): array
@@ -170,11 +173,6 @@ class GetTransactionsRequest extends BearerJsonRequest
             'limit'          => $this->pageSize,
             'order_by'       => 'block_timestamp,asc',
         ];
-
-        $contractAddress = (string)config('trc20.usdt_contract_address', '');
-        if ('' !== $contractAddress) {
-            $query['contract_address'] = $contractAddress;
-        }
 
         $fromTimestamp = $this->toMillisecondTimestamp($dateFrom);
         if (null !== $fromTimestamp) {
@@ -205,8 +203,13 @@ class GetTransactionsRequest extends BearerJsonRequest
 
     private function normalizeTransaction(array $row, array $wallets): ?array
     {
-        if (!TRC20TokenFilter::isUSDT($row)) {
+        if (!TRC20TokenFilter::isSupported($row)) {
             return null;
+        }
+
+        $tokenSymbol = TRC20TokenFilter::extractSymbol($row);
+        if ('' === $tokenSymbol) {
+            $tokenSymbol = TRC20Constants::CURRENCY_USDT;
         }
 
         $fromAddress = trim((string)($row['from'] ?? ''));
@@ -250,17 +253,20 @@ class GetTransactionsRequest extends BearerJsonRequest
         }
 
         $counterparty = $isOutgoing ? $toAddress : $fromAddress;
-        $description  = sprintf('TRC20 transfer %s', $txId);
+        $description  = sprintf('%s transfer %s', $tokenSymbol, $txId);
+
+        // accountId includes token symbol for per-token account routing
+        $perTokenAccountId = sprintf('%s|%s', $accountId, $tokenSymbol);
 
         return [
             'id'             => $txId,
-            'accountId'      => $accountId,
+            'accountId'      => $perTokenAccountId,
             'amount'         => (string)$amount,
-            'currency'       => TRC20Constants::CURRENCY_USDT,
+            'currency'       => $tokenSymbol,
             'date'           => $date,
             'merchant'       => $counterparty,
             'description'    => $description,
-            'token_symbol'   => TRC20Constants::CURRENCY_USDT,
+            'token_symbol'   => $tokenSymbol,
             'token_contract' => TRC20TokenFilter::extractContract($row),
             'from_address'   => $fromAddress,
             'to_address'     => $toAddress,
@@ -271,6 +277,24 @@ class GetTransactionsRequest extends BearerJsonRequest
     public function getPageSize(): int
     {
         return $this->pageSize;
+    }
+
+    private function normalizeDate(array $row): ?string
+    {
+        $rawDate = $row['block_timestamp'] ?? null;
+        if (!is_numeric($rawDate)) {
+            return null;
+        }
+
+        $timestamp = (int)$rawDate;
+        if ($timestamp > TRC20Constants::UNIX_MS_THRESHOLD) {
+            $timestamp = intdiv($timestamp, 1000);
+        }
+        if ($timestamp < 0) {
+            return null;
+        }
+
+        return date('Y-m-d', $timestamp);
     }
 
     private function toMillisecondTimestamp(?string $value): ?int

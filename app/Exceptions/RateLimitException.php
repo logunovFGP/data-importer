@@ -26,4 +26,4 @@ namespace App\Exceptions;
 
 use Exception;
 
-final class RateLimitException extends Exception {}
+class RateLimitException extends Exception {}

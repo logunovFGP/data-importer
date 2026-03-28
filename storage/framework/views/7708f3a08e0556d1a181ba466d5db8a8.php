@@ -1,4 +1,3 @@
-
 <?php $__env->startSection('content'); ?>
     <div class="container" x-data="index">
         <!-- this is a bit of a hack, but it works well enough to sync AlpineJS and the configuration object -->
@@ -8,6 +7,18 @@
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
                 <h1><?php echo e($mainTitle); ?></h1>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <?php echo $__env->make('components.step-navigation', [
+                    'backUrl' => route('new-import.index', [$flow]),
+                    'backLabel' => 'Go back to upload',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => true,
+                    'currentStep' => 'Configure',
+                ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
         </div>
 
@@ -117,22 +128,14 @@
         <?php endif; ?>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="btn-group btn-group-sm">
-                            <a href="<?php echo e(route('new-import.index', [$flow])); ?>" class="btn btn-secondary"><span
-                                    class="fas fa-arrow-left"></span> Go back to upload</a>
-                            <a href="<?php echo e(route('flush')); ?>" class="btn text-white btn-danger btn-sm"><span
-                                    class="fas fa-redo-alt"></span> Start over</a>
-                            <a class="btn btn-info text-white btn-sm"
-                               href="<?php echo e(route('configure-import.download', [$identifier])); ?>"
-                               data-bs-toggle="tooltip" data-bs-placement="top"
-                               title="You can download a configuration file of your import, so you can make a quick start the next time you import.">
-                                <span class="fas fa-download"></span> Download configuration file
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                <?php echo $__env->make('components.step-navigation', [
+                    'backUrl' => route('new-import.index', [$flow]),
+                    'backLabel' => 'Go back to upload',
+                    'identifier' => $identifier,
+                    'flow' => $flow,
+                    'showDownloadConfig' => true,
+                    'currentStep' => 'Configure',
+                ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
         </div>
     </div>

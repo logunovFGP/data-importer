@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Class Balance
  */
-final class Balance
+class Balance
 {
     public string $amount;
     public string $currency;

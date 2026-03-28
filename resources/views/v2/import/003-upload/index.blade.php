@@ -8,6 +8,18 @@
         </div>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
+                @include('components.step-navigation', [
+                    'backUrl' => route('index'),
+                    'backLabel' => 'Go back to index',
+                    'identifier' => null,
+                    'flow' => $flow,
+                    'showDownloadConfig' => false,
+                    'currentStep' => 'Upload',
+                ])
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
                 <div class="card">
                     <div class="card-header">
                         {{ $subTitle }}
@@ -109,15 +121,18 @@
                         </form>
                     </div>
                 </div>
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ route('index') }}" class="btn btn-secondary"><span class="fas fa-arrow-left"></span> Go back to the index</a>
-                            <a href="{{ route('flush') }}" class="btn btn-danger text-white"><span class="fas fa-redo-alt"></span>
-                                Start over entirely</a>
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                @include('components.step-navigation', [
+                    'backUrl' => route('index'),
+                    'backLabel' => 'Go back to index',
+                    'identifier' => null,
+                    'flow' => $flow,
+                    'showDownloadConfig' => false,
+                    'currentStep' => 'Upload',
+                ])
             </div>
         </div>
     </div>

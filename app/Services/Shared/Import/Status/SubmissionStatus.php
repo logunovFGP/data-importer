@@ -42,6 +42,7 @@ class SubmissionStatus
     public int     $duplicateTransactions  = 0;
     public int     $progressPercentage     = 0;
     public array   $performance            = [];
+    public array   $activityLog            = [];
 
     /**
      * ImportJobStatus constructor.
@@ -106,6 +107,7 @@ class SubmissionStatus
         $config->duplicateTransactions = $array['duplicateTransactions'] ?? 0;
         $config->progressPercentage = $array['progressPercentage'] ?? 0;
         $config->performance        = $array['performance'] ?? $config->defaultPerformanceBuckets();
+        $config->activityLog        = $array['activity_log'] ?? [];
 
         return $config;
     }
@@ -123,7 +125,19 @@ class SubmissionStatus
             'duplicateTransactions' => $this->duplicateTransactions,
             'progressPercentage' => $this->progressPercentage,
             'performance'        => $this->performance,
+            'activity_log'       => $this->activityLog,
         ];
+    }
+
+    public function addActivity(string $message): void
+    {
+        $this->activityLog[] = [
+            'time'    => date('H:i:s'),
+            'message' => $message,
+        ];
+        if (count($this->activityLog) > 200) {
+            $this->activityLog = array_slice($this->activityLog, -200);
+        }
     }
 
     public function setTotals(int $totalTransactions, int $uniqueTransactions, int $duplicateTransactions): void

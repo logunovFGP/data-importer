@@ -29,7 +29,7 @@ use App\Exceptions\ImporterErrorException;
 /**
  * Class OpposingAccountIbans
  */
-final class OpposingAccountIbans implements MapperInterface
+class OpposingAccountIbans implements MapperInterface
 {
     use GetAccounts;
 
