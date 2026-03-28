@@ -38,9 +38,15 @@
                         </div>
                         <div x-show="showTooManyChecks()" class="card-body">
                             <p>
-                                <em class="fa-solid fa-face-dizzy"></em>
-                                The data importer has been polling for more than <span x-text="checkCount"></span>
-                                seconds. It has stopped, to prevent eternal loops.</p>
+                                <em class="fa-solid fa-hourglass-half"></em>
+                                This conversion is taking longer than <span x-text="checkCount"></span> seconds.
+                                Polling continues automatically in the background.</p>
+                        </div>
+                        <div x-show="post.startTimedOut && 'conv_running' === pageStatus.status" class="card-body">
+                            <p class="text-warning mb-0">
+                                Start request hit gateway timeout (HTTP 504), but conversion is still running.
+                                Status polling continues automatically.
+                            </p>
                         </div>
                         <div x-show="showPostError()" class="card-body">
                             <p class="text-danger">
@@ -49,7 +55,14 @@
                                 Sorry about this :(
                             </p>
                             <p x-show="'' !== post.result" x-text="post.result"></p>
+                            <template x-if="hasAuthError()">
+                                <div class="alert alert-warning">
+                                    <strong>Bank session expired.</strong> You need to re-authenticate before retrying.
+                                    <a href="{{ route('authenticate-flow.index', [$flow]) }}" class="btn btn-primary btn-sm ms-2">Re-authenticate</a>
+                                </div>
+                            </template>
                             <x-conversion-messages/>
+                            <button class="btn btn-warning mt-2" @click="retryConversion">Retry conversion</button>
                         </div>
 
                         <div x-show="showWhenRunning()" class="card-body">
@@ -57,10 +70,62 @@
                                 <span class="fas fa-cog fa-spin"></span> The conversion is running, please wait.
                                 Messages may appear below the progress bar.
                             </p>
-                            <div class="progress">
+                            <div x-show="Object.keys(pull.checklist || {}).length > 0 || getPullProgressTotal() > 0">
+                                <h6>Remote pull checklist</h6>
+                                <div class="progress mb-2">
+                                    <div aria-valuemax="100" aria-valuemin="0"
+                                         :aria-valuenow="getPullProgressPercentage()"
+                                         class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" :style="'width: ' + getPullProgressWidth()"></div>
+                                </div>
+                                <small class="text-muted d-block mb-2">
+                                    Pulled data for <span x-text="getPullProgressDone()"></span> of
+                                    <span x-text="getPullProgressTotal()"></span> account(s)
+                                    (<span x-text="getPullProgressPercentage()"></span>%).
+                                    Transactions fetched so far:
+                                    <strong><span x-text="getPulledTransactionsTotal()"></span></strong>.
+                                </small>
+
+                                <ul class="list-group">
+                                    <template x-for="(item, accountId) in pull.checklist" :key="accountId">
+                                        <li class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <strong>Account #<span x-text="accountId"></span></strong>:
+                                                    <span x-text="item.message || item.status"></span>
+                                                </span>
+                                                <span class="badge" :class="getPullStatusBadgeClass(item.status)">
+                                                    <span x-text="item.status"></span>
+                                                </span>
+                                            </div>
+                                            <div class="mt-2" x-show="hasNestedPullProgress(item)">
+                                                <div class="progress" style="height: 8px;">
+                                                    <div class="progress-bar"
+                                                         role="progressbar"
+                                                         :class="getNestedPullBarClass(item)"
+                                                         :style="'width: ' + getNestedPullWidth(item)"
+                                                         :aria-valuenow="getNestedPullPercent(item)"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100"></div>
+                                                </div>
+                                                <small class="text-muted d-block mt-1" x-text="getNestedPullText(item)"></small>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                            <div class="progress mt-2">
                                 <div aria-valuemax="100" aria-valuemin="0"
-                                     aria-valuenow="100" class="progress-bar progress-bar-striped progress-bar-animated"
-                                     role="progressbar" style="width: 100%"></div>
+                                     :aria-valuenow="getOverallProgressPercentage()"
+                                     :class="hasPullProgressData() ? 'progress-bar' : 'progress-bar progress-bar-striped progress-bar-animated'"
+                                     role="progressbar"
+                                     :style="'width: ' + getOverallProgressWidth()"></div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted" x-text="getOverallProgressText()"></small>
+                            </div>
+                            <div class="text-center" x-show="'conv_running' === pageStatus.status && !hasPullProgressData()">
+                                <small class="text-muted">No account-level checkpoints yet. Large imports may take a few minutes.</small>
                             </div>
                             <x-conversion-messages/>
                         </div>
@@ -71,13 +136,37 @@
                             </p>
                             <x-conversion-messages/>
                         </div>
+                        <div x-show="showWhenDoneEmpty()" class="card-body">
+                            <div class="alert alert-warning mb-3">
+                                <span class="fas fa-exclamation-triangle"></span>
+                                <strong>No transactions found.</strong>
+                                The conversion completed successfully, but no transactions were returned for the selected date range and wallets.
+                            </div>
+                            <p>You can go back to adjust your settings (date range, wallets, accounts) and try again, or proceed to the submit step with zero transactions.</p>
+                            <x-conversion-messages/>
+                            <div class="mt-3">
+                                <a href="{{ $jobBackUrl }}" class="btn btn-secondary me-2">
+                                    <span class="fas fa-arrow-left"></span> Go back and adjust settings
+                                </a>
+                                <button class="btn btn-outline-primary" type="button" @click="redirectToImport">
+                                    Proceed to submit step <span class="fas fa-arrow-right"></span>
+                                </button>
+                            </div>
+                        </div>
                         <div x-show="showIfError()" class="card-body">
                             <p class="text-danger">
                                 The conversion could not be started, or failed due to an error. Please check the log
                                 files.
                                 Sorry about this :(
                             </p>
+                            <template x-if="hasAuthError()">
+                                <div class="alert alert-warning">
+                                    <strong>Bank session expired.</strong> You need to re-authenticate before retrying.
+                                    <a href="{{ route('authenticate-flow.index', [$flow]) }}" class="btn btn-primary btn-sm ms-2">Re-authenticate</a>
+                                </div>
+                            </template>
                             <x-conversion-messages/>
+                            <button class="btn btn-warning mt-2" @click="retryConversion">Retry conversion</button>
                         </div>
                     </div>
                 </div>

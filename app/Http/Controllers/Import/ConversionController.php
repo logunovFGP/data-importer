@@ -171,19 +171,27 @@ class ConversionController extends Controller
         }
 
         Log::debug(sprintf('Conversion routine "%s" was started successfully.', $flow));
-        if (0 === count($transactions)) {
-            // #10590 do not error out if no transactions are found.
-            Log::warning('[b] Zero transactions found during conversion. Will not error out.');
 
-            $importJob->conversionStatus->setStatus(ConversionStatus::CONVERSION_DONE);
-
-            // return response()->json($importJobStatus->toArray());
-        }
         $importJob     = $routine->getImportJob();
         Log::debug(sprintf('Conversion routine "%s" yielded %d transaction(s).', $flow, count($transactions)));
         $importJob->setConvertedTransactions($transactions);
-        $this->repository->saveToDisk($importJob);
 
+        if (0 === count($transactions)) {
+            // #10590 do not error out if no transactions are found.
+            // C4 fix: set state to ready_for_submission so the user is not stuck in
+            // a redirect loop between conversion and submit pages.  There is nothing
+            // to map when there are zero transactions, so skip mapping entirely.
+            Log::warning('[b] Zero transactions found during conversion. Advancing state to ready_for_submission.');
+
+            $importJob->conversionStatus->addMessage(0, 'No transactions found for the selected date range and wallets. You can go back to adjust your settings or proceed to the submit step.');
+            $importJob->setState('ready_for_submission');
+            $importJob->conversionStatus->setStatus(ConversionStatus::CONVERSION_DONE);
+            $this->repository->saveToDisk($importJob);
+
+            return response()->json($importJob->conversionStatus->toArray());
+        }
+
+        $this->repository->saveToDisk($importJob);
 
         if ('file' !== $flow) {
             // all other workflows go to mapping (if requested from configuration?)
@@ -208,6 +216,7 @@ class ConversionController extends Controller
         $array                        = $importJob->conversionStatus->toArray();
         $array['instance_counter']    = $importJob->getInstanceCounter();
         $array['instance_identifier'] = $importJob->getInstanceIdentifier();
+        $array['transaction_count']   = count($importJob->getConvertedTransactions());
 
         return response()->json($array);
     }

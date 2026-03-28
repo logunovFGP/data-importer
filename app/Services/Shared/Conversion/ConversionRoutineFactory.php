@@ -30,8 +30,11 @@ use App\Services\Sophtron\Conversion\RoutineManager as SophtronRoutineManager;
 use App\Services\CSV\Conversion\RoutineManager as CSVRoutineManager;
 use App\Services\LunchFlow\Conversion\RoutineManager as LunchFlowRoutineManager;
 use App\Services\Nordigen\Conversion\RoutineManager as NordigenRoutineManager;
+use App\Services\BasisBank\Conversion\RoutineManager as BasisBankRoutineManager;
 use App\Services\Shared\File\FileContentSherlock;
 use App\Services\SimpleFIN\Conversion\RoutineManager as SimpleFINRoutineManager;
+use App\Services\TBank\Conversion\RoutineManager as TBankRoutineManager;
+use App\Services\TRC20\Conversion\RoutineManager as TRC20RoutineManager;
 use Illuminate\Support\Facades\Log;
 
 class ConversionRoutineFactory
@@ -79,6 +82,15 @@ class ConversionRoutineFactory
         }
         if ('lunchflow' === $flow) {
             return new LunchFlowRoutineManager($this->importJob);
+        }
+        if ('basisbank' === $flow) {
+            return new BasisBankRoutineManager($this->importJob);
+        }
+        if ('tbank' === $flow) {
+            return new TBankRoutineManager($this->importJob);
+        }
+        if ('trc20' === $flow) {
+            return new TRC20RoutineManager($this->importJob);
         }
 
         throw new ImporterErrorException(sprintf('ConversionRoutineFactory cannot create a routine for import flow "%s"', $flow));

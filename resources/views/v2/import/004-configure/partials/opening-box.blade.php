@@ -25,7 +25,7 @@
                         @endif
                     </p>
                 @endif
-                @if('nordigen' === $flow || 'spectre' === $flow || 'lunchflow' === $flow)
+                @if('nordigen' === $flow || 'spectre' === $flow || 'lunchflow' === $flow || 'basisbank' === $flow || 'tbank' === $flow)
                     <p>
                         Your
                         @if('nordigen' === $flow)
@@ -36,6 +36,12 @@
                         @endif
                         @if('spectre' === $flow)
                             Spectre
+                        @endif
+                        @if('basisbank' === $flow)
+                            BasisBank
+                        @endif
+                        @if('tbank' === $flow)
+                            TBank
                         @endif
                         import can be configured and fine-tuned.
                         <a href="https://docs.firefly-iii.org/how-to/data-importer/import/gocardless/"
@@ -48,6 +54,11 @@
                         Configure how your SimpleFIN accounts will be mapped to Firefly III accounts.
                         You can map existing accounts or create new ones during import.
                         Accounts marked for import will have their transactions synchronized based on your date range settings.
+                    </p>
+                @endif
+                @if('trc20' === $flow)
+                    <p>
+                        Configure which TRC-20 wallets to include and how import dates/cursors are managed for USDT transactions.
                     </p>
                 @endif
             </div>

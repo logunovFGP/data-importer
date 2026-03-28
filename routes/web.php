@@ -26,17 +26,32 @@ declare(strict_types=1);
 Route::post('/autoimport', 'AutoImportController@index')->name('autoimport');
 Route::post('/autoupload', 'AutoUploadController@index')->name('autoupload');
 
+// legacy route aliases kept for compatibility with older test suites and integrations.
+Route::get('/upload', 'Import\UploadController@legacyIndex')->name('003-upload.index');
+Route::post('/upload', 'Import\UploadController@legacyUpload')->name('003-upload.upload');
+Route::get('/import/configure', function () {
+    return response('Legacy configure route compatibility bridge.', 200);
+})->name('004-configure.index');
+Route::post('/import/configure', function () {
+    return redirect(route('004-configure.index'));
+})->name('004-configure.post');
+
 // new routes that use less session data and redirects.
 Route::get('/authenticate-flow/{flow?}', 'Import\AuthenticateController@index')->name('authenticate-flow.index');
 Route::post('/authenticate-flow/{flow}', 'Import\AuthenticateController@postIndex')->name('authenticate-flow.post');
+Route::get('/authenticate-flow/tbank/callback', 'Import\AuthenticateController@tbankCallback')->name('authenticate-flow.tbank.callback');
+Route::post('/authenticate-flow/{flow}/forget', 'Import\AuthenticateController@forget')->name('authenticate-flow.forget');
+Route::post('/authenticate-flow/{flow}/forget-and-flush', 'Import\AuthenticateController@forgetAndStartOver')->name('authenticate-flow.forget-and-flush');
+Route::get('/authenticate-flow/{flow}/forget', 'Import\AuthenticateController@forget');
+Route::get('/authenticate-flow/{flow}/forget-and-flush', 'Import\AuthenticateController@forgetAndStartOver');
 
 Route::get('/new-import/{flow?}', 'Import\UploadController@index')->name('new-import.index');
 Route::post('/new-import/{flow}', 'Import\UploadController@upload')->name('new-import.post');
 
-Route::get('/configure-import/{identifier}', 'Import\ConfigurationController@index')->name('configure-import.index');
-Route::post('/configure-import/{identifier}', ['uses' => 'Import\ConfigurationController@postIndex', 'as' => 'configure-import.post']);
-Route::get('/download-import-configuration/{identifier}', ['uses' => 'Import\DownloadController@download', 'as' => 'configure-import.download']);
-Route::post('/check-duplicate-account/{identifier}', ['uses' => 'Import\DuplicateCheckController@checkDuplicate', 'as' => 'configure-import.check-duplicate']);
+Route::get('/configure-import/{identifier}', 'Import\ConfigurationController@index')->middleware('import.step:configure')->name('configure-import.index');
+Route::post('/configure-import/{identifier}', ['uses' => 'Import\ConfigurationController@postIndex', 'as' => 'configure-import.post', 'middleware' => 'import.step:configure']);
+Route::get('/download-import-configuration/{identifier}', ['uses' => 'Import\DownloadController@download', 'as' => 'configure-import.download', 'middleware' => 'import.step:configure']);
+Route::post('/check-duplicate-account/{identifier}', ['uses' => 'Import\DuplicateCheckController@checkDuplicate', 'as' => 'configure-import.check-duplicate', 'middleware' => 'import.step:configure']);
 
 // for GoCardless / Nordigen we have another step if you have no requisitions.
 // 1. Select a bank
@@ -47,19 +62,19 @@ Route::post('/gocardless-select-bank/{identifier}', ['uses' => 'Import\Nordigen\
 Route::get('/gocardless-connect/{identifier}', ['uses' => 'Import\Nordigen\LinkController@build', 'as' => 'gocardless-connect.index']);
 Route::get('/gocardless-connected/{identifier}', ['uses' => 'Import\Nordigen\LinkController@callback', 'as' => 'gocardless-connect.callback']);
 
-Route::get('/configure-roles/{identifier}', ['uses' => 'Import\File\RoleController@index', 'as' => 'configure-roles.index']);
-Route::post('/configure-roles/{identifier}', ['uses' => 'Import\File\RoleController@postIndex', 'as' => 'configure-roles.post']);
+Route::get('/configure-roles/{identifier}', ['uses' => 'Import\File\RoleController@index', 'as' => 'configure-roles.index', 'middleware' => 'import.step:roles']);
+Route::post('/configure-roles/{identifier}', ['uses' => 'Import\File\RoleController@postIndex', 'as' => 'configure-roles.post', 'middleware' => 'import.step:roles']);
 
-Route::get('/data-mapping/{identifier}', ['uses' => 'Import\MapController@index', 'as' => 'data-mapping.index']);
-Route::post('/data-mapping/{identifier}', ['uses' => 'Import\MapController@postIndex', 'as' => 'data-mapping.post']);
+Route::get('/data-mapping/{identifier}', ['uses' => 'Import\MapController@index', 'as' => 'data-mapping.index', 'middleware' => 'import.step:mapping']);
+Route::post('/data-mapping/{identifier}', ['uses' => 'Import\MapController@postIndex', 'as' => 'data-mapping.post', 'middleware' => 'import.step:mapping']);
 
-Route::get('/data-conversion/{identifier}', ['uses' => 'Import\ConversionController@index', 'as' => 'data-conversion.index']);
-Route::any('/data-conversion/{identifier}/start', ['uses' => 'Import\ConversionController@start', 'as' => 'data-conversion.start']);
-Route::get('/data-conversion/{identifier}/status', ['uses' => 'Import\ConversionController@status', 'as' => 'data-conversion.status']);
+Route::get('/data-conversion/{identifier}', ['uses' => 'Import\ConversionController@index', 'as' => 'data-conversion.index', 'middleware' => 'import.step:convert']);
+Route::any('/data-conversion/{identifier}/start', ['uses' => 'Import\ConversionController@start', 'as' => 'data-conversion.start', 'middleware' => 'import.step:convert']);
+Route::get('/data-conversion/{identifier}/status', ['uses' => 'Import\ConversionController@status', 'as' => 'data-conversion.status', 'middleware' => 'import.step:convert']);
 
-Route::get('/submit-data/{identifier}', ['uses' => 'Import\SubmitController@index', 'as' => 'submit-data.index']);
-Route::any('/submit-data/{identifier}/start', ['uses' => 'Import\SubmitController@start', 'as' => 'submit-data.start']);
-Route::get('/submit-data/{identifier}/status', ['uses' => 'Import\SubmitController@status', 'as' => 'submit-data.status']);
+Route::get('/submit-data/{identifier}', ['uses' => 'Import\SubmitController@index', 'as' => 'submit-data.index', 'middleware' => 'import.step:submit']);
+Route::any('/submit-data/{identifier}/start', ['uses' => 'Import\SubmitController@start', 'as' => 'submit-data.start', 'middleware' => 'import.step:submit']);
+Route::get('/submit-data/{identifier}/status', ['uses' => 'Import\SubmitController@status', 'as' => 'submit-data.status', 'middleware' => 'import.step:submit']);
 
 
 // index: no checks

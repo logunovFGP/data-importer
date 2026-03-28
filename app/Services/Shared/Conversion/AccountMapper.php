@@ -46,48 +46,83 @@ class AccountMapper
     private array $fireflyIIIAccounts = [];
     private array $accountMapping     = [];
     private array $createdAccounts    = [];
+    private ?string $baseUrlOverride  = null;
+    private ?string $accessTokenOverride = null;
 
-    public function __construct()
+    public function __construct(?string $baseUrl = null, ?string $accessToken = null)
     {
         // Defer account loading until actually needed to avoid authentication errors
         // during constructor when authentication context may not be available
+        $normalizedBaseUrl = trim((string)$baseUrl);
+        $normalizedAccessToken = trim((string)$accessToken);
+        $this->baseUrlOverride = '' === $normalizedBaseUrl ? null : $normalizedBaseUrl;
+        $this->accessTokenOverride = '' === $normalizedAccessToken ? null : $normalizedAccessToken;
     }
 
     /**
      * Find a matching Firefly III account for a SimpleFIN account
      */
-    public function findMatchingFireflyIIIAccount(ImportServiceAccount $account): ?Account
+    public function findMatchingFireflyIIIAccount(ImportServiceAccount $account, ?string $expectedCurrency = null): ?Account
     {
         $this->loadFireflyIIIAccounts();
+        $expectedCurrency = $this->normalizeCurrencyCode(
+            null !== $expectedCurrency ? $expectedCurrency : $account->currencyCode
+        );
 
         // Try to find by name first
-        $matchingAccounts = array_filter($this->fireflyIIIAccounts, fn (Account $current) => strtolower((string)$current->name) === strtolower($account->name));
+        $matchingAccounts = array_values(array_filter(
+            $this->fireflyIIIAccounts,
+            fn (Account $current) => strtolower((string)$current->name) === strtolower($account->name)
+        ));
 
         if (0 === count($matchingAccounts)) {
             return null;
         }
 
-        Log::debug(sprintf('Search for Firefly III account with name "%s"', $account->name));
+        Log::debug(sprintf('Search for Firefly III account with name "%s" and expected currency "%s"', $account->name, $expectedCurrency));
+        $matchingAccounts = $this->applyCurrencyGuard($matchingAccounts, $expectedCurrency, $account->name);
+        if (0 === count($matchingAccounts)) {
+            return null;
+        }
+
+        $identifierMatch = $this->preferIdentifierMatch($matchingAccounts, $account);
+        if ($identifierMatch instanceof Account) {
+            return $identifierMatch;
+        }
+
+        if (1 === count($matchingAccounts)) {
+            return $matchingAccounts[0];
+        }
 
         // Try to search via API
         try {
-            $request  = new GetSearchAccountRequest(SecretManager::getBaseUrl(), SecretManager::getAccessToken());
+            $request  = new GetSearchAccountRequest($this->resolveBaseUrl(), $this->resolveAccessToken());
             $request->setField('name');
             $request->setQuery($account->name);
             $response = $request->get();
 
             if ($response instanceof GetAccountsResponse && count($response) > 0) {
+                $searchMatches = [];
                 foreach ($response as $current) {
                     if (strtolower($current->name) === strtolower($account->name)) {
-                        return $current;
+                        $searchMatches[] = $current;
                     }
+                }
+                $searchMatches = $this->applyCurrencyGuard($searchMatches, $expectedCurrency, $account->name);
+                if (count($searchMatches) > 0) {
+                    $identifierMatch = $this->preferIdentifierMatch($searchMatches, $account);
+                    if ($identifierMatch instanceof Account) {
+                        return $identifierMatch;
+                    }
+
+                    return $searchMatches[0];
                 }
             }
         } catch (ApiHttpException $e) {
             Log::warning(sprintf('Could not search for account "%s": %s', $account->name, $e->getMessage()));
         }
 
-        return null;
+        return $matchingAccounts[0];
     }
 
     /**
@@ -104,7 +139,7 @@ class AccountMapper
         Log::info(sprintf('Creating Firefly III account "%s" via API', $accountName));
 
         try {
-            $request  = new PostAccountRequest(SecretManager::getBaseUrl(), SecretManager::getAccessToken());
+            $request  = new PostAccountRequest($this->resolveBaseUrl(), $this->resolveAccessToken());
 
             // Build account creation payload
             $payload  = [
@@ -153,6 +188,16 @@ class AccountMapper
 
             $request->setBody($payload);
             $response = $this->makeApiCallWithRetry($request, $accountName);
+
+            if ($response instanceof ValidationErrorResponse) {
+                $errors = $response->errors->toArray();
+                if ($this->hasCurrencyCodeValidationError($errors) && array_key_exists('currency_code', $payload)) {
+                    Log::warning(sprintf('Currency "%s" is not available in Firefly III for account "%s". Retrying without explicit currency code.', (string)$payload['currency_code'], $accountName));
+                    unset($payload['currency_code']);
+                    $request->setBody($payload);
+                    $response = $this->makeApiCallWithRetry($request, $accountName);
+                }
+            }
 
             if ($response instanceof ValidationErrorResponse) {
                 Log::error(sprintf('Failed to create account "%s": %s', $accountName, json_encode($response->errors->toArray())));
@@ -228,8 +273,8 @@ class AccountMapper
 
         try {
             // Verify authentication context before making API calls
-            $baseUrl     = SecretManager::getBaseUrl();
-            $accessToken = SecretManager::getAccessToken();
+            $baseUrl     = $this->resolveBaseUrl();
+            $accessToken = $this->resolveAccessToken();
 
             if ('' === $baseUrl || '' === $accessToken) {
                 Log::warning('Missing authentication context for Firefly III account loading');
@@ -297,6 +342,99 @@ class AccountMapper
         Log::error(sprintf('All retries exhausted for account "%s": %s', $accountName, $lastException->getMessage()));
 
         throw $lastException;
+    }
+
+    private function resolveBaseUrl(): string
+    {
+        if (null !== $this->baseUrlOverride && '' !== $this->baseUrlOverride) {
+            return $this->baseUrlOverride;
+        }
+
+        return SecretManager::getBaseUrl();
+    }
+
+    private function resolveAccessToken(): string
+    {
+        if (null !== $this->accessTokenOverride && '' !== $this->accessTokenOverride) {
+            return $this->accessTokenOverride;
+        }
+
+        return SecretManager::getAccessToken();
+    }
+
+    private function hasCurrencyCodeValidationError(array $errors): bool
+    {
+        if (!isset($errors['currency_code']) || !is_array($errors['currency_code'])) {
+            return false;
+        }
+
+        foreach ($errors['currency_code'] as $message) {
+            if (!is_string($message)) {
+                continue;
+            }
+            if (false !== stripos($message, 'invalid')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<Account> $accounts
+     * @return array<Account>
+     */
+    private function applyCurrencyGuard(array $accounts, string $expectedCurrency, string $accountName): array
+    {
+        if ('' === $expectedCurrency) {
+            return $accounts;
+        }
+
+        $filtered = array_values(array_filter(
+            $accounts,
+            fn (Account $candidate) => $this->normalizeCurrencyCode((string)($candidate->currencyCode ?? '')) === $expectedCurrency
+        ));
+
+        if (0 === count($filtered)) {
+            Log::warning(sprintf('Refusing to auto-reuse account "%s": name matches exist, but none match expected currency "%s".', $accountName, $expectedCurrency));
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * @param array<Account> $accounts
+     */
+    private function preferIdentifierMatch(array $accounts, ImportServiceAccount $account): ?Account
+    {
+        $iban = trim((string)$account->iban);
+        $bban = trim((string)$account->bban);
+
+        if ('' !== $iban) {
+            foreach ($accounts as $candidate) {
+                $candidateIban = trim((string)($candidate->iban ?? ''));
+                $candidateNumber = trim((string)($candidate->accountNumber ?? ''));
+                if ($candidateIban === $iban || $candidateNumber === $iban) {
+                    return $candidate;
+                }
+            }
+        }
+
+        if ('' !== $bban) {
+            foreach ($accounts as $candidate) {
+                $candidateNumber = trim((string)($candidate->accountNumber ?? ''));
+                if ('' !== $candidateNumber && $candidateNumber === $bban) {
+                    return $candidate;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeCurrencyCode(?string $currency): string
+    {
+        return strtoupper(trim((string)$currency));
     }
 
     /**

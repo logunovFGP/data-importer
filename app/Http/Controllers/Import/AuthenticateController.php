@@ -114,6 +114,14 @@ class AuthenticateController extends Controller
             return view('import.002-authenticate.index')->with(compact('mainTitle', 'flow', 'subTitle', 'pageTitle', 'data', 'error'));
         }
 
+        if (AuthenticationStatus::ERROR === $result) {
+            Log::warning(sprintf('Authentication validation returned ERROR for flow "%s". Showing form with error.', $flow));
+            $data  = $validator->getData();
+            $error = 'The stored wallet address format is invalid. Please re-enter your credentials.';
+
+            return view('import.002-authenticate.index')->with(compact('mainTitle', 'flow', 'subTitle', 'pageTitle', 'data', 'error'));
+        }
+
         if (AuthenticationStatus::AUTHENTICATED === $result) {
             Log::debug('[a] Return redirect to already authenticated view');
 

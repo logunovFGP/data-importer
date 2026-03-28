@@ -31,6 +31,7 @@ use App\Models\ImportJob;
 use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\CSV\Converter\Date;
 use App\Services\Shared\Model\ImportServiceAccount;
+use App\Services\Shared\Preflight\ProviderCurrencyPreflightService;
 use App\Support\Internal\CollectsAccounts;
 use App\Support\Internal\MergesAccountLists;
 use Carbon\Carbon;
@@ -45,6 +46,7 @@ class ConfigurationController extends Controller
     use MergesAccountLists;
 
     private ImportJobRepository $repository;
+    private ProviderCurrencyPreflightService $currencyPreflightService;
 
     /**
      * StartController constructor.
@@ -54,6 +56,7 @@ class ConfigurationController extends Controller
         parent::__construct();
         app('view')->share('pageTitle', 'Configuration');
         $this->repository = new ImportJobRepository();
+        $this->currencyPreflightService = app(ProviderCurrencyPreflightService::class);
     }
 
     public function index(Request $request, string $identifier)
@@ -62,6 +65,7 @@ class ConfigurationController extends Controller
         $mainTitle           = 'Configuration';
         $subTitle            = 'Configure your import';
         $doParse             = 'true' === $request->get('parse');
+        $isAsyncParseRequest = $doParse && ($request->ajax() || $request->expectsJson());
         $importJob           = $this->repository->find($identifier);
         $flow                = $importJob->getFlow();
 
@@ -89,6 +93,14 @@ class ConfigurationController extends Controller
                     $importJob->setState('needs_connection_details');
                     $this->repository->saveToDisk($importJob);
 
+                    if ($isAsyncParseRequest) {
+                        return response()->json([
+                            'success'  => true,
+                            'redirect' => route('select-bank.index', [$identifier]),
+                            'message'  => 'Additional bank connection details required.',
+                        ]);
+                    }
+
                     return redirect()->route('select-bank.index', [$identifier]);
                 }
                 if ($messages->has('expired_agreement') && 'true' === (string)$messages->get('expired_agreement')[0]) {
@@ -100,6 +112,14 @@ class ConfigurationController extends Controller
                     $this->repository->saveToDisk($importJob);
                     $redirect      = route('select-bank.index', [$identifier]);
 
+                    if ($isAsyncParseRequest) {
+                        return response()->json([
+                            'success'  => true,
+                            'redirect' => $redirect,
+                            'message'  => 'Connection agreement expired. Redirecting to reconnect.',
+                        ]);
+                    }
+
                     return view('import.004-configure.gocardless-expired')->with(compact('mainTitle', 'subTitle', 'redirect'));
 
                 }
@@ -110,9 +130,34 @@ class ConfigurationController extends Controller
                 // if there is any state for the job here forget about it, just remove it.
                 $this->repository->deleteImportJob($importJob);
 
+                if ($isAsyncParseRequest) {
+                    $errorBag = new \Illuminate\Support\ViewErrorBag();
+                    $errorBag->put('default', $messages);
+                    session()->flash('errors', $errorBag);
+
+                    return response()->json([
+                        'success'  => false,
+                        'redirect' => route('new-import.index', [$flow]),
+                        'message'  => 'Parsing failed. Please restart the import flow.',
+                        'errors'   => $messages->toArray(),
+                    ], 422);
+                }
+
                 return redirect()->route('new-import.index', [$flow])->withErrors($messages);
             }
         }
+
+        if ($isAsyncParseRequest) {
+            $importJob->setInitialized(true);
+            $this->repository->saveToDisk($importJob);
+
+            return response()->json([
+                'success'  => true,
+                'redirect' => route('configure-import.index', [$identifier]),
+                'message'  => 'Parsing finished.',
+            ]);
+        }
+
         $importJob->setInitialized(true);
         $this->repository->saveToDisk($importJob);
 
@@ -126,6 +171,17 @@ class ConfigurationController extends Controller
             return view('import.004-configure.skipping')->with(compact('mainTitle', 'subTitle', 'identifier', 'redirect'));
         }
 
+        $currencyPreflight      = [];
+        $currencyPreflightCodes = [];
+        if ($this->currencyPreflightService->supportsFlow($flow)) {
+            $preflight = $this->currencyPreflightService->evaluate($importJob);
+            if (($preflight['changed'] ?? false) === true) {
+                $this->repository->saveToDisk($importJob);
+            }
+            $currencyPreflight      = is_array($preflight['entries'] ?? null) ? $preflight['entries'] : [];
+            $currencyPreflightCodes = is_array($preflight['currency_options'] ?? null) ? $preflight['currency_options'] : [];
+        }
+
         // unique column options (this depends on the flow):
         $uniqueColumns       = config(sprintf('%s.unique_column_options', $flow)) ?? [];
         $applicationAccounts = $importJob->getApplicationAccounts();
@@ -134,7 +190,7 @@ class ConfigurationController extends Controller
         $accounts            = $this->mergeAccountLists($flow, $applicationAccounts, $serviceAccounts);
         $camtType            = $configuration->getCamtType();
 
-        return view('import.004-configure.index', compact('camtType', 'identifier', 'mainTitle', 'subTitle', 'applicationAccounts', 'configuration', 'flow', 'accounts', 'uniqueColumns', 'currencies'));
+        return view('import.004-configure.index', compact('camtType', 'identifier', 'mainTitle', 'subTitle', 'applicationAccounts', 'configuration', 'flow', 'accounts', 'uniqueColumns', 'currencies', 'currencyPreflight', 'currencyPreflightCodes'));
     }
 
     private function mergeAccountLists(string $flow, array $applicationAccounts, array $serviceAccounts): array
@@ -144,6 +200,9 @@ class ConfigurationController extends Controller
             'nordigen'  => ImportServiceAccount::convertNordigenArray($serviceAccounts),
             'simplefin' => ImportServiceAccount::convertSimpleFINArray($serviceAccounts),
             'lunchflow' => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
+            'basisbank' => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
+            'tbank'     => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
+            'trc20'     => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
             'sophtron'  => ImportServiceAccount::convertSophtronArray($serviceAccounts),
             'file'      => [],
             default     => throw new ImporterErrorException(sprintf('Cannot mergeAccountLists("%s")', $flow)),
@@ -178,6 +237,30 @@ class ConfigurationController extends Controller
         $configuration->updateFromRequest($request->getAll());
         $configuration->updateDateRange();
         $importJob->setConfiguration($configuration);
+
+        if ($this->currencyPreflightService->supportsFlow($importJob->getFlow())) {
+            $preflight = $this->currencyPreflightService->evaluate(
+                $importJob,
+                [
+                    'code'        => $request->input('currency_preflight_code', []),
+                    'custom_code' => $request->input('currency_preflight_code_custom', []),
+                    'details'     => $request->input('currency_preflight_details', []),
+                    'fingerprint' => $request->input('currency_preflight_fingerprint', []),
+                ],
+                true
+            );
+
+            $this->repository->saveToDisk($importJob);
+
+            if (($preflight['has_blocking_errors'] ?? false) === true) {
+                $errors = is_array($preflight['errors'] ?? null) ? $preflight['errors'] : ['Currency preflight validation failed.'];
+
+                return redirect()
+                    ->route('configure-import.index', [$identifier])
+                    ->withInput()
+                    ->withErrors($errors);
+            }
+        }
 
         return redirect($this->redirectToNextstep($importJob));
     }

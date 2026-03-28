@@ -75,6 +75,7 @@ class ImportJob implements Arrayable
     private array $currencies                      = [];
     private array $serviceAccounts                 = [];
     private array $authenticationDetails           = [];
+    private array $providerAuth                    = [];
 
     public static function createNew(): self
     {
@@ -109,6 +110,7 @@ class ImportJob implements Arrayable
         $importJob->importableFileString  = $array['importable_file_string'];
         $importJob->authenticationDetails = $array['authentication_details'];
         $importJob->sophtronInstitutions  = $array['sophtron_institutions'];
+        $importJob->providerAuth          = $array['provider_auth'] ?? [];
 
         // only create configuration object when there is configuration to be parsed.
         $importJob->configuration         = null;
@@ -188,6 +190,7 @@ class ImportJob implements Arrayable
                 'configuration_string'   => $this->configurationString,
                 'sophtron_institutions'  => $this->sophtronInstitutions,
                 'authentication_details' => $this->authenticationDetails,
+                'provider_auth'          => $this->providerAuth,
                 'importable_file_string' => $this->importableFileString,
                 'configuration'          => null === $this->configuration ? [] : $this->configuration->toArray(),
                 'conversion_status'      => $this->conversionStatus->toArray(),
@@ -346,6 +349,16 @@ class ImportJob implements Arrayable
     public function getAuthenticationDetails(): array
     {
         return $this->authenticationDetails;
+    }
+
+    public function getProviderAuth(): array
+    {
+        return $this->providerAuth;
+    }
+
+    public function setProviderAuth(array $providerAuth): void
+    {
+        $this->providerAuth = $providerAuth;
     }
 
     public function getSophtronInstitutions(): array

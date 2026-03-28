@@ -26,8 +26,14 @@ namespace App\Jobs;
 
 use App\Models\ImportJob;
 use App\Repository\ImportJob\ImportJobRepository;
+use App\Services\BasisBank\Authentication\SecretManager as BasisSecretManager;
 use App\Services\Shared\Import\Routine\RoutineManager;
 use App\Services\Shared\Import\Status\SubmissionStatus;
+use App\Services\Shared\Authentication\SecretManager as FireflySecretManager;
+use App\Services\Shared\SyncState\SyncStateManager;
+use App\Services\TRC20\Authentication\SecretManager as TRC20SecretManager;
+use App\Services\TBank\Authentication\SecretManager as TBankSecretManager;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -58,7 +64,7 @@ class ProcessImportSubmissionJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(private ImportJob $importJob, private string $accessToken, private string $baseUrl, private ?string $vanityUrl)
+    public function __construct(private ImportJob $importJob, private string $accessToken, private string $baseUrl, private ?string $vanityUrl, private ?string $submissionLockKey = null)
     {
         $this->importJob->refreshInstanceIdentifier();
         $this->repository = new ImportJobRepository();
@@ -88,6 +94,7 @@ class ProcessImportSubmissionJob implements ShouldQueue
             // Set initial running status
             $this->importJob->submissionStatus->setStatus(SubmissionStatus::SUBMISSION_RUNNING);
             $this->repository->saveToDisk($this->importJob);
+            $this->prepareBasisBankRuntimeContext();
             // Initialize routine manager and execute import
             $routine         = new RoutineManager($this->importJob);
 
@@ -98,6 +105,7 @@ class ProcessImportSubmissionJob implements ShouldQueue
 
             // get the import job back just in case.
             $this->importJob = $routine->getImportJob();
+            $this->updateSyncState();
 
             // Set completion status
             $this->importJob->submissionStatus->setStatus(SubmissionStatus::SUBMISSION_DONE);
@@ -118,6 +126,8 @@ class ProcessImportSubmissionJob implements ShouldQueue
 
             // Re-throw to mark job as failed
             throw $e;
+        } finally {
+            $this->releaseSubmissionLock();
         }
     }
 
@@ -133,6 +143,7 @@ class ProcessImportSubmissionJob implements ShouldQueue
 
         // Ensure error status is set even if job fails catastrophically
         $this->importJob->submissionStatus->setStatus(SubmissionStatus::SUBMISSION_ERRORED);
+        $this->releaseSubmissionLock();
     }
 
     /**
@@ -143,5 +154,126 @@ class ProcessImportSubmissionJob implements ShouldQueue
     public function tags(): array
     {
         return ['import-submission', $this->identifier];
+    }
+
+    private function updateSyncState(): void
+    {
+        $flow       = $this->importJob->getFlow();
+        if ('basisbank' !== $flow && 'tbank' !== $flow && 'trc20' !== $flow) {
+            return;
+        }
+
+        $cursorCandidates = $this->importJob->conversionStatus->getPullCursorCandidates();
+        if (0 === count($cursorCandidates)) {
+            Log::debug('No cursor candidates found, skipping sync-state update.');
+            return;
+        }
+
+        $syncStateManager = new SyncStateManager();
+        $configuration    = $this->importJob->getConfiguration();
+        $fingerprint      = $this->buildSyncStateFingerprint($flow, $configuration);
+
+        foreach ($cursorCandidates as $accountId => $cursorCandidate) {
+            if (!is_string($cursorCandidate) || '' === $cursorCandidate) {
+                continue;
+            }
+            try {
+                $syncStateManager->setLookBackDate($flow, $fingerprint, (string)$accountId, Carbon::parse($cursorCandidate));
+                Log::info(sprintf('Updated sync cursor for %s account %s to %s.', $flow, $accountId, $cursorCandidate));
+            } catch (\Throwable $exception) {
+                Log::warning(sprintf('Could not update sync cursor for account %s: %s', $accountId, $exception->getMessage()));
+            }
+        }
+    }
+
+    private function prepareBasisBankRuntimeContext(): void
+    {
+        if ('basisbank' !== $this->importJob->getFlow()) {
+            return;
+        }
+
+        $configuration = $this->importJob->getConfiguration();
+        if (null === $configuration) {
+            return;
+        }
+
+        $login          = trim((string)$configuration->getBasisBankLogin());
+        $password       = trim((string)$configuration->getBasisBankPassword());
+        $legacyLogin    = trim((string)$configuration->getBasisBankApiToken());
+        $legacyPassword = trim((string)$configuration->getBasisBankConsentId());
+        $authState      = trim((string)$configuration->getBasisBankAuthState());
+        $sessionArtifact = trim((string)$configuration->getBasisBankSessionArtifact());
+
+        if ('' === $login && '' !== $legacyLogin) {
+            $login = $legacyLogin;
+        }
+        if ('' === $password && '' !== $legacyPassword) {
+            $password = $legacyPassword;
+        }
+
+        BasisSecretManager::saveLogin($login);
+        BasisSecretManager::savePassword($password);
+        BasisSecretManager::saveAuthState($authState);
+        BasisSecretManager::saveSessionArtifact($sessionArtifact);
+        BasisSecretManager::saveRequestSmsCode($configuration->isBasisBankRequestSmsCode());
+        BasisSecretManager::saveTrustDevice($configuration->isBasisBankTrustDevice());
+    }
+
+    private function buildSyncStateFingerprint(string $flow, ?\App\Services\Shared\Configuration\Configuration $configuration): string
+    {
+        $sharedSecretManager = FireflySecretManager::getBaseUrl();
+        if ('basisbank' === $flow) {
+            $login             = BasisSecretManager::getLogin($configuration);
+            $password          = BasisSecretManager::getPassword($configuration);
+            $authState         = BasisSecretManager::getAuthState($configuration);
+            $sessionArtifact   = BasisSecretManager::getSessionArtifact($configuration);
+            $requestSmsCode    = BasisSecretManager::getRequestSmsCode($configuration);
+            $trustDevice       = BasisSecretManager::getTrustDevice($configuration);
+            $artifactFingerprint = '' === trim($sessionArtifact) ? '' : hash('sha256', $sessionArtifact);
+            $passwordFingerprint = '' === trim($password) ? '' : hash('sha256', $password);
+            $manager  = new SyncStateManager();
+
+            return $manager->buildContextFingerprint(
+                $flow,
+                [
+                    config('importer.version'),
+                    $login,
+                    $passwordFingerprint,
+                    $authState,
+                    $artifactFingerprint,
+                    $requestSmsCode ? 'sms_request' : 'sms_not_requested',
+                    $trustDevice ? 'trusted_device' : 'not_trusted_device',
+                    $sharedSecretManager,
+                ]
+            );
+        }
+
+        if ('trc20' === $flow) {
+            $apiKey  = TRC20SecretManager::getApiKey($configuration);
+            $manager = new SyncStateManager();
+
+            return $manager->buildContextFingerprint(
+                $flow,
+                [config('importer.version'), $apiKey, $sharedSecretManager]
+            );
+        }
+
+        $sessionId = TBankSecretManager::getSessionId($configuration);
+        $cookieHeader = TBankSecretManager::getCookieHeader($configuration);
+        $manager = new SyncStateManager();
+
+        return $manager->buildContextFingerprint(
+            $flow,
+            [config('importer.version'), $sessionId, $cookieHeader, $sharedSecretManager]
+        );
+    }
+
+    private function releaseSubmissionLock(): void
+    {
+        if (null === $this->submissionLockKey || '' === trim($this->submissionLockKey)) {
+            return;
+        }
+        cache()->forget($this->submissionLockKey);
+        Log::debug(sprintf('Released submission lock "%s".', $this->submissionLockKey));
     }
 }

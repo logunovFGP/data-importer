@@ -72,7 +72,7 @@ class MapController extends Controller
 
         $state         = $importJob->getState();
         if ('new' === $state || 'contains_content' === $state || 'is_parsed' === $state || 'is_configured' === $state) {
-            exit(sprintf('Job is in state "%s" so not ready for this step. Needs a better page.', $state));
+            return redirect(route('configure-import.index', [$identifier]))->with(['error' => sprintf('Job is in an unexpected state. Please restart from configuration.')]);
         }
 
         // file things
@@ -111,7 +111,12 @@ class MapController extends Controller
             return view('import.006-mapping.no-mapping', compact('mainTitle', 'subTitle', 'identifier', 'roles', 'data', 'redirect'));
         }
 
-        return view('import.006-mapping.index', compact('mainTitle', 'subTitle', 'identifier', 'roles', 'data'));
+        // Back URL depends on the flow: file-based flows come from roles, others from configure.
+        $jobBackUrl = 'file' === $importJob->getFlow()
+            ? route('configure-roles.index', [$identifier])
+            : route('configure-import.index', [$identifier]);
+
+        return view('import.006-mapping.index', compact('mainTitle', 'subTitle', 'identifier', 'roles', 'data', 'jobBackUrl'));
     }
 
     /**
@@ -256,7 +261,8 @@ class MapController extends Controller
          */
         if (
             'nordigen' === $importJob->getFlow() || 'sophtron' === $importJob->getFlow()
-            || 'spectre' === $importJob->getFlow() || 'lunchflow' === $importJob->getFlow()) {
+            || 'spectre' === $importJob->getFlow() || 'lunchflow' === $importJob->getFlow()
+            || 'basisbank' === $importJob->getFlow() || 'tbank' === $importJob->getFlow() || 'trc20' === $importJob->getFlow()) {
             // FIXME should be in a helper or something generic.
             // index 0, opposing account name:
             $index                        = 0;

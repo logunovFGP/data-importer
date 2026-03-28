@@ -25,14 +25,20 @@ namespace App\Repository\ImportJob;
 
 use App\Exceptions\ImporterErrorException;
 use App\Models\ImportJob;
+use App\Services\BasisBank\Authentication\SecretManager as BasisBankSecretManager;
+use App\Services\TBank\Authentication\SecretManager as TBankSecretManager;
+use App\Services\TRC20\Authentication\SecretManager as TRC20SecretManager;
 use App\Services\CSV\Mapper\TransactionCurrencies;
 use App\Services\LunchFlow\Validation\NewJobDataCollector as LunchFlowNewJobDataCollector;
 use App\Services\Nordigen\Validation\NewJobDataCollector as NordigenNewJobDataCollector;
+use App\Services\BasisBank\Validation\NewJobDataCollector as BasisBankNewJobDataCollector;
+use App\Services\TRC20\Validation\NewJobDataCollector as TRC20NewJobDataCollector;
 use App\Services\Session\Constants;
 use App\Services\Shared\Authentication\SecretManager;
 use App\Services\Shared\Configuration\Configuration;
 use App\Services\Shared\File\FileContentSherlock;
 use App\Services\SimpleFIN\Validation\NewJobDataCollector as SimpleFINNewJobDataCollector;
+use App\Services\TBank\Validation\NewJobDataCollector as TBankNewJobDataCollector;
 use Exception;
 use GrumpyDictator\FFIIIApiSupport\Exceptions\ApiHttpException;
 use GrumpyDictator\FFIIIApiSupport\Model\Account;
@@ -42,6 +48,7 @@ use Illuminate\Filesystem\LocalFilesystemAdapter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\MessageBag;
+use Throwable;
 
 class ImportJobRepository
 {
@@ -74,13 +81,47 @@ class ImportJobRepository
         if (!$disk->exists($file)) {
             throw new ImporterErrorException(sprintf('There is no import job with identifier "%s".', $identifier));
         }
-        $content = $disk->get($file);
-        if (null === $content || '' === $content) {
-            throw new ImporterErrorException(sprintf('The file for import job "%s" is empty.', $identifier));
-        }
-        // Log::debug(sprintf('Found import job with identifier "%s"', $identifier));
+        $attempts = 5;
+        $sleepUs  = 75_000;
+        for ($attempt = 1; $attempt <= $attempts; ++$attempt) {
+            $content = $disk->get($file);
+            $trimmed = trim((string)$content);
+            if ('' === $trimmed) {
+                if ($attempt < $attempts) {
+                    Log::warning(sprintf('Import job "%s" file is temporarily empty while reading (attempt %d/%d). Retrying.', $identifier, $attempt, $attempts));
+                    usleep($sleepUs);
 
-        return ImportJob::createFromJson($content);
+                    continue;
+                }
+                throw new ImporterErrorException(sprintf('The file for import job "%s" is empty.', $identifier));
+            }
+            if (!json_validate($trimmed)) {
+                if ($attempt < $attempts) {
+                    Log::warning(sprintf('Import job "%s" file contains incomplete JSON while reading (attempt %d/%d). Retrying.', $identifier, $attempt, $attempts));
+                    usleep($sleepUs);
+
+                    continue;
+                }
+                throw new ImporterErrorException(sprintf('The file for import job "%s" is invalid JSON.', $identifier));
+            }
+
+            try {
+                $importJob = ImportJob::createFromJson($trimmed);
+                $this->restoreProviderAuthIfNeeded($importJob);
+
+                return $importJob;
+            } catch (Throwable $e) {
+                if ($attempt < $attempts) {
+                    Log::warning(sprintf('Could not deserialize import job "%s" (attempt %d/%d): %s. Retrying.', $identifier, $attempt, $attempts, $e->getMessage()));
+                    usleep($sleepUs);
+
+                    continue;
+                }
+                throw $e;
+            }
+        }
+
+        throw new ImporterErrorException(sprintf('Could not load import job "%s" after retries.', $identifier));
     }
 
     public function saveToDisk(ImportJob $importJob): void
@@ -128,6 +169,13 @@ class ImportJobRepository
         }
         $messageBag    = new MessageBag();
         $configuration = $importJob->getConfiguration();
+        if (null !== $configuration && '' === trim($configuration->getAccessToken())) {
+            $sharedAccessToken = trim(SecretManager::getAccessToken());
+            if ('' !== $sharedAccessToken) {
+                $configuration->setAccessToken($sharedAccessToken);
+                Log::debug('Hydrated import job configuration with shared access token.');
+            }
+        }
 
         // collect Firefly III accounts, if not already in place for this job.
         // this function returns an array with keys 'assets' and 'liabilities', each containing an array of Firefly III accounts.
@@ -169,6 +217,37 @@ class ImportJobRepository
                 $validator->setImportJob($importJob);
                 $messageBag    = $validator->collectAccounts();
                 // get import job + configuration back:
+                $importJob     = $validator->getImportJob();
+                $configuration = $importJob->getConfiguration();
+                $configuration->setDuplicateDetectionMethod('cell');
+
+                break;
+
+            case 'basisbank':
+                $configuration = $this->hydrateBasisBankContext($configuration);
+                $validator     = new BasisBankNewJobDataCollector();
+                $validator->setImportJob($importJob);
+                $messageBag    = $validator->collectAccounts();
+                $importJob     = $validator->getImportJob();
+                $configuration = $importJob->getConfiguration();
+                $configuration->setDuplicateDetectionMethod('cell');
+
+                break;
+
+            case 'trc20':
+                $validator     = new TRC20NewJobDataCollector();
+                $validator->setImportJob($importJob);
+                $messageBag    = $validator->collectAccounts();
+                $importJob     = $validator->getImportJob();
+                $configuration = $importJob->getConfiguration();
+                $configuration->setDuplicateDetectionMethod('cell');
+
+                break;
+
+            case 'tbank':
+                $validator     = new TBankNewJobDataCollector();
+                $validator->setImportJob($importJob);
+                $messageBag    = $validator->collectAccounts();
                 $importJob     = $validator->getImportJob();
                 $configuration = $importJob->getConfiguration();
                 $configuration->setDuplicateDetectionMethod('cell');
@@ -359,6 +438,143 @@ class ImportJobRepository
             Log::error(sprintf('Failed to load currencies: %s', $e->getMessage()));
 
             return [];
+        }
+    }
+
+    private function hydrateBasisBankContext(Configuration $configuration): Configuration
+    {
+        $login          = BasisBankSecretManager::getLogin($configuration);
+        $password       = BasisBankSecretManager::getPassword($configuration);
+        $legacyApiToken = trim((string)$configuration->getBasisBankApiToken());
+        $legacyConsent  = trim((string)$configuration->getBasisBankConsentId());
+
+        if ('' === trim($login) && '' !== $legacyApiToken) {
+            $login = $legacyApiToken;
+        }
+        if ('' === trim($password) && '' !== $legacyConsent) {
+            $password = $legacyConsent;
+        }
+
+        $configuration->setBasisBankLogin($login);
+        $configuration->setBasisBankPassword($password);
+        $configuration->setBasisBankAuthState(BasisBankSecretManager::getAuthState($configuration));
+        $configuration->setBasisBankSessionArtifact(BasisBankSecretManager::getSessionArtifact($configuration));
+        $configuration->setBasisBankRequestSmsCode(BasisBankSecretManager::getRequestSmsCode($configuration));
+        $configuration->setBasisBankTrustDevice(BasisBankSecretManager::getTrustDevice($configuration));
+
+        return $configuration;
+    }
+
+    /**
+     * Restore provider auth from the import job JSON into the session if the session
+     * has lost the provider auth data (e.g., after container restart or session expiry).
+     * This is the "resume" mechanism for provider auth persistence.
+     */
+    private function restoreProviderAuthIfNeeded(ImportJob $importJob): void
+    {
+        $providerAuth = $importJob->getProviderAuth();
+        if ([] === $providerAuth) {
+            return;
+        }
+
+        $provider = (string)($providerAuth['provider'] ?? '');
+        if ('' === $provider) {
+            return;
+        }
+
+        match ($provider) {
+            'basisbank' => $this->restoreBasisBankAuth($providerAuth),
+            'tbank'     => $this->restoreTBankAuth($providerAuth),
+            'trc20'     => $this->restoreTRC20Auth($providerAuth),
+            default     => Log::debug(sprintf('No provider auth restore handler for provider "%s".', $provider)),
+        };
+    }
+
+    private function restoreBasisBankAuth(array $auth): void
+    {
+        // Only restore if the session has lost the auth state
+        $currentAuthState = (string)session()->get(BasisBankSecretManager::AUTH_STATE, '');
+        if ('' !== $currentAuthState) {
+            return;
+        }
+
+        $sessionArtifact = (string)($auth['session_artifact'] ?? '');
+        $authState       = (string)($auth['auth_state'] ?? '');
+        $login           = (string)($auth['login'] ?? '');
+        $password        = (string)($auth['password'] ?? '');
+        $trustDevice     = (bool)($auth['trust_device'] ?? false);
+
+        if ('' === $authState) {
+            return;
+        }
+
+        Log::info('Restoring BasisBank provider auth from import job JSON into session.');
+        if ('' !== $login) {
+            BasisBankSecretManager::saveLogin($login);
+        }
+        if ('' !== $password) {
+            BasisBankSecretManager::savePassword($password);
+        }
+        BasisBankSecretManager::saveAuthState($authState);
+        if ('' !== $sessionArtifact) {
+            BasisBankSecretManager::saveSessionArtifact($sessionArtifact);
+        }
+        BasisBankSecretManager::saveTrustDevice($trustDevice);
+    }
+
+    private function restoreTBankAuth(array $auth): void
+    {
+        $currentAuthState = (string)session()->get(TBankSecretManager::AUTH_STATE, '');
+        if ('' !== $currentAuthState) {
+            return;
+        }
+
+        $sessionId    = (string)($auth['session_id'] ?? '');
+        $cookieHeader = (string)($auth['cookie_header'] ?? '');
+        $accessLevel  = (string)($auth['access_level'] ?? '');
+        $authState    = (string)($auth['auth_state'] ?? '');
+        $devicePin    = (string)($auth['device_pin'] ?? '');
+
+        if ('' === $authState) {
+            return;
+        }
+
+        Log::info('Restoring TBank provider auth from import job JSON into session.');
+        if ('' !== $sessionId) {
+            TBankSecretManager::saveSessionId($sessionId);
+        }
+        if ('' !== $cookieHeader) {
+            TBankSecretManager::saveCookieHeader($cookieHeader);
+        }
+        if ('' !== $accessLevel) {
+            TBankSecretManager::saveAccessLevel($accessLevel);
+        }
+        TBankSecretManager::saveAuthState($authState);
+        if ('' !== $devicePin) {
+            TBankSecretManager::saveDevicePin($devicePin);
+        }
+    }
+
+    private function restoreTRC20Auth(array $auth): void
+    {
+        $currentApiKey = (string)session()->get(TRC20SecretManager::API_KEY, '');
+        if ('' !== $currentApiKey) {
+            return;
+        }
+
+        $apiKey  = (string)($auth['api_key'] ?? '');
+        $wallets = (string)($auth['wallets'] ?? '');
+
+        if ('' === $apiKey && '' === $wallets) {
+            return;
+        }
+
+        Log::info('Restoring TRC20 provider auth from import job JSON into session.');
+        if ('' !== $apiKey) {
+            TRC20SecretManager::saveApiKey($apiKey);
+        }
+        if ('' !== $wallets) {
+            TRC20SecretManager::saveWallets($wallets);
         }
     }
 }

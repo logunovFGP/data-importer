@@ -1,0 +1,156 @@
+{
+    "basisbank|fd42ded24668b5f9f192289145d8700a8cb8820592fc5dc071124ee3c1548347|GE42BS0000000012645491": {
+        "last_pull_date": "2026-02-16",
+        "updated_at": "2026-02-16 21:18:39",
+        "account_id": "GE42BS0000000012645491",
+        "provider": "basisbank",
+        "context_hash": "fd42ded24668b5f9f192289145d8700a8cb8820592fc5dc071124ee3c1548347"
+    },
+    "basisbank|fd42ded24668b5f9f192289145d8700a8cb8820592fc5dc071124ee3c1548347|GE15BS0000000012645492": {
+        "last_pull_date": "2026-02-16",
+        "updated_at": "2026-02-16 21:18:39",
+        "account_id": "GE15BS0000000012645492",
+        "provider": "basisbank",
+        "context_hash": "fd42ded24668b5f9f192289145d8700a8cb8820592fc5dc071124ee3c1548347"
+    },
+    "basisbank|46e9d87a2347e9349a2c914535cff939b7f681cd87e3639a4be81156b4a40a0d|GE42BS0000000012645491#GEL": {
+        "last_pull_date": "2026-02-17",
+        "updated_at": "2026-02-17 12:01:44",
+        "account_id": "GE42BS0000000012645491#GEL",
+        "provider": "basisbank",
+        "context_hash": "46e9d87a2347e9349a2c914535cff939b7f681cd87e3639a4be81156b4a40a0d"
+    },
+    "basisbank|46e9d87a2347e9349a2c914535cff939b7f681cd87e3639a4be81156b4a40a0d|GE15BS0000000012645492#USD": {
+        "last_pull_date": "2026-02-16",
+        "updated_at": "2026-02-17 12:01:44",
+        "account_id": "GE15BS0000000012645492#USD",
+        "provider": "basisbank",
+        "context_hash": "46e9d87a2347e9349a2c914535cff939b7f681cd87e3639a4be81156b4a40a0d"
+    },
+    "basisbank|ab9e6f06ea4cef372ef7214075241e022d83195070c6c44aa2efa5d43f912320|GE42BS0000000012645491#GEL": {
+        "last_pull_date": "2026-03-25",
+        "updated_at": "2026-03-26 05:32:00",
+        "account_id": "GE42BS0000000012645491#GEL",
+        "provider": "basisbank",
+        "context_hash": "ab9e6f06ea4cef372ef7214075241e022d83195070c6c44aa2efa5d43f912320"
+    },
+    "basisbank|ab9e6f06ea4cef372ef7214075241e022d83195070c6c44aa2efa5d43f912320|GE15BS0000000012645492#USD": {
+        "last_pull_date": "2026-03-25",
+        "updated_at": "2026-03-26 05:32:00",
+        "account_id": "GE15BS0000000012645492#USD",
+        "provider": "basisbank",
+        "context_hash": "ab9e6f06ea4cef372ef7214075241e022d83195070c6c44aa2efa5d43f912320"
+    },
+    "basisbank|b806ed5dc1bad4d31502ccdb05ebbe1a2187f93608417d3d877bb2bafdd6c821|GE42BS0000000012645491#GEL": {
+        "last_pull_date": "2026-03-25",
+        "updated_at": "2026-03-26 06:51:32",
+        "account_id": "GE42BS0000000012645491#GEL",
+        "provider": "basisbank",
+        "context_hash": "b806ed5dc1bad4d31502ccdb05ebbe1a2187f93608417d3d877bb2bafdd6c821"
+    },
+    "basisbank|b806ed5dc1bad4d31502ccdb05ebbe1a2187f93608417d3d877bb2bafdd6c821|GE15BS0000000012645492#USD": {
+        "last_pull_date": "2026-03-25",
+        "updated_at": "2026-03-26 06:51:32",
+        "account_id": "GE15BS0000000012645492#USD",
+        "provider": "basisbank",
+        "context_hash": "b806ed5dc1bad4d31502ccdb05ebbe1a2187f93608417d3d877bb2bafdd6c821"
+    },
+    "basisbank|48c768fa09e6750b51eb28ab148802cd19838bb684860f705526155ba750ae8b|GE42BS0000000012645491#GEL": {
+        "last_pull_date": "2026-03-25",
+        "updated_at": "2026-03-26 07:11:42",
+        "account_id": "GE42BS0000000012645491#GEL",
+        "provider": "basisbank",
+        "context_hash": "48c768fa09e6750b51eb28ab148802cd19838bb684860f705526155ba750ae8b"
+    },
+    "basisbank|48c768fa09e6750b51eb28ab148802cd19838bb684860f705526155ba750ae8b|GE15BS0000000012645492#USD": {
+        "last_pull_date": "2026-03-25",
+        "updated_at": "2026-03-26 07:11:42",
+        "account_id": "GE15BS0000000012645492#USD",
+        "provider": "basisbank",
+        "context_hash": "48c768fa09e6750b51eb28ab148802cd19838bb684860f705526155ba750ae8b"
+    },
+    "basisbank|a1491e047377c892fe7a8e6fe210e1968507ccdbc2dfc8cdbfda344e2b1ab4dc|GE42BS0000000012645491#GEL": {
+        "last_pull_date": "2026-03-26",
+        "updated_at": "2026-03-26 14:00:23",
+        "account_id": "GE42BS0000000012645491#GEL",
+        "provider": "basisbank",
+        "context_hash": "a1491e047377c892fe7a8e6fe210e1968507ccdbc2dfc8cdbfda344e2b1ab4dc"
+    },
+    "basisbank|a1491e047377c892fe7a8e6fe210e1968507ccdbc2dfc8cdbfda344e2b1ab4dc|GE15BS0000000012645492#USD": {
+        "last_pull_date": "2026-03-26",
+        "updated_at": "2026-03-26 14:00:23",
+        "account_id": "GE15BS0000000012645492#USD",
+        "provider": "basisbank",
+        "context_hash": "a1491e047377c892fe7a8e6fe210e1968507ccdbc2dfc8cdbfda344e2b1ab4dc"
+    },
+    "basisbank|134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa|1608513#GEL": {
+        "last_pull_date": "2026-03-01",
+        "updated_at": "2026-03-26 22:40:35",
+        "account_id": "1608513#GEL",
+        "provider": "basisbank",
+        "context_hash": "134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa"
+    },
+    "basisbank|134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa|1608514#USD": {
+        "last_pull_date": "2025-11-13",
+        "updated_at": "2026-03-26 22:40:35",
+        "account_id": "1608514#USD",
+        "provider": "basisbank",
+        "context_hash": "134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa"
+    },
+    "basisbank|134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa|1608515#EUR": {
+        "last_pull_date": "2026-03-24",
+        "updated_at": "2026-03-26 22:40:35",
+        "account_id": "1608515#EUR",
+        "provider": "basisbank",
+        "context_hash": "134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa"
+    },
+    "basisbank|134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa|GE42BS0000000012645491#GEL": {
+        "last_pull_date": "2026-03-26",
+        "updated_at": "2026-03-26 22:40:35",
+        "account_id": "GE42BS0000000012645491#GEL",
+        "provider": "basisbank",
+        "context_hash": "134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa"
+    },
+    "basisbank|134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa|GE15BS0000000012645492#USD": {
+        "last_pull_date": "2026-03-26",
+        "updated_at": "2026-03-26 22:40:35",
+        "account_id": "GE15BS0000000012645492#USD",
+        "provider": "basisbank",
+        "context_hash": "134d3b1184df964d888283c91f28e2a60aa12c7b1303bfcfc674ea575846dbaa"
+    },
+    "basisbank|156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292|1608513#GEL": {
+        "last_pull_date": "2026-03-01",
+        "updated_at": "2026-03-27 22:11:45",
+        "account_id": "1608513#GEL",
+        "provider": "basisbank",
+        "context_hash": "156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292"
+    },
+    "basisbank|156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292|1608514#USD": {
+        "last_pull_date": "2025-11-13",
+        "updated_at": "2026-03-27 22:11:45",
+        "account_id": "1608514#USD",
+        "provider": "basisbank",
+        "context_hash": "156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292"
+    },
+    "basisbank|156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292|1608515#EUR": {
+        "last_pull_date": "2026-03-27",
+        "updated_at": "2026-03-27 22:11:46",
+        "account_id": "1608515#EUR",
+        "provider": "basisbank",
+        "context_hash": "156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292"
+    },
+    "basisbank|156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292|GE42BS0000000012645491#GEL": {
+        "last_pull_date": "2026-03-27",
+        "updated_at": "2026-03-27 22:11:46",
+        "account_id": "GE42BS0000000012645491#GEL",
+        "provider": "basisbank",
+        "context_hash": "156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292"
+    },
+    "basisbank|156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292|GE15BS0000000012645492#USD": {
+        "last_pull_date": "2026-03-27",
+        "updated_at": "2026-03-27 22:11:46",
+        "account_id": "GE15BS0000000012645492#USD",
+        "provider": "basisbank",
+        "context_hash": "156e5ebfef2af205469be676a815c9b1fd807a6f6cc9dccfe71b01183c391292"
+    }
+}

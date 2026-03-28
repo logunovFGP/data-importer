@@ -24,8 +24,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\Session\Constants;
 use App\Services\Shared\Authentication\SecretManager;
+use App\Services\Shared\State\ImportStateManager;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,12 +52,34 @@ class IndexController extends Controller
     public function flush(): RedirectResponse
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
-        session()->forget([
-            Constants::SELECTED_BANK_COUNTRY,
-        ]);
+
+        // Capture Firefly III auth state BEFORE flushing the session.
+        // These methods read from session first, then fall back to config,
+        // so we capture the effective value regardless of source.
+        $baseUrl      = SecretManager::getBaseUrl();
+        $accessToken  = SecretManager::getAccessToken();
+        $vanityUrl    = SecretManager::getVanityUrl();
+        $refreshToken = session()->get(Constants::SESSION_REFRESH_TOKEN, '');
+
+        // Flush the entire session and regenerate the session ID.
         session()->flush();
         session()->regenerate(true);
         Artisan::call('cache:clear');
+
+        // Restore Firefly III auth state so the user does not have to
+        // re-enter their connection details after starting over.
+        if ('' !== $baseUrl) {
+            SecretManager::saveBaseUrl($baseUrl);
+        }
+        if ('' !== $accessToken) {
+            SecretManager::saveAccessToken($accessToken);
+        }
+        if ('' !== $vanityUrl) {
+            SecretManager::saveVanityUrl($vanityUrl);
+        }
+        if ('' !== (string) $refreshToken) {
+            SecretManager::saveRefreshToken((string) $refreshToken);
+        }
 
         return redirect(route('index'));
     }
@@ -122,7 +146,60 @@ class IndexController extends Controller
         $isDocker          = config('importer.docker.is_docker', false);
         $identifier        = substr(session()->getId(), 0, 10);
 
-        return view('index', compact('pat', 'warning', 'clientIdWithURL', 'URLonly', 'flexible', 'identifier', 'isDocker'));
+        // Scan for recent resumable import jobs (created within the last 24 hours).
+        $recentJobs        = $this->getRecentJobs();
+
+        return view('index', compact('pat', 'warning', 'clientIdWithURL', 'URLonly', 'flexible', 'identifier', 'isDocker', 'recentJobs'));
+    }
+
+    /**
+     * Scan storage/import-jobs/ for recent jobs (created within the last 24 hours)
+     * that are in a resumable state. Returns an array of job summaries for the view.
+     */
+    private function getRecentJobs(): array
+    {
+        $recentJobs = [];
+        $disk       = Storage::disk('import-jobs');
+        $files      = $disk->files();
+        $cutoff     = time() - 86400; // 24 hours
+        $repository = new ImportJobRepository();
+
+        foreach ($files as $file) {
+            if (!str_ends_with($file, '.json')) {
+                continue;
+            }
+            $lastModified = $disk->lastModified($file);
+            if ($lastModified < $cutoff) {
+                continue;
+            }
+            $jobIdentifier = pathinfo($file, PATHINFO_FILENAME);
+
+            try {
+                $job = $repository->find($jobIdentifier);
+            } catch (\Throwable $e) {
+                Log::debug(sprintf('Could not load job "%s" for recent jobs listing: %s', $jobIdentifier, $e->getMessage()));
+
+                continue;
+            }
+
+            if (!ImportStateManager::isResumable($job)) {
+                continue;
+            }
+
+            $recentJobs[] = [
+                'identifier' => $job->identifier,
+                'flow'       => $job->getFlow(),
+                'state'      => $job->getState(),
+                'step'       => ImportStateManager::getCurrentStep($job),
+                'created'    => date('Y-m-d H:i', $lastModified),
+                'url'        => ImportStateManager::getCorrectRouteForState($job->identifier, $job),
+            ];
+        }
+
+        // Sort by creation time descending (most recent first).
+        usort($recentJobs, static fn(array $a, array $b): int => strcmp($b['created'], $a['created']));
+
+        return $recentJobs;
     }
 
     private function clearOldJobs(): void

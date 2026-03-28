@@ -62,11 +62,11 @@ class RoleController extends Controller
         $mainTitle     = 'Role definition';
         $subTitle      = 'Data role definition';
         if ('file' !== $flow) {
-            return view('import.005-roles.no-define-roles')->with(compact('flow', 'mainTitle', 'subTitle'));
+            return view('import.005-roles.no-define-roles')->with(compact('flow', 'mainTitle', 'subTitle', 'identifier'));
         }
         $state         = $importJob->getState();
         if ('new' === $state || 'contains_content' === $state || 'is_parsed' === $state) {
-            exit(sprintf('Job is in state "%s" so not ready for this step. Needs a better page.', $state));
+            return redirect(route('configure-import.index', [$identifier]))->with(['error' => sprintf('Job is in an unexpected state. Please restart from configuration.')]);
         }
 
         $warning       = '';

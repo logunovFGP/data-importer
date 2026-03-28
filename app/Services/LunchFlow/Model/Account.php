@@ -29,13 +29,20 @@ namespace App\Services\LunchFlow\Model;
  */
 class Account
 {
-    public int     $id;
+    public string  $id;
     public string  $institutionLogo;
     public string  $institutionName;
     public string  $name;
     public string  $provider;
+    public string  $iban = '';
+    public string  $bban = '';
     public ?string $currency = null;
     public ?string $status   = null;
+    public ?float $balance   = null;
+    public ?float $available = null;
+    public bool $isCard      = false;
+    public array $syncIds    = [];
+    public array $extra      = [];
 
     /**
      * Account constructor.
@@ -48,13 +55,20 @@ class Account
     public static function fromArray(array $data): self
     {
         $model                  = new self();
-        $model->id              = $data['id'];
+        $model->id              = (string)$data['id'];
         $model->institutionLogo = $data['institution_logo'];
         $model->institutionName = $data['institution_name'];
         $model->name            = $data['name'];
         $model->provider        = $data['provider'];
+        $model->iban            = (string)($data['iban'] ?? '');
+        $model->bban            = (string)($data['bban'] ?? '');
         $model->currency        = $data['currency'] ?? null;
         $model->status          = $data['status'] ?? null;
+        $model->balance         = self::normalizeAmount($data['balance'] ?? null);
+        $model->available       = self::normalizeAmount($data['available'] ?? null);
+        $model->isCard          = (bool)($data['is_card'] ?? false);
+        $model->syncIds         = is_array($data['sync_ids'] ?? null) ? $data['sync_ids'] : [];
+        $model->extra           = is_array($data['extra'] ?? null) ? $data['extra'] : [];
 
         return $model;
     }
@@ -67,9 +81,31 @@ class Account
             'institution_name' => $this->institutionName,
             'name'             => $this->name,
             'provider'         => $this->provider,
+            'iban'             => $this->iban,
+            'bban'             => $this->bban,
             'currency'         => $this->currency,
             'status'           => $this->status,
+            'balance'          => $this->balance,
+            'available'        => $this->available,
+            'is_card'          => $this->isCard,
+            'sync_ids'         => $this->syncIds,
+            'extra'            => $this->extra,
             'class'            => self::class,
         ];
+    }
+
+    private static function normalizeAmount(mixed $value): ?float
+    {
+        if (null === $value) {
+            return null;
+        }
+        if (is_string($value) && '' === trim($value)) {
+            return null;
+        }
+        if (!is_numeric($value)) {
+            return null;
+        }
+
+        return (float)$value;
     }
 }

@@ -257,7 +257,10 @@
                                 $accountId = $account['import_account']->id;
                                 $newAccounts = $configuration->getNewAccounts();
                                 $committedCurrency = $newAccounts[$accountId]['currency'] ?? null;
-                                $displayCurrency = $committedCurrency ?? $account['import_account']->currencyCode ?? 'EUR';
+                                $displayCurrency = strtoupper(trim((string)($committedCurrency ?? $account['import_account']->currencyCode ?? 'EUR')));
+                                if ('' === $displayCurrency) {
+                                    $displayCurrency = 'EUR';
+                                }
                             @endphp
                             <span id="currency-display-{{ $account['import_account']->id }}" class="fw-bold">
                                 {{ $displayCurrency }}
@@ -266,21 +269,38 @@
                                     id="currency-edit-{{ $account['import_account']->id }}"
                                     name="new_accounts[{{  $account['import_account']->id }}][currency]">
                                 @php
-                                    // Use the same committed currency logic for option selection
                                     $defaultCurrency = $displayCurrency;
+                                    $hasDefaultCurrencyOption = false;
                                 @endphp
                                 @foreach($currencies ?? [] as $currencyId => $currencyDisplay)
                                     @php
-                                        // Extract ISO code from currency display (e.g., "US Dollar (EUR)" -> "EUR")
-                                        preg_match('/\(([A-Z]{3})\)/', $currencyDisplay, $matches);
-                                        $isoCode = $matches[1] ?? 'EUR';
+                                        // Extract ISO code from display (prefer explicit "(XXX)", then any standalone XXX code)
+                                        $isoCode = null;
+                                        if (preg_match('/\(([A-Z]{3})\)/', (string)$currencyDisplay, $matches) === 1) {
+                                            $isoCode = strtoupper(trim((string)$matches[1]));
+                                        } elseif (preg_match_all('/\b([A-Z]{3})\b/', (string)$currencyDisplay, $allMatches) === 1 || count($allMatches[1] ?? []) > 0) {
+                                            $codes = $allMatches[1] ?? [];
+                                            $lastCode = end($codes);
+                                            $isoCode = false === $lastCode ? null : strtoupper(trim((string)$lastCode));
+                                        }
+                                        if (null === $isoCode || '' === $isoCode) {
+                                            continue;
+                                        }
+                                        if ($isoCode === $defaultCurrency) {
+                                            $hasDefaultCurrencyOption = true;
+                                        }
                                     @endphp
                                     <option value="{{ $isoCode }}" @if($isoCode === $defaultCurrency) selected @endif>
                                         {{ $currencyDisplay }}
                                     </option>
                                 @endforeach
+                                @if(!$hasDefaultCurrencyOption)
+                                    <option value="{{ $defaultCurrency }}" selected>
+                                        {{ $defaultCurrency }} (source account currency)
+                                    </option>
+                                @endif
                                 @if(empty($currencies))
-                                    <option value="USD">EUR (Euro)</option>
+                                    <option value="{{ $defaultCurrency }}" selected>{{ $defaultCurrency }} (source account currency)</option>
                                 @endif
                             </select>
                         </div>

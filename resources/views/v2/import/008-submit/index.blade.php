@@ -5,6 +5,66 @@
     <span id="data-helper" data-identifier="{{ $identifier }}"></span>
 
     <div class="container" x-data="index">
+        <style>
+            .submit-log-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            @media (max-width: 991.98px) {
+                .submit-log-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .submit-log-pane {
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                background: #fff;
+                min-height: 260px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .submit-log-pane-header {
+                padding: 8px 12px;
+                border-bottom: 1px solid #e9ecef;
+                font-weight: 700;
+                background: #f8f9fa;
+            }
+
+            .submit-log-pane-body {
+                padding: 10px 12px;
+                max-height: 320px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                font-size: 0.92rem;
+            }
+
+            .submit-log-entry {
+                padding-bottom: 8px;
+                margin-bottom: 8px;
+                border-bottom: 1px dashed #e9ecef;
+            }
+
+            .submit-log-entry:last-child {
+                border-bottom: 0;
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+
+            .submit-log-line {
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .submit-log-entry ul,
+            .submit-log-entry ol {
+                margin-bottom: 0;
+                padding-left: 18px;
+            }
+        </style>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
                 <h1>{{ $mainTitle }}</h1>
@@ -57,7 +117,8 @@
                                 Sorry about this :(
                             </p>
                             <p x-show="'' !== post.result" x-text="post.result"></p>
-                            <x-conversion-messages />
+                            <x-submission-messages />
+                            <button class="btn btn-warning mt-2" @click="retrySubmission">Retry submission</button>
                         </div>
 
                         <div x-show="showWhenRunning()" class="card-body">
@@ -74,20 +135,89 @@
                             <div x-show="hasProgressData()" class="text-center mt-2">
                                 <small class="text-muted" x-text="getProgressDisplay()"></small>
                             </div>
-                            <x-conversion-messages />
+                            <div x-show="getSubmissionSummary()" class="text-center mt-2">
+                                <small class="text-muted" x-text="getSubmissionSummary()"></small>
+                            </div>
+                            <div x-show="hasPerformanceData()" class="mt-3">
+                                <div class="card">
+                                    <div class="card-header">Submission performance telemetry</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm mb-0">
+                                            <thead>
+                                            <tr>
+                                                <th>Phase</th>
+                                                <th class="text-end">Calls</th>
+                                                <th class="text-end">Avg ms</th>
+                                                <th class="text-end">Total ms</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <template x-for="row in getPerformanceRows()" :key="row.key">
+                                                <tr>
+                                                    <td x-text="row.label"></td>
+                                                    <td class="text-end" x-text="row.count"></td>
+                                                    <td class="text-end" x-text="row.avg"></td>
+                                                    <td class="text-end" x-text="row.total"></td>
+                                                </tr>
+                                            </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <x-submission-messages />
                         </div>
                         <div x-show="showWhenDone()" class="card-body">
                             <p>
                                 The submission routine has finished 🎉. Errors and messages can be seen below.
                             </p>
-                            <x-conversion-messages />
+                            <div class="row mt-3 mb-3">
+                                <div class="col-lg-12">
+                                    <a href="{{ config('importer.vanity_url', config('importer.url')) }}" class="btn btn-success btn-lg me-2" target="_blank">
+                                        View in Firefly III
+                                    </a>
+                                    <a href="{{ route('index') }}" class="btn btn-primary btn-lg">
+                                        Start new import
+                                    </a>
+                                </div>
+                            </div>
+                            <p x-show="getSubmissionSummary()" class="text-muted small" x-text="getSubmissionSummary()"></p>
+                            <div x-show="hasPerformanceData()" class="mt-3">
+                                <div class="card">
+                                    <div class="card-header">Submission performance telemetry</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm mb-0">
+                                            <thead>
+                                            <tr>
+                                                <th>Phase</th>
+                                                <th class="text-end">Calls</th>
+                                                <th class="text-end">Avg ms</th>
+                                                <th class="text-end">Total ms</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <template x-for="row in getPerformanceRows()" :key="row.key">
+                                                <tr>
+                                                    <td x-text="row.label"></td>
+                                                    <td class="text-end" x-text="row.count"></td>
+                                                    <td class="text-end" x-text="row.avg"></td>
+                                                    <td class="text-end" x-text="row.total"></td>
+                                                </tr>
+                                            </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <x-submission-messages />
                         </div>
                         <div x-show="showIfError()" class="card-body">
                             <p class="text-danger">
                                 The submission could not be started, or failed due to an error. Please check the log files.
                                 Sorry about this :(
                             </p>
-                            <x-conversion-messages />
+                            <x-submission-messages />
+                            <button class="btn btn-warning mt-2" @click="retrySubmission">Retry submission</button>
                         </div>
                     </div>
                 </div>
@@ -122,3 +252,4 @@
 @section('scripts')
     @vite(['src/pages/submit/index.js'])
 @endsection
+

@@ -39,6 +39,9 @@ class ImportServiceAccount
 {
     public string $bban;
     public string $currencyCode;
+    public ?string $balance = null;
+    public ?string $availableBalance = null;
+    public bool $isCard = false;
     public array  $extra;
     public string $iban;
     public string $id;
@@ -96,19 +99,41 @@ class ImportServiceAccount
             );
         }
         if ($account instanceof LunchFlowAccount) {
+            $iban = trim((string)($account->iban ?? ''));
+            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
+                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
+                $iban = '';
+            }
+            $bban = trim((string)($account->bban ?? ''));
+            $syncIds = is_array($account->syncIds ?? null) ? $account->syncIds : [];
+            $sourceExtra = is_array($account->extra ?? null) ? $account->extra : [];
+            $extra = array_merge(
+                [
+                    'Currency'          => (string)$account->currency,
+                    'IBAN'              => $iban,
+                    'BBAN'              => $bban,
+                    'Balance'           => null !== $account->balance ? (string)$account->balance : null,
+                    'Available balance' => null !== $account->available ? (string)$account->available : null,
+                    'Card account'      => $account->isCard ? 'yes' : 'no',
+                ],
+                $sourceExtra
+            );
+            if ([] !== $syncIds) {
+                $extra['Sync IDs'] = implode(', ', array_map(static fn ($value): string => (string)$value, $syncIds));
+            }
+
             return self::fromArray(
                 [
                     'id'            => (string)$account->id,
                     'name'          => $account->name,
                     'currency_code' => (string)$account->currency,
-                    'iban'          => '',
-                    'bban'          => '',
+                    'iban'          => $iban,
+                    'bban'          => $bban,
                     'status'        => $account->status,
-                    'extra'         => [
-                        'Currency' => (string)$account->currency,
-                        'IBAN'     => '',
-                        'BBAN'     => '',
-                    ],
+                    'balance'       => null !== $account->balance ? (string)$account->balance : null,
+                    'available_balance' => null !== $account->available ? (string)$account->available : null,
+                    'is_card'       => $account->isCard,
+                    'extra'         => $extra,
                 ]
             );
         }
@@ -262,13 +287,19 @@ class ImportServiceAccount
             $iban = '';
         }
         $account               = new self();
-        $account->id           = $array['id'];
-        $account->name         = $array['name'];
+        $extra                 = is_array($array['extra'] ?? null) ? $array['extra'] : [];
+        $balanceRaw            = $array['balance'] ?? ($extra['Balance'] ?? null);
+        $availableRaw          = $array['available_balance'] ?? ($array['available'] ?? ($extra['Available balance'] ?? null));
+        $account->id           = (string)($array['id'] ?? '');
+        $account->name         = (string)($array['name'] ?? '');
         $account->iban         = $iban;
-        $account->bban         = $array['bban'];
-        $account->currencyCode = $array['currency_code'];
-        $account->status       = $array['status'];
-        $account->extra        = $array['extra'];
+        $account->bban         = (string)($array['bban'] ?? '');
+        $account->currencyCode = (string)($array['currency_code'] ?? '');
+        $account->status       = (string)($array['status'] ?? 'active');
+        $account->balance      = self::normalizeOptionalString($balanceRaw);
+        $account->availableBalance = self::normalizeOptionalString($availableRaw);
+        $account->isCard       = (bool)($array['is_card'] ?? false);
+        $account->extra        = $extra;
 
         return $account;
     }
@@ -344,23 +375,61 @@ class ImportServiceAccount
 
         /** @var LunchFlowAccount $account */
         foreach ($lunchFlow as $account) {
+            $iban = trim((string)($account->iban ?? ''));
+            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
+                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
+                $iban = '';
+            }
+            $bban = trim((string)($account->bban ?? ''));
+            $syncIds = is_array($account->syncIds ?? null) ? $account->syncIds : [];
+            $sourceExtra = is_array($account->extra ?? null) ? $account->extra : [];
+            $extra = array_merge(
+                [
+                    'Currency'          => (string)$account->currency,
+                    'IBAN'              => $iban,
+                    'BBAN'              => $bban,
+                    'Balance'           => null !== $account->balance ? (string)$account->balance : null,
+                    'Available balance' => null !== $account->available ? (string)$account->available : null,
+                    'Card account'      => $account->isCard ? 'yes' : 'no',
+                ],
+                $sourceExtra
+            );
+            if ([] !== $syncIds) {
+                $extra['Sync IDs'] = implode(', ', array_map(static fn ($value): string => (string)$value, $syncIds));
+            }
+
             $return[] = self::fromArray(
                 [
                     'id'            => (string)$account->id,
                     'name'          => $account->name,
                     'currency_code' => (string)$account->currency,
-                    'iban'          => '',
-                    'bban'          => '',
+                    'iban'          => $iban,
+                    'bban'          => $bban,
                     'status'        => $account->status,
-                    'extra'         => [
-                        'Currency' => (string)$account->currency,
-                        'IBAN'     => '',
-                        'BBAN'     => '',
-                    ],
+                    'balance'       => null !== $account->balance ? (string)$account->balance : null,
+                    'available_balance' => null !== $account->available ? (string)$account->available : null,
+                    'is_card'       => $account->isCard,
+                    'extra'         => $extra,
                 ]
             );
         }
 
         return $return;
+    }
+
+    private static function normalizeOptionalString(mixed $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+        if (!is_scalar($value)) {
+            return null;
+        }
+        $result = trim((string)$value);
+        if ('' === $result) {
+            return null;
+        }
+
+        return $result;
     }
 }

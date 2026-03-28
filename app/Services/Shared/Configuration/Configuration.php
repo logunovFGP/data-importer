@@ -92,6 +92,19 @@ class Configuration
     private array  $nordigenRequisitions;
 
     private string $lunchFlowApiKey = '';
+    private string $basisBankApiToken = '';
+    private string $basisBankConsentId = '';
+    private string $basisBankLogin = '';
+    private string $basisBankPassword = '';
+    private string $basisBankAuthState = '';
+    private string $basisBankSessionArtifact = '';
+    private bool   $basisBankRequestSmsCode = false;
+    private bool   $basisBankTrustDevice = false;
+    private string $tBankApiToken = '';
+    private string $trc20ApiKey = '';
+    private string $trc20Wallets = '';
+    private bool   $incrementalSyncEnabled = false;
+    private int    $incrementalLookbackDays = 3;
 
     // what type of import?
     private array $roles            = [];
@@ -143,6 +156,19 @@ class Configuration
 
         // lunch flow configuration
         $this->lunchFlowApiKey             = '';
+        $this->basisBankApiToken           = '';
+        $this->basisBankConsentId          = '';
+        $this->basisBankLogin              = '';
+        $this->basisBankPassword           = '';
+        $this->basisBankAuthState          = '';
+        $this->basisBankSessionArtifact    = '';
+        $this->basisBankRequestSmsCode     = false;
+        $this->basisBankTrustDevice        = false;
+        $this->tBankApiToken               = '';
+        $this->trc20ApiKey                = '';
+        $this->trc20Wallets               = '';
+        $this->incrementalSyncEnabled      = false;
+        $this->incrementalLookbackDays     = 3;
 
         // spectre
         $this->identifier                  = '0';
@@ -246,6 +272,21 @@ class Configuration
 
         // lunch flow configuration
         $object->lunchFlowApiKey             = $data['lunch_flow_api_key'] ?? '';
+        $legacyLogin                          = trim((string)($data['basis_bank_api_token'] ?? ''));
+        $legacyConsent                        = trim((string)($data['basis_bank_consent_id'] ?? ''));
+        $object->basisBankLogin                = trim((string)($data['basis_bank_login'] ?? $legacyLogin));
+        $object->basisBankPassword             = trim((string)($data['basis_bank_password'] ?? $legacyConsent));
+        $object->basisBankAuthState            = trim((string)($data['basis_bank_auth_state'] ?? ''));
+        $object->basisBankSessionArtifact      = trim((string)($data['basis_bank_session_artifact'] ?? ''));
+        $object->basisBankRequestSmsCode       = (bool)($data['basis_bank_request_sms_code'] ?? false);
+        $object->basisBankTrustDevice          = (bool)($data['basis_bank_trust_device'] ?? false);
+        $object->basisBankApiToken             = $object->basisBankLogin;
+        $object->basisBankConsentId            = $object->basisBankPassword;
+        $object->tBankApiToken               = $data['t_bank_api_token'] ?? '';
+        $object->trc20ApiKey                = $data['trc20_api_key'] ?? '';
+        $object->trc20Wallets               = $data['trc20_wallets'] ?? '';
+        $object->incrementalSyncEnabled      = (bool)($data['incremental_sync_enabled'] ?? false);
+        $object->incrementalLookbackDays     = (int)($data['incremental_lookback_days'] ?? 3);
 
         // settings for spectre + nordigen (are not in v1 anyway)
         $object->mapAllData                  = $data['map_all_data'] ?? false;
@@ -368,7 +409,7 @@ class Configuration
         // settings for spectre + nordigen
         $object->mapAllData                  = $array['map_all_data'] ?? false;
         $object->accounts                    = $array['accounts'] ?? [];
-        $object->newAccounts                 = $array['new_accounts'] ?? [];
+        $object->newAccounts                 = $array['new_accounts'] ?? $array['new_account'] ?? [];
 
         // spectre
         $object->identifier                  = $array['identifier'] ?? '0';
@@ -399,6 +440,21 @@ class Configuration
 
         // lunch flow configuration
         $object->lunchFlowApiKey             = $array['lunch_flow_api_key'] ?? '';
+        $legacyLogin                          = trim((string)($array['basis_bank_api_token'] ?? ''));
+        $legacyConsent                        = trim((string)($array['basis_bank_consent_id'] ?? ''));
+        $object->basisBankLogin                = trim((string)($array['basis_bank_login'] ?? $legacyLogin));
+        $object->basisBankPassword             = trim((string)($array['basis_bank_password'] ?? $legacyConsent));
+        $object->basisBankAuthState            = trim((string)($array['basis_bank_auth_state'] ?? ''));
+        $object->basisBankSessionArtifact      = trim((string)($array['basis_bank_session_artifact'] ?? ''));
+        $object->basisBankRequestSmsCode       = (bool)($array['basis_bank_request_sms_code'] ?? false);
+        $object->basisBankTrustDevice          = (bool)($array['basis_bank_trust_device'] ?? false);
+        $object->basisBankApiToken             = $object->basisBankLogin;
+        $object->basisBankConsentId            = $object->basisBankPassword;
+        $object->tBankApiToken               = $array['t_bank_api_token'] ?? '';
+        $object->trc20ApiKey                = $array['trc20_api_key'] ?? '';
+        $object->trc20Wallets               = $array['trc20_wallets'] ?? '';
+        $object->incrementalSyncEnabled      = (bool)($array['incremental_sync_enabled'] ?? false);
+        $object->incrementalLookbackDays     = (int)($array['incremental_lookback_days'] ?? 3);
 
         // simplefin
         $object->pendingTransactions         = $array['pending_transactions'] ?? true;
@@ -497,13 +553,28 @@ class Configuration
 
         // lunch flow configuration
         $object->lunchFlowApiKey             = $array['lunch_flow_api_key'] ?? '';
+        $legacyLogin                          = trim((string)($array['basis_bank_api_token'] ?? ''));
+        $legacyConsent                        = trim((string)($array['basis_bank_consent_id'] ?? ''));
+        $object->basisBankLogin                = trim((string)($array['basis_bank_login'] ?? $legacyLogin));
+        $object->basisBankPassword             = trim((string)($array['basis_bank_password'] ?? $legacyConsent));
+        $object->basisBankAuthState            = trim((string)($array['basis_bank_auth_state'] ?? ''));
+        $object->basisBankSessionArtifact      = trim((string)($array['basis_bank_session_artifact'] ?? ''));
+        $object->basisBankRequestSmsCode       = (bool)($array['basis_bank_request_sms_code'] ?? false);
+        $object->basisBankTrustDevice          = (bool)($array['basis_bank_trust_device'] ?? false);
+        $object->basisBankApiToken             = $object->basisBankLogin;
+        $object->basisBankConsentId            = $object->basisBankPassword;
+        $object->tBankApiToken               = $array['t_bank_api_token'] ?? '';
+        $object->trc20ApiKey                = $array['trc20_api_key'] ?? '';
+        $object->trc20Wallets               = $array['trc20_wallets'] ?? '';
+        $object->incrementalSyncEnabled      = (bool)($array['incremental_sync_enabled'] ?? false);
+        $object->incrementalLookbackDays     = (int)($array['incremental_lookback_days'] ?? 3);
 
         $object->groupedTransactionHandling  = $array['grouped_transaction_handling'] ?? 'single';
         $object->useEntireOpposingAddress    = $array['use_entire_opposing_address'] ?? false;
 
         // spectre + nordigen
         $object->accounts                    = $array['accounts'] ?? [];
-        $object->newAccounts                 = $array['new_accounts'] ?? [];
+        $object->newAccounts                 = $array['new_accounts'] ?? $array['new_account'] ?? [];
 
         // date range settings
         $object->dateRange                   = $array['date_range'] ?? 'all';
@@ -986,6 +1057,17 @@ class Configuration
             'nordigen_requisitions'        => $this->nordigenRequisitions,
             'nordigen_max_days'            => $this->nordigenMaxDays,
             'lunch_flow_api_key'           => $this->lunchFlowApiKey,
+            'basis_bank_login'             => $this->basisBankLogin,
+            'basis_bank_password'          => $this->basisBankPassword,
+            'basis_bank_auth_state'        => $this->basisBankAuthState,
+            'basis_bank_request_sms_code'  => $this->basisBankRequestSmsCode,
+            'basis_bank_trust_device'      => $this->basisBankTrustDevice,
+            'basis_bank_session_artifact'  => $this->basisBankSessionArtifact,
+            't_bank_api_token'             => $this->tBankApiToken,
+            'incremental_sync_enabled'      => $this->incrementalSyncEnabled,
+            'incremental_lookback_days'     => $this->incrementalLookbackDays,
+            'trc20_api_key'                => $this->trc20ApiKey,
+            'trc20_wallets'                => $this->trc20Wallets,
 
             // utf8
             'conversion'                   => $this->conversion,
@@ -1111,6 +1193,140 @@ class Configuration
         return $this->lunchFlowApiKey;
     }
 
+    public function getBasisBankLogin(): string
+    {
+        return $this->basisBankLogin;
+    }
+
+    public function setBasisBankLogin(string $login): void
+    {
+        $value                 = trim($login);
+        $this->basisBankLogin   = $value;
+        $this->basisBankApiToken = $value;
+    }
+
+    public function getBasisBankPassword(): string
+    {
+        return $this->basisBankPassword;
+    }
+
+    public function setBasisBankPassword(string $password): void
+    {
+        $value                   = trim($password);
+        $this->basisBankPassword  = $value;
+        $this->basisBankConsentId = $value;
+    }
+
+    public function getBasisBankAuthState(): string
+    {
+        return $this->basisBankAuthState;
+    }
+
+    public function setBasisBankAuthState(string $authState): void
+    {
+        $this->basisBankAuthState = trim($authState);
+    }
+
+    public function isBasisBankRequestSmsCode(): bool
+    {
+        return $this->basisBankRequestSmsCode;
+    }
+
+    public function setBasisBankRequestSmsCode(bool $requestSmsCode): void
+    {
+        $this->basisBankRequestSmsCode = $requestSmsCode;
+    }
+
+    public function isBasisBankTrustDevice(): bool
+    {
+        return $this->basisBankTrustDevice;
+    }
+
+    public function setBasisBankTrustDevice(bool $trustDevice): void
+    {
+        $this->basisBankTrustDevice = $trustDevice;
+    }
+
+    public function getBasisBankSessionArtifact(): string
+    {
+        return $this->basisBankSessionArtifact;
+    }
+
+    public function setBasisBankSessionArtifact(string $sessionArtifact): void
+    {
+        $this->basisBankSessionArtifact = trim($sessionArtifact);
+    }
+
+    public function getBasisBankApiToken(): string
+    {
+        return $this->basisBankApiToken;
+    }
+
+    public function setBasisBankApiToken(string $token): void
+    {
+        $this->setBasisBankLogin($token);
+    }
+
+    public function getBasisBankConsentId(): string
+    {
+        return $this->basisBankConsentId;
+    }
+
+    public function setBasisBankConsentId(string $consentId): void
+    {
+        $this->setBasisBankPassword($consentId);
+    }
+
+    public function getTBankApiToken(): string
+    {
+        return $this->tBankApiToken;
+    }
+
+    public function setTBankApiToken(string $token): void
+    {
+        $this->tBankApiToken = $token;
+    }
+
+    public function isIncrementalSyncEnabled(): bool
+    {
+        return $this->incrementalSyncEnabled;
+    }
+
+    public function setIncrementalSyncEnabled(bool $incrementalSyncEnabled): void
+    {
+        $this->incrementalSyncEnabled = $incrementalSyncEnabled;
+    }
+
+    public function getIncrementalLookbackDays(): int
+    {
+        return $this->incrementalLookbackDays;
+    }
+
+    public function setIncrementalLookbackDays(int $incrementalLookbackDays): void
+    {
+        $this->incrementalLookbackDays = max(0, $incrementalLookbackDays);
+    }
+
+    public function getTrc20ApiKey(): string
+    {
+        return $this->trc20ApiKey;
+    }
+
+    public function setTrc20ApiKey(string $apiKey): void
+    {
+        $this->trc20ApiKey = $apiKey;
+    }
+
+    public function getTrc20Wallets(): string
+    {
+        return $this->trc20Wallets;
+    }
+
+    public function setTrc20Wallets(string $wallets): void
+    {
+        $this->trc20Wallets = $wallets;
+    }
+
     public function setDuplicateDetectionMethod(string $duplicateDetectionMethod): void
     {
         $this->duplicateDetectionMethod = $duplicateDetectionMethod;
@@ -1142,6 +1358,15 @@ class Configuration
         $this->dateRangeUnit               = $request['date_range_unit'];
         $this->dateRangeNotAfterNumber     = $request['date_range_not_after_number'];
         $this->dateRangeNotAfterUnit       = $request['date_range_not_after_unit'];
+        $this->incrementalSyncEnabled      = (bool)($request['incremental_sync_enabled'] ?? false);
+        $this->incrementalLookbackDays     = (int)($request['incremental_lookback_days'] ?? 3);
+        // Preserve TRC20 credentials if not present in the configure form request.
+        if (isset($request['trc20_api_key']) && '' !== trim((string)$request['trc20_api_key'])) {
+            $this->trc20ApiKey = (string)$request['trc20_api_key'];
+        }
+        if (isset($request['trc20_wallets']) && '' !== trim((string)$request['trc20_wallets'])) {
+            $this->trc20Wallets = (string)$request['trc20_wallets'];
+        }
 
         if ($request['date_not_before'] instanceof Carbon) {
             $request['date_not_before'] = $request['date_not_before']->format('Y-m-d');

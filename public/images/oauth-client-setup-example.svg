@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">OAuth client setup example</title>
+  <desc id="desc">Create client dialog example with Name set, Redirect URL set to localhost callback, and Confidential unchecked.</desc>
+
+  <rect width="1200" height="760" fill="#f3f5f7"/>
+
+  <rect x="160" y="60" width="880" height="620" rx="10" fill="#ffffff" stroke="#d5dce3"/>
+  <text x="200" y="120" font-family="Arial, sans-serif" font-size="38" fill="#2f3a45">Create Client</text>
+
+  <text x="200" y="200" font-family="Arial, sans-serif" font-size="30" fill="#2f3a45">Name</text>
+  <rect x="390" y="160" width="590" height="56" rx="6" fill="#ffffff" stroke="#bcc8d3"/>
+  <text x="410" y="198" font-family="Arial, sans-serif" font-size="24" fill="#2f3a45">Data Importer</text>
+
+  <text x="200" y="298" font-family="Arial, sans-serif" font-size="30" fill="#2f3a45">Redirect URL</text>
+  <rect x="390" y="258" width="590" height="56" rx="6" fill="#ffffff" stroke="#bcc8d3"/>
+  <text x="410" y="295" font-family="Arial, sans-serif" font-size="20" fill="#2f3a45">http://localhost:9998/callback</text>
+
+  <text x="200" y="394" font-family="Arial, sans-serif" font-size="30" fill="#2f3a45">Confidential</text>
+  <rect x="390" y="366" width="24" height="24" rx="3" fill="#ffffff" stroke="#506070"/>
+  <text x="430" y="387" font-family="Arial, sans-serif" font-size="22" fill="#5a6876">Leave unchecked</text>
+
+  <rect x="390" y="420" width="590" height="150" rx="6" fill="#f6f9fc" stroke="#d9e1ea"/>
+  <text x="410" y="458" font-family="Arial, sans-serif" font-size="21" fill="#4f5e6d">Public client for Data Importer.</text>
+  <text x="410" y="492" font-family="Arial, sans-serif" font-size="21" fill="#4f5e6d">Do not enable confidential mode.</text>
+  <text x="410" y="526" font-family="Arial, sans-serif" font-size="21" fill="#4f5e6d">Use the generated Client ID in importer setup.</text>
+
+  <rect x="850" y="600" width="130" height="52" rx="6" fill="#1f8fff"/>
+  <text x="893" y="634" font-family="Arial, sans-serif" font-size="26" fill="#ffffff">Create</text>
+
+  <rect x="610" y="610" width="120" height="42" rx="6" fill="#f0f3f6" stroke="#d0d8df"/>
+  <text x="646" y="637" font-family="Arial, sans-serif" font-size="22" fill="#425262">Close</text>
+
+  <path d="M1000 286 L1080 286" stroke="#1f8fff" stroke-width="4"/>
+  <polygon points="1080,286 1064,278 1064,294" fill="#1f8fff"/>
+  <text x="1088" y="292" font-family="Arial, sans-serif" font-size="20" fill="#1f8fff">must match</text>
+</svg>

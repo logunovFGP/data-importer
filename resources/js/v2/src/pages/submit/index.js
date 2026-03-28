@@ -43,9 +43,13 @@ let index = function () {
             currentTransaction: 0,
             totalTransactions: 0,
             progressPercentage: 0,
+            uniqueTransactions: 0,
+            duplicateTransactions: 0,
         },
+        performance: {},
         checkCount: 0,
         maxCheckCount: 1200,
+        longRunningNotice: false,
         manualRefreshAvailable: false,
         functionName() {
 
@@ -62,12 +66,72 @@ let index = function () {
             }
             return this.progress.currentTransaction + ' / ' + this.progress.totalTransactions + ' transactions';
         },
+        getSubmissionSummary() {
+            if (this.progress.totalTransactions === 0 && this.progress.uniqueTransactions === 0 && this.progress.duplicateTransactions === 0) {
+                return '';
+            }
+            return 'Imported ' + this.progress.uniqueTransactions + ' / ' + this.progress.totalTransactions + ' transactions, skipped ' + this.progress.duplicateTransactions + ' duplicate(s).';
+        },
         hasProgressData() {
             return this.progress.totalTransactions > 0;
         },
+        hasPerformanceData() {
+            return this.getPerformanceRows().length > 0;
+        },
+        getPerformanceRows() {
+            const labels = {
+                duplicate_checks: 'Duplicate checks',
+                duplicate_index_preload: 'Duplicate index preload',
+                firefly_submissions: 'Firefly submissions',
+                tag_updates: 'Tag updates',
+                disk_saves: 'Status saves',
+            };
+            const rows = [];
+            Object.keys(this.performance || {}).forEach((bucket) => {
+                const item = this.performance[bucket] || {};
+                const count = Number(item.count || 0);
+                const totalMs = Number(item.milliseconds || 0);
+                const avgMs = Number(item.average_ms || 0);
+                if (count <= 0 && totalMs <= 0) {
+                    return;
+                }
+                rows.push({
+                    key: bucket,
+                    label: labels[bucket] || bucket,
+                    count: count,
+                    total: totalMs.toFixed(1),
+                    avg: avgMs.toFixed(1),
+                    meta: item.meta || {},
+                });
+            });
+            return rows;
+        },
         showJobMessages() {
-            //console.log(this.messages);
-            return Object.values(this.messages.messages).length > 0 || Object.values(this.messages.warnings).length > 0 || Object.values(this.messages.errors).length > 0;
+            return this.messages.messages.length > 0 || this.messages.warnings.length > 0 || this.messages.errors.length > 0;
+        },
+        normalizeMessageBuckets(rawBuckets) {
+            if (!rawBuckets || 'object' !== typeof rawBuckets) {
+                return [];
+            }
+            const buckets = Object.entries(rawBuckets).map(([line, messageList], index) => {
+                const parsedLine = Number.parseInt(line, 10);
+                return {
+                    key: line + '-' + index,
+                    line: line,
+                    lineNumber: Number.isNaN(parsedLine) ? -1 : parsedLine,
+                    messages: Array.isArray(messageList) ? [...messageList].reverse() : [String(messageList)],
+                    index: index,
+                };
+            });
+
+            buckets.sort((a, b) => {
+                if (a.lineNumber !== b.lineNumber) {
+                    return b.lineNumber - a.lineNumber;
+                }
+                return b.index - a.index;
+            });
+
+            return buckets;
         },
         showStartButton() {
             return('init' === this.pageStatus.status || 'waiting_to_start' === this.pageStatus.status) && false === this.pageStatus.triedToStart && false === this.post.errored;
@@ -76,7 +140,7 @@ let index = function () {
             return 'waiting_to_start' === this.pageStatus.status && true === this.pageStatus.triedToStart && false === this.post.errored;
         },
         showTooManyChecks() {
-            return 'too_long_checks' === this.pageStatus.status;
+            return this.longRunningNotice && 'submission_running' === this.pageStatus.status;
         },
         refreshStatus() {
             console.log('Manual refresh triggered');
@@ -95,7 +159,22 @@ let index = function () {
             return 'submission_done' === this.pageStatus.status;
         },
         showIfError() {
-            return 'submission_errored' === this.pageStatus.status;
+            return 'submission_errored' === this.pageStatus.status && !this.post.errored;
+        },
+        retrySubmission() {
+            this.post.errored = false;
+            this.post.done = false;
+            this.post.result = '';
+            this.post.running = false;
+            this.pageStatus.status = 'init';
+            this.pageStatus.triedToStart = false;
+            this.messages.errors = [];
+            this.messages.warnings = [];
+            this.messages.messages = [];
+            this.longRunningNotice = false;
+            this.checkCount = 0;
+            this.manualRefreshAvailable = false;
+            this.startJobButton();
         },
         init() {
             this.identifier = document.querySelector('#data-helper').dataset.identifier;
@@ -103,19 +182,19 @@ let index = function () {
             this.getJobStatus();
         },
         startJobButton() {
+            if (this.post.running || this.pageStatus.triedToStart) {
+                return;
+            }
             this.pageStatus.triedToStart = true;
             this.pageStatus.status = 'waiting_to_start';
             this.postJobStart();
         },
         postJobStart() {
             console.log('postJobStart');
-            this.triedToStart = true;
             this.post.running = true;
             const jobStartUrl = './submit-data/' + this.identifier + '/start';
             window.axios.post(jobStartUrl, null).then((response) => {
                 console.log('POST was OK');
-                this.getJobStatus();
-                this.post.running = false;
             }).catch((error) => {
                 if(error.response) {
                     // The request was made and the server responded with a status code
@@ -126,50 +205,47 @@ let index = function () {
                     // respond to some different error codes:
                     if(524 === error.response.status) {
                         console.error('Error 524: A timeout occurred. The job is probably still running.');
-                        this.triedToStart = true;
+                        this.pageStatus.triedToStart = true;
                         this.getJobStatus();
                     }
                 } else {
-                    console.error('JOB HAS FAILED :(');
-                    this.post.result = error;
-                    this.post.errored = true;
+                    // Network error (timeout, connection reset) — the job may still be running
+                    // in the PHP-FPM worker even though nginx dropped the connection.
+                    // Don't mark as errored — keep polling for status.
+                    console.warn('Job start request failed (network error). The job may still be running. Will keep checking status.');
+                    this.pageStatus.triedToStart = true;
                 }
             }).finally(() => {
+                    this.post.running = false;
                     this.getJobStatus();
-                    this.triedToStart = true;
+                    this.pageStatus.triedToStart = true;
                 }
             );
-            this.getJobStatus();
-            this.triedToStart = true;
         },
         getJobStatus() {
-            this.checkCount++;
-            if (this.checkCount >= this.maxCheckCount) {
-                console.log('Block getJobStatus (' + this.checkCount + ')');
-                this.pageStatus.status = 'too_long_checks';
-                this.manualRefreshAvailable = true;
-                return;
-            }
             const submitUrl = './submit-data/' + this.identifier + '/status';
-            window.axios.get(submitUrl).then((response) => {
+            window.axios.get(submitUrl, {
+                params: {'_': Date.now()},
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                },
+            }).then((response) => {
                 this.pageStatus.status = response.data.status;
                 console.log('Status is now ' + response.data.status + ' (' + this.checkCount + ') ('+this.pageStatus.triedToStart+')');
 
-                if (this.checkCount >= this.maxCheckCount) {
-                    // error
-                    this.pageStatus.status = 'too_long_checks';
-                    console.log('Status is now ' + response.data.status + ' (' + this.checkCount + ') ('+this.pageStatus.triedToStart+')');
-                }
-
                 // process messages, warnings and errors:
-                this.messages.errors = response.data.errors;
-                this.messages.warnings = response.data.warnings;
-                this.messages.messages = response.data.messages;
+                this.messages.errors = this.normalizeMessageBuckets(response.data.errors);
+                this.messages.warnings = this.normalizeMessageBuckets(response.data.warnings);
+                this.messages.messages = this.normalizeMessageBuckets(response.data.messages);
 
                 // process progress data:
                 this.progress.currentTransaction = response.data.currentTransaction || 0;
                 this.progress.totalTransactions = response.data.totalTransactions || 0;
                 this.progress.progressPercentage = response.data.progressPercentage || 0;
+                this.progress.uniqueTransactions = response.data.uniqueTransactions || 0;
+                this.progress.duplicateTransactions = response.data.duplicateTransactions || 0;
+                this.performance = response.data.performance || {};
 
                 // job has not started yet. Let's wait.
                 if (false === this.pageStatus.triedToStart && 'waiting_to_start' === this.pageStatus.status) {
@@ -203,11 +279,25 @@ let index = function () {
                     this.post.errored = true;
                 }
             }).catch((error) => {
-                console.error('JOB HAS FAILED :(');
-                this.post.result = error;
-                this.post.errored = true;
+                if (!error.response) {
+                    // Network error — keep polling (job may still be running)
+                    console.warn('Status poll network error, retrying...');
+                } else if ([502, 503, 504].includes(error.response.status)) {
+                    // Gateway timeout — keep polling
+                    console.warn('Gateway timeout during status poll, retrying...');
+                } else {
+                    // Real HTTP error — stop polling
+                    console.error('Status poll error:', error.response.status);
+                    this.post.result = error;
+                    this.post.errored = true;
+                }
             });
-            if (this.checkCount < this.maxCheckCount && !this.post.errored && !this.post.done) {
+            this.checkCount++;
+            if (this.checkCount >= this.maxCheckCount && !this.longRunningNotice) {
+                this.longRunningNotice = true;
+                this.manualRefreshAvailable = true;
+            }
+            if (!this.post.errored && !this.post.done) {
                 setTimeout(function () {
                     this.getJobStatus();
                 }.bind(this), 1000);

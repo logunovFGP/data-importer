@@ -35,24 +35,32 @@
                                 @if('' !== (string)$vanityUrl)
                                     (<a href="{{ $vanityUrl }}">{{ $vanityUrl }}</a>)
                                 @endif
-                                , you will need to submit a valid Client ID. This is a number.
+                                , you need to create an OAuth client and submit its Client ID.
                             @else
-                                In order to get access to your Firefly III installation, you will need to submit a valid Client ID. This is a number.
+                                In order to get access to your Firefly III installation, you need to create an OAuth client and submit its Client ID.
                             @endif
                         </p>
-                        <p>
-                            @if('' !== (string)$baseUrl)
-                                If you don't have one, you must create <a href="{{ $baseUrl }}/profile">in your
-                                profile</a> under "OAuth". Make sure you
-                                <em>remove</em> the checkbox under "Confidential".
-                            @else
-                                If you don't have one, you must create in your profile under "OAuth". Make sure you
-                                <em>remove</em> the checkbox under "Confidential".
-                            @endif
-                        </p>
-                        <p>
-                            The callback URL for this installation is<br> <code>{{ route('token.callback') }}</code>
-                        </p>
+                        <div class="alert alert-info" role="alert">
+                            <strong>Required OAuth settings</strong><br>
+                            1. Open Firefly III <code>Profile -> OAuth -> Create New Client</code>.<br>
+                            2. Set <strong>Name</strong> to any label (for example: <code>Data Importer</code>).<br>
+                            3. Set <strong>Redirect URL</strong> to:<br>
+                            <code>{{ route('token.callback') }}</code><br>
+                            4. Leave <strong>Confidential</strong> unchecked.<br>
+                            5. Click <strong>Create</strong> and enter the generated <strong>Client ID</strong> below.
+                        </div>
+                        <div class="alert alert-warning" role="alert">
+                            If <strong>Confidential</strong> is enabled, token exchange will fail with
+                            <code>invalid_client</code> / <code>Client authentication failed</code>.
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-2"><strong>Example of correct client dialog settings:</strong></p>
+                            <img
+                                src="{{ asset('images/oauth-client-setup-example.svg') }}"
+                                alt="OAuth create client example: Name any value, Redirect URL set to callback URL, Confidential checkbox unchecked."
+                                class="img-fluid border rounded"
+                            >
+                        </div>
                         @foreach($errors->all() as $error)
                             <p class="text-danger">{{ $error }}</p>
                         @endforeach

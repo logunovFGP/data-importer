@@ -108,6 +108,8 @@ class ConfigurationPostRequest extends Request
             'date_range_not_after_unit'     => $this->convertToString('date_range_not_after_unit'),
             'date_not_before'               => $notBefore,
             'date_not_after'                => $notAfter,
+            'incremental_sync_enabled'       => $this->convertBoolean($this->get('incremental_sync_enabled')),
+            'incremental_lookback_days'      => $this->convertToInteger('incremental_lookback_days'),
 
             // utf8 conversion
             'conversion'                    => $this->convertBoolean($this->get('conversion')),
@@ -115,6 +117,8 @@ class ConfigurationPostRequest extends Request
             // camt
             'grouped_transaction_handling'  => $this->convertToString('grouped_transaction_handling'),
             'use_entire_opposing_address'   => $this->convertBoolean($this->get('use_entire_opposing_address')),
+            'trc20_api_key'                 => $this->convertToString('trc20_api_key'),
+            'trc20_wallets'                 => $this->convertToString('trc20_wallets'),
         ];
     }
 
@@ -215,6 +219,14 @@ class ConfigurationPostRequest extends Request
 
             // conversion
             'conversion'                    => 'numeric|between:0,1',
+            'trc20_api_key'                => 'nullable|string|min:0|max:255',
+            'trc20_wallets'                => 'nullable|string|max:4096',
+            'incremental_sync_enabled'      => 'numeric|between:0,1',
+            'incremental_lookback_days'     => 'integer|min:0|max:365',
+            'currency_preflight_code.*'     => 'nullable|string|size:3',
+            'currency_preflight_code_custom.*' => 'nullable|string|size:3',
+            'currency_preflight_details.*'  => 'nullable|string|max:255',
+            'currency_preflight_fingerprint.*' => 'nullable|string|max:255',
 
             // new account creation - updated to handle underscore-encoded field names
             'new_account.*.name'            => 'nullable|string|max:255',
@@ -251,12 +263,28 @@ class ConfigurationPostRequest extends Request
         if ('simplefin' === $flow) {
             return implode(',', array_keys(config('simplefin.unique_column_options')));
         }
+        if ('lunchflow' === $flow) {
+            return implode(',', array_keys(config('lunchflow.unique_column_options')));
+        }
+        if ('trc20' === $flow) {
+            return implode(',', array_keys(config('file.unique_column_options')));
+        }
+        if ('basisbank' === $flow) {
+            return implode(',', array_keys(config('basisbank.unique_column_options')));
+        }
+        if ('tbank' === $flow) {
+            return implode(',', array_keys(config('tbank.unique_column_options')));
+        }
 
         return implode(',', array_keys(config('file.unique_column_options')));
     }
 
     private function getDefaultAccountRule(string $flow): string
     {
-        return 'simplefin' === $flow ? 'nullable|numeric|min:1|max:100000' : 'required|numeric|min:1|max:100000';
+        if (in_array($flow, ['simplefin', 'lunchflow', 'basisbank', 'tbank', 'trc20'], true)) {
+            return 'nullable|numeric|min:1|max:100000';
+        }
+
+        return 'required|numeric|min:1|max:100000';
     }
 }

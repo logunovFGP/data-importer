@@ -100,7 +100,7 @@ class DuplicateCheckController extends Controller
         }
         $message             = null;
         if ($isDuplicate) {
-            $message = sprintf('%s <em>%s</em> already exists!', ucfirst($type), $name);
+            $message = sprintf('%s <em>%s</em> already exists and will be reused during import.', ucfirst($type), $name);
         }
 
         Log::debug('DUPLICATE_CHECK: Validation result', [

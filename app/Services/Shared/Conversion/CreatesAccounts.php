@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace App\Services\Shared\Conversion;
 
 use App\Exceptions\ImporterErrorException;
+use App\Services\Shared\Authentication\SecretManager as SharedSecretManager;
 use App\Services\Shared\Model\ImportServiceAccount;
 use Carbon\Carbon;
 use GrumpyDictator\FFIIIApiSupport\Model\Account;
@@ -109,15 +110,34 @@ trait CreatesAccounts
 
             // Create Account object and create Firefly III account
             $existingAccountObject       = ImportServiceAccount::convertSingleAccount($existingAccount);
-            $accountMapper               = new AccountMapper();
-            $createdAccount              = $accountMapper->createFireflyIIIAccount($existingAccountObject, $configuration);
-
             // overrule the name with what we actually want to search for.
             $existingAccountObject->name = $newAccountData['name'];
+            $expectedCurrency            = strtoupper(trim((string)($configuration['currency'] ?? $existingAccountObject->currencyCode ?? '')));
+            if ('' !== $expectedCurrency) {
+                $existingAccountObject->currencyCode = $expectedCurrency;
+            }
+            $accessToken                 = trim((string)($this->importJob->getConfiguration()?->getAccessToken() ?? ''));
+            if ('' === $accessToken) {
+                $accessToken = trim(SharedSecretManager::getAccessToken());
+            }
+            $baseUrl                     = trim(SharedSecretManager::getBaseUrl());
+            $accountMapper               = new AccountMapper($baseUrl, $accessToken);
+            $matchedAccount              = $accountMapper->findMatchingFireflyIIIAccount($existingAccountObject, $expectedCurrency);
+            if ($matchedAccount instanceof Account) {
+                Log::info('Reusing existing Firefly III account instead of creating duplicate.', [
+                    'import_service_account_id' => $importServiceId,
+                    'firefly_account_id'        => $matchedAccount->id,
+                    'firefly_account_name'      => $matchedAccount->name,
+                ]);
+                $createdAccount = $matchedAccount;
+            }
+            if (!$createdAccount instanceof Account) {
+                $createdAccount = $accountMapper->createFireflyIIIAccount($existingAccountObject, $configuration);
+            }
 
             if (!$createdAccount instanceof Account) {
                 Log::warning('Failed to create Firefly III account. May not be able to proceed with transaction import for this account.', $configuration);
-                $createdAccount = $accountMapper->findMatchingFireflyIIIAccount($existingAccountObject);
+                $createdAccount = $accountMapper->findMatchingFireflyIIIAccount($existingAccountObject, $expectedCurrency);
             }
         }
 

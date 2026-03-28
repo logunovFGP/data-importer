@@ -23,12 +23,50 @@ declare(strict_types=1);
 
 namespace App\Support\Http\Upload;
 
+use App\Services\TBank\Authentication\SecretManager as TBankSecretManager;
+
 trait CollectsSettings
 {
     protected function getSimpleFINSettings(): array
     {
         return [
             'token' => old('simplefin_token') ?? config('simplefin.token'),
+        ];
+    }
+
+    protected function getBasisBankSettings(): array
+    {
+        return [
+            'api_token'  => old('basisbank_api_token') ?? session()->get('basisbank_api_token') ?? config('basisbank.api_token'),
+            'consent_id' => old('basisbank_consent_id') ?? session()->get('basisbank_consent_id') ?? config('basisbank.consent_id'),
+        ];
+    }
+
+    protected function getTBankSettings(): array
+    {
+        $sessionId    = TBankSecretManager::getSessionId();
+        $cookieHeader = TBankSecretManager::getCookieHeader();
+        $sessionReady = '' !== trim($sessionId) && '' !== trim($cookieHeader);
+        $sessionPreview = '';
+        if ('' !== trim($sessionId)) {
+            $sessionPreview = strlen($sessionId) <= 16
+                ? $sessionId
+                : sprintf('%s...%s', substr($sessionId, 0, 8), substr($sessionId, -4));
+        }
+
+        return [
+            'session_ready' => $sessionReady,
+            'session_id_preview' => $sessionPreview,
+            'auth_state' => TBankSecretManager::getAuthState(),
+            'device_pin' => TBankSecretManager::getDevicePin(),
+        ];
+    }
+
+    protected function getTRC20Settings(): array
+    {
+        return [
+            'api_key' => old('trc20_api_key') ?? session()->get('trc20_api_key') ?? config('trc20.api_key'),
+            'wallets' => old('trc20_wallets') ?? session()->get('trc20_wallets') ?? config('trc20.wallets'),
         ];
     }
 }

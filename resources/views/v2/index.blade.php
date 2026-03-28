@@ -122,6 +122,43 @@
             </div>
         </div>
         --}}
+        @if(!empty($recentJobs))
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="card">
+                    <div class="card-header">
+                        Recent imports
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            These are your recent import jobs from the last 24 hours. You can resume any of them
+                            by clicking the <strong>Resume</strong> button.
+                        </p>
+                        <table class="table table-sm table-striped">
+                            <thead>
+                            <tr>
+                                <th>Data source</th>
+                                <th>Current step</th>
+                                <th>Created</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($recentJobs as $job)
+                                <tr>
+                                    <td>{{ ucfirst($job['flow']) }}</td>
+                                    <td>{{ ucfirst($job['step']) }}</td>
+                                    <td>{{ $job['created'] }}</td>
+                                    <td><a href="{{ $job['url'] }}" class="btn btn-sm btn-outline-primary">Resume</a></td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
                 <div class="card">

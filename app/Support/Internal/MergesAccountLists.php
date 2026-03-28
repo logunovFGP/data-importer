@@ -103,7 +103,11 @@ trait MergesAccountLists
                 }
 
                 // match on name.
-                if ('' !== $importServiceAccount->name && $importServiceAccount->name === $applicationAccount->name) {
+                if (
+                    '' !== $importServiceAccount->name
+                    && $importServiceAccount->name === $applicationAccount->name
+                    && $this->isCurrencyCompatible($importServiceAccount, $applicationAccount)
+                ) {
                     $applicationAccount->match = true;
                     $result[$key][]            = $applicationAccount;
 
@@ -153,5 +157,20 @@ trait MergesAccountLists
         $generic = ImportServiceAccount::convertLunchFlowArray($lunchFlow);
 
         return $this->mergeGenericAccountList($generic, $applicationAccounts);
+    }
+
+    private function isCurrencyCompatible(ImportServiceAccount $importServiceAccount, Account $applicationAccount): bool
+    {
+        $importCurrency = strtoupper(trim((string)$importServiceAccount->currencyCode));
+        if ('' === $importCurrency) {
+            return true;
+        }
+
+        $applicationCurrency = strtoupper(trim((string)($applicationAccount->currencyCode ?? '')));
+        if ('' === $applicationCurrency) {
+            return false;
+        }
+
+        return $importCurrency === $applicationCurrency;
     }
 }

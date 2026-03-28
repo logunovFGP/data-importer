@@ -32,6 +32,12 @@ use App\Services\Shared\Configuration\Configuration;
 use App\Services\Shared\File\FileContentSherlock;
 use App\Services\SimpleFIN\Validation\NewJobDataCollector as SimpleFINNewJobDataCollector;
 use App\Services\Sophtron\Validation\NewJobDataCollector as SophtronNewJobDataCollector;
+use App\Services\BasisBank\Authentication\SecretManager as BasisBankSecretManager;
+use App\Services\TBank\Authentication\SecretManager as TBankSecretManager;
+use App\Services\TRC20\Authentication\SecretManager as TRC20SecretManager;
+use App\Services\BasisBank\Validation\NewJobDataCollector as BasisBankNewJobDataCollector;
+use App\Services\TBank\Validation\NewJobDataCollector as TBankNewJobDataCollector;
+use App\Support\Constants;
 use App\Support\Http\Upload\CollectsSettings;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Contracts\View\Factory;
@@ -82,10 +88,15 @@ class UploadController extends Controller
         $subTitle  = 'Start page and instructions';
         $settings  = [
             'simplefin' => $this->getSimpleFINSettings(),
+            'basisbank' => $this->getBasisBankSettings(),
+            'tbank'     => $this->getTBankSettings(),
+            'trc20'     => $this->getTRC20Settings(),
         ];
+        $fileImportTypes        = config('file.import_types', []);
+        $selectedFileImportType = (string)$request->old('file_import_type', 'manual');
         $list      = $this->getConfigurations();
 
-        return view('import.003-upload.index', compact('mainTitle', 'subTitle', 'list', 'flow', 'settings'));
+        return view('import.003-upload.index', compact('mainTitle', 'subTitle', 'list', 'flow', 'settings', 'fileImportTypes', 'selectedFileImportType'));
     }
 
     private function getConfigurations(): array
@@ -159,6 +170,14 @@ class UploadController extends Controller
         if (null !== $importJob->getConfiguration()) {
             $configuration = $importJob->getConfiguration();
         }
+        if ('file' === $flow) {
+            $configuration = $this->applyFileImportTypePreset(
+                $configuration,
+                trim((string)$request->get('file_import_type', 'manual')),
+                $this->contentType,
+                '' !== trim($this->configFileContent)
+            );
+        }
         $configuration->setFlow($importJob->getFlow());
         $importJob->setConfiguration($configuration);
         $this->repository->saveToDisk($importJob);
@@ -204,6 +223,57 @@ class UploadController extends Controller
                 Log::debug('No extra steps for Lunch Flow.');
 
                 break;
+
+            case 'basisbank':
+                $configuration = $importJob->getConfiguration();
+                $token         = trim((string)$request->get('basisbank_api_token'));
+                $consentId     = trim((string)$request->get('basisbank_consent_id'));
+                $configuration->setBasisBankApiToken($token);
+                $configuration->setBasisBankConsentId($consentId);
+                $importJob->setConfiguration($configuration);
+                $this->repository->saveToDisk($importJob);
+                BasisBankSecretManager::saveApiToken($token);
+                BasisBankSecretManager::saveConsentId($consentId);
+                $collector             = new BasisBankNewJobDataCollector();
+                $collector->setImportJob($importJob);
+                $errors                = $collector->validate();
+                $importJob             = $collector->getImportJob();
+                $this->repository->saveToDisk($importJob);
+
+                break;
+
+            case 'tbank':
+                $configuration = $importJob->getConfiguration();
+                $sessionId     = trim(TBankSecretManager::getSessionId($configuration));
+                $configuration->setTBankApiToken($sessionId);
+                $importJob->setConfiguration($configuration);
+                $this->repository->saveToDisk($importJob);
+                $collector             = new TBankNewJobDataCollector();
+                $collector->setImportJob($importJob);
+                $errors                = $collector->validate();
+                $importJob             = $collector->getImportJob();
+                $this->repository->saveToDisk($importJob);
+
+                break;
+
+            case 'trc20':
+                $configuration = $importJob->getConfiguration();
+                $apiKey       = trim((string)$request->get('trc20_api_key'));
+                $wallets      = trim((string)$request->get('trc20_wallets'));
+
+                // If the API key field is empty, keep the existing stored key.
+                if ('' === $apiKey) {
+                    $apiKey = TRC20SecretManager::getApiKey($configuration);
+                }
+
+                $configuration->setTrc20ApiKey($apiKey);
+                $configuration->setTrc20Wallets($wallets);
+                $importJob->setConfiguration($configuration);
+                $this->repository->saveToDisk($importJob);
+                TRC20SecretManager::saveApiKey($apiKey);
+                TRC20SecretManager::saveWallets($wallets);
+
+                break;
         }
 
         // stop again if any errors:
@@ -211,9 +281,117 @@ class UploadController extends Controller
             return redirect(route('new-import.index', [$flow]))->withErrors($errors)->withInput();
         }
 
+        // Persist provider auth to the import job JSON so it can be restored after session loss.
+        $providerAuth = $this->collectProviderAuth($flow);
+        if ([] !== $providerAuth) {
+            $importJob->setProviderAuth($providerAuth);
+            $this->repository->saveToDisk($importJob);
+        }
+
         // redirect to configuration controller.
         return redirect()->route('configure-import.index', [$importJob->identifier]);
 
+    }
+
+    /**
+     * Apply file import type defaults to configuration for known CSV exports.
+     * Existing uploaded/selected configuration content remains authoritative.
+     *
+     * @throws ImporterErrorException
+     */
+    private function applyFileImportTypePreset(Configuration $configuration, string $importType, string $detectedContentType, bool $hasConfigFile): Configuration
+    {
+        if ($hasConfigFile) {
+            return $configuration;
+        }
+        $selected = '' === trim($importType) ? 'manual' : trim($importType);
+        if ('manual' === $selected) {
+            return $configuration;
+        }
+
+        $presets = config('file.import_types', []);
+        if (!is_array($presets) || !array_key_exists($selected, $presets)) {
+            throw new ImporterErrorException(sprintf('Unknown file import type "%s".', $selected));
+        }
+        if ('csv' !== $detectedContentType) {
+            Log::info(sprintf('Skip import type preset "%s" because detected content type is "%s".', $selected, $detectedContentType));
+
+            return $configuration;
+        }
+        $defaults = $presets[$selected]['defaults'] ?? [];
+        if (!is_array($defaults) || 0 === count($defaults)) {
+            return $configuration;
+        }
+
+        $payload                 = $configuration->toArray();
+        foreach ($defaults as $key => $value) {
+            $payload[$key] = $value;
+        }
+        $payload['flow']         = 'file';
+        $payload['content_type'] = 'csv';
+
+        return Configuration::fromArray($payload);
+    }
+
+    public function legacyIndex(Request $request)
+    {
+        $flow = strtolower(trim((string)$request->cookie(Constants::FLOW_COOKIE, 'file')));
+        if ('' === $flow) {
+            $flow = 'file';
+        }
+
+        return redirect(route('new-import.index', [$flow]));
+    }
+
+    public function legacyUpload(Request $request): RedirectResponse
+    {
+        Log::debug('UploadController::upload() - Request All:', $request->all());
+        $flow = strtolower(trim((string)$request->cookie(Constants::FLOW_COOKIE, 'file')));
+
+        if ('simplefin' !== $flow) {
+            return redirect(route('003-upload.index'));
+        }
+
+        return $this->handleSimpleFINLegacyFlow($request);
+    }
+
+    private function handleSimpleFINLegacyFlow(Request $request): RedirectResponse
+    {
+        $requestAll = $request->all();
+        Log::debug('handleSimpleFINFlow() - Request All:', $requestAll);
+        $rawUseDemo = $requestAll['use_demo'] ?? null;
+        Log::debug('handleSimpleFINFlow() - Raw use_demo input:', ['use_demo' => $rawUseDemo]);
+        $isDemo = $this->isTruthyCheckboxValue($rawUseDemo);
+        Log::debug('handleSimpleFINFlow() - Evaluated $isDemo:', [$isDemo]);
+
+        if ($isDemo) {
+            session()->put(Constants::SIMPLEFIN_TOKEN, (string)config('importer.simplefin.demo_token', config('simplefin.demo_token', '')));
+            session()->put(Constants::SIMPLEFIN_BRIDGE_URL, (string)config('importer.simplefin.demo_url', config('simplefin.demo_url', '')));
+            session()->put(Constants::SIMPLEFIN_IS_DEMO, true);
+            session()->put(Constants::HAS_UPLOAD, true);
+
+            return redirect(route('004-configure.index'));
+        }
+
+        $simpleFinToken = trim((string)$request->get('simplefin_token', ''));
+        $bridgeUrl = trim((string)$request->get('bridge_url', ''));
+        $errors = [];
+        if ('' === $simpleFinToken) {
+            $errors['simplefin_token'] = 'SimpleFIN token is required.';
+        }
+        if ('' === $bridgeUrl) {
+            $errors['bridge_url'] = 'Bridge URL is required.';
+        }
+        if ([] !== $errors) {
+            return redirect(route('003-upload.index'))->withErrors($errors)->withInput();
+        }
+
+        session()->put(Constants::SIMPLEFIN_TOKEN, $simpleFinToken);
+        session()->put(Constants::SIMPLEFIN_BRIDGE_URL, $bridgeUrl);
+        session()->put(Constants::SIMPLEFIN_IS_DEMO, false);
+        session()->put(Constants::HAS_UPLOAD, true);
+
+        return redirect(route('004-configure.index'));
     }
 
     /**
@@ -302,6 +480,50 @@ class UploadController extends Controller
         }
 
         return $curEol;
+    }
+
+    private function isTruthyCheckboxValue(mixed $value): bool
+    {
+        if (true === $value || 1 === $value) {
+            return true;
+        }
+        if (is_string($value)) {
+            return in_array(strtolower(trim($value)), ['1', 'true', 'on', 'yes'], true);
+        }
+
+        return false;
+    }
+
+    /**
+     * Collect the current provider auth state from the session for persistence to the import job JSON.
+     * This enables resume after session loss.
+     */
+    private function collectProviderAuth(string $flow): array
+    {
+        return match ($flow) {
+            'basisbank' => [
+                'provider'         => 'basisbank',
+                'session_artifact' => BasisBankSecretManager::getSessionArtifact(),
+                'auth_state'       => BasisBankSecretManager::getAuthState(),
+                'login'            => BasisBankSecretManager::getLogin(),
+                'password'         => BasisBankSecretManager::getPassword(),
+                'trust_device'     => BasisBankSecretManager::getTrustDevice(),
+            ],
+            'tbank' => [
+                'provider'      => 'tbank',
+                'session_id'    => TBankSecretManager::getSessionId(),
+                'cookie_header' => TBankSecretManager::getCookieHeader(),
+                'access_level'  => TBankSecretManager::getAccessLevel(),
+                'auth_state'    => TBankSecretManager::getAuthState(),
+                'device_pin'    => TBankSecretManager::getDevicePin(),
+            ],
+            'trc20' => [
+                'provider' => 'trc20',
+                'api_key'  => TRC20SecretManager::getApiKey(),
+                'wallets'  => implode(',', TRC20SecretManager::getWallets()),
+            ],
+            default => [],
+        };
     }
 
     /**

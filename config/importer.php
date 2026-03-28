@@ -103,6 +103,27 @@ return [
             'explanation'               => '',
             'supports_new_accounts'     => true,
         ],
+        'basisbank' => [
+            'title'                     => 'BasisBank',
+            'enabled'                   => true,
+            'conversion_before_mapping' => true,
+            'explanation'               => '',
+            'supports_new_accounts'     => true,
+        ],
+        'tbank'     => [
+            'title'                     => 'TBank',
+            'enabled'                   => true,
+            'conversion_before_mapping' => true,
+            'explanation'               => '',
+            'supports_new_accounts'     => true,
+        ],
+        'trc20'     => [
+            'title'                     => 'TRC-20',
+            'enabled'                   => true,
+            'conversion_before_mapping' => true,
+            'explanation'               => '',
+            'supports_new_accounts'     => true,
+        ],
         'obg'       => [
             'title'                     => 'Open Banking Gateway',
             'enabled'                   => false,
@@ -172,6 +193,12 @@ return [
     'connection'                    => [
         'verify'  => env('VERIFY_TLS_SECURITY', true),
         'timeout' => 0.0 === (float)env('CONNECTION_TIMEOUT', 31.415) ? 31.415 : (float)env('CONNECTION_TIMEOUT', 31.415),
+    ],
+    'submission'                    => [
+        'save_every_n_rows'           => max(1, (int)env('SUBMISSION_SAVE_EVERY_N_ROWS', 10)),
+        'skip_tag_updates'            => env('SUBMISSION_SKIP_TAG_UPDATES', false),
+        'duplicate_index_page_size'   => max(10, (int)env('SUBMISSION_DUPLICATE_INDEX_PAGE_SIZE', 100)),
+        'duplicate_index_max_pages'   => max(1, (int)env('SUBMISSION_DUPLICATE_INDEX_MAX_PAGES', 200)),
     ],
     'trusted_proxies'               => env('TRUSTED_PROXIES', ''),
     'encoding'                      => [

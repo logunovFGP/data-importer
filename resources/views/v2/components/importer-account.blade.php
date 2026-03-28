@@ -1,6 +1,6 @@
 <tr>
     <td style="width:45%">
-        <x-importer-account-title :account="$account" :configuration="$configuration"/>
+        <x-importer-account-title :account="$account" :configuration="$configuration" :currencyPreflight="$currencyPreflight ?? []" :currencyPreflightCodes="$currencyPreflightCodes ?? []"/>
     </td>
     <td style="width:10%">
 

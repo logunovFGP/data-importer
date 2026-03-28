@@ -513,7 +513,7 @@ class GetTransactionsRequest extends BearerJsonRequest
             'limit'         => $limit,
         ]);
 
-        $html = $this->requestStatementPageWithSessionRecovery($statementId);
+        $html = $this->requestStatementPageWithSessionRecovery($statementId, $dateFrom, $dateTo);
         $rows = $this->parseStatementTransactionsFromHtml($html, $statementId, $dateFrom, $dateTo, $limit);
         if ([] === $rows) {
             Log::warning(sprintf('BasisBank statement fallback for account "%s" returned zero parsed transaction rows.', $statementId));
@@ -603,12 +603,12 @@ class GetTransactionsRequest extends BearerJsonRequest
     /**
      * @throws ImporterHttpException
      */
-    private function requestStatementPageWithSessionRecovery(string $statementId): string
+    private function requestStatementPageWithSessionRecovery(string $statementId, ?string $dateFrom = null, ?string $dateTo = null): string
     {
         $attempt = 0;
         while (true) {
             try {
-                return $this->requestStatementPage($statementId);
+                return $this->requestStatementPage($statementId, $dateFrom, $dateTo);
             } catch (ImporterHttpException $e) {
                 if (!$this->isSessionRecoveryCandidate($e) || $attempt >= self::MAX_SESSION_RECOVERY_ATTEMPTS) {
                     throw $e;
@@ -622,7 +622,7 @@ class GetTransactionsRequest extends BearerJsonRequest
     /**
      * @throws ImporterHttpException
      */
-    private function requestStatementPage(string $statementId): string
+    private function requestStatementPage(string $statementId, ?string $dateFrom = null, ?string $dateTo = null): string
     {
         $cookies = $this->getSessionCookies();
         if ([] === $cookies) {
@@ -638,10 +638,29 @@ class GetTransactionsRequest extends BearerJsonRequest
             ]
         );
 
+        // The initial GET MUST include date params in the URL.
+        // Without them, the server returns a 42KB page with empty GridView1 and a tiny ViewState (~3KB).
+        // With them, the server pre-populates the grid and returns a 176KB page with full ViewState (~59KB).
+        // Proven via Playwright recording: browser navigates to Statement.aspx?ID=X&StartDay=D&StartMounth=M&StartYear=Y
+        // When dateFrom is null ("import all" mode), use the earliest date the bank supports.
+        // The Statement.aspx dropdown starts at year 2000. Using 2-year fallback would miss older data.
+        $getStart = null !== $dateFrom && '' !== trim((string)$dateFrom)
+            ? Carbon::parse($dateFrom) : Carbon::create(2000, 1, 1);
+        $getEnd = null !== $dateTo && '' !== trim((string)$dateTo)
+            ? Carbon::parse($dateTo) : Carbon::now();
+        $getUrl = sprintf(
+            '%s?ID=%s&StartDay=%s&StartMounth=%s&StartYear=%s',
+            self::STATEMENT_PAGE_PATH,
+            urlencode($statementId),
+            (string)(int)$getStart->format('d'),
+            (string)(int)$getStart->format('m'),
+            $getStart->format('Y')
+        );
+
         try {
             $response = $client->request(
                 'GET',
-                sprintf('%s?ID=%s', self::STATEMENT_PAGE_PATH, urlencode($statementId)),
+                $getUrl,
                 [
                     'headers'         => [
                         'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -727,25 +746,57 @@ class GetTransactionsRequest extends BearerJsonRequest
             throw new ImporterHttpException(sprintf('BasisBank statement page returned login form for account "%s".', $statementId));
         }
 
-        return $this->hydrateStatementPageWithPostback($client, $statementId, $html);
+        Log::debug(sprintf(
+            'BasisBank statement GET response for account "%s": %d bytes, has ViewState=%s (size %d), has GridView1=%s, has AccountDDL=%s',
+            $statementId,
+            strlen($html),
+            str_contains($html, '__VIEWSTATE') ? 'yes' : 'no',
+            strlen((string)(preg_match('/name="__VIEWSTATE"[^>]*value="([^"]*)"/', $html, $m) ? $m[1] : '')),
+            str_contains($html, 'GridView1') ? 'yes' : 'no',
+            str_contains($html, 'AccountDDL') ? 'yes' : 'no'
+        ));
+        return $this->hydrateStatementPageWithPostback($client, $statementId, $html, $dateFrom, $dateTo);
     }
 
-    private function hydrateStatementPageWithPostback(Client $client, string $statementId, string $html): string
+    private function hydrateStatementPageWithPostback(Client $client, string $statementId, string $html, ?string $dateFrom = null, ?string $dateTo = null): string
     {
-        $payload = $this->buildStatementPostPayload($html, $statementId);
+        $payload = $this->buildStatementPostPayload($html, $statementId, $dateFrom, $dateTo);
         if ([] === $payload) {
             return $html;
         }
 
+        // Build URL with date params matching the browser's pattern:
+        // Statement.aspx?ID=1608515&StartDay=26&StartMounth=3&StartYear=2026
+        // The bank expects dates in both the URL query string AND the form body.
+        $start = null !== $dateFrom && '' !== trim((string)$dateFrom)
+            ? Carbon::parse($dateFrom) : Carbon::create(2000, 1, 1);
+        $end = null !== $dateTo && '' !== trim((string)$dateTo)
+            ? Carbon::parse($dateTo) : Carbon::now();
+        $postUrl = sprintf(
+            '%s?ID=%s&StartDay=%s&StartMounth=%s&StartYear=%s',
+            self::STATEMENT_PAGE_PATH,
+            urlencode($statementId),
+            (string)(int)$start->format('d'),
+            (string)(int)$start->format('m'),
+            $start->format('Y')
+        );
+
+        Log::debug(sprintf('BasisBank statement POST URL for account "%s": %s (payload fields: %d, has Button2: %s)',
+            $statementId,
+            $postUrl,
+            count($payload),
+            isset($payload['ctl00$Content$Button2']) ? 'yes='.$payload['ctl00$Content$Button2'] : 'NO'
+        ));
+
         try {
             $response = $client->request(
                 'POST',
-                sprintf('%s?ID=%s', self::STATEMENT_PAGE_PATH, urlencode($statementId)),
+                $postUrl,
                 [
                     'headers' => [
                         'Accept'       => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                         'Cookie'       => $this->buildCookieHeader($this->getSessionCookies()),
-                        'Referer'      => sprintf('%s%s?ID=%s', self::BASE_WEB_URL, self::STATEMENT_PAGE_PATH, urlencode($statementId)),
+                        'Referer'      => sprintf('%s%s', self::BASE_WEB_URL, $postUrl),
                         'User-Agent'   => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
                         'Content-Type' => 'application/x-www-form-urlencoded',
                     ],
@@ -810,6 +861,28 @@ class GetTransactionsRequest extends BearerJsonRequest
         }
 
         $postedHtml = (string)$response->getBody();
+        // Detailed diagnostics to find why GridView1 is missing
+        $hasGrid = str_contains($postedHtml, 'GridView1');
+        $hasButton2 = str_contains($postedHtml, 'Button2');
+        $hasAccountDDL = str_contains($postedHtml, 'AccountDDL');
+        $hasLoginForm = $this->containsLoginForm($postedHtml);
+        $titleMatch = preg_match('/<title[^>]*>([^<]*)<\/title>/i', $postedHtml, $titleMatches);
+        $pageTitle = $titleMatch ? trim($titleMatches[1]) : '(no title)';
+        // Extract first 500 chars of body text (strip tags) for debugging
+        $bodyPreview = substr(strip_tags($postedHtml), 0, 500);
+        $bodyPreview = preg_replace('/\s+/', ' ', $bodyPreview);
+        Log::debug(sprintf(
+            'BasisBank statement POST response for account "%s": HTTP %d, body %d bytes, has grid=%s, has Button2=%s, has AccountDDL=%s, isLoginForm=%s, title="%s"',
+            $statementId,
+            $status,
+            strlen($postedHtml),
+            $hasGrid ? 'yes' : 'no',
+            $hasButton2 ? 'yes' : 'no',
+            $hasAccountDDL ? 'yes' : 'no',
+            $hasLoginForm ? 'yes' : 'no',
+            $pageTitle
+        ));
+        Log::debug(sprintf('BasisBank statement POST body preview for account "%s": %s', $statementId, substr((string)$bodyPreview, 0, 300)));
         if ('' === trim($postedHtml) || $this->containsLoginForm($postedHtml)) {
             return $html;
         }
@@ -820,7 +893,7 @@ class GetTransactionsRequest extends BearerJsonRequest
     /**
      * @return array<string, string>
      */
-    private function buildStatementPostPayload(string $html, string $statementId): array
+    private function buildStatementPostPayload(string $html, string $statementId, ?string $dateFrom = null, ?string $dateTo = null): array
     {
         $document = new \DOMDocument();
         $loaded = @ $document->loadHTML($html);
@@ -892,31 +965,60 @@ class GetTransactionsRequest extends BearerJsonRequest
             $payload['ctl00$Content$AccountDDL'] = $statementId;
         }
 
-        $start = Carbon::now()->subYears(2);
-        $end = Carbon::now();
+        // Use caller's date range if provided; fall back to earliest date the bank dropdown supports (year 2000).
+        // "Import all" passes null dateFrom — using subYears(2) would miss older transactions.
+        try {
+            $start = null !== $dateFrom && '' !== trim($dateFrom)
+                ? Carbon::parse($dateFrom)
+                : Carbon::create(2000, 1, 1);
+        } catch (\Exception) {
+            Log::warning(sprintf('BasisBank statement: could not parse dateFrom "%s", using year 2000 fallback.', $dateFrom));
+            $start = Carbon::create(2000, 1, 1);
+        }
+        try {
+            $end = null !== $dateTo && '' !== trim($dateTo)
+                ? Carbon::parse($dateTo)
+                : Carbon::now();
+        } catch (\Exception) {
+            Log::warning(sprintf('BasisBank statement: could not parse dateTo "%s", using today.', $dateTo));
+            $end = Carbon::now();
+        }
+
+        // Resolve form field names dynamically — BasisBank uses "mounth" (their typo, not ours).
         $defaults = [
             'ctl00$Content$CurDateTxt'     => $start->format(self::DATE_FORMAT),
             'ctl00$Content$CurDateTxtEnd'  => $end->format(self::DATE_FORMAT),
-            'ctl00$Content$DDLday'         => $start->format('d'),
-            'ctl00$Content$DDLmounth'      => $start->format('n'),
+            'ctl00$Content$DDLday'         => (string)(int)$start->format('d'),
+            'ctl00$Content$DDLmounth'      => (string)(int)$start->format('m'),
             'ctl00$Content$DDLyear'        => $start->format('Y'),
-            'ctl00$Content$DDLdayEnd'      => $end->format('d'),
-            'ctl00$Content$DDLmounthEnd'   => $end->format('n'),
+            'ctl00$Content$DDLdayEnd'      => (string)(int)$end->format('d'),
+            'ctl00$Content$DDLmounthEnd'   => (string)(int)$end->format('m'),
             'ctl00$Content$DDLyearEnd'     => $end->format('Y'),
             'ctl00$Content$ReportType'     => '3',
             '__EVENTTARGET'                => '',
             '__EVENTARGUMENT'              => '',
         ];
+        // Unconditionally set all defaults — ASP.NET expects ALL form fields in the POST,
+        // even if they weren't rendered as visible HTML elements in the GET response.
+        // The previous code only set fields that existed in the HTML, which caused
+        // date range fields to be missing for C/A (non-card) accounts.
         foreach ($defaults as $key => $value) {
-            if (array_key_exists($key, $payload) || str_starts_with($key, '__')) {
-                $payload[$key] = (string)$value;
-            }
+            $payload[$key] = (string)$value;
         }
-        foreach (array_keys($payload) as $key) {
-            if (preg_match('/\\$Content\\$.*(Search|ReCount)/i', $key) === 1 && '' === trim((string)$payload[$key])) {
-                $payload[$key] = 'Search';
-            }
-        }
+
+        Log::debug(sprintf(
+            'BasisBank statement POST payload for account "%s": dateRange=%s..%s, viewstate=%s, accountDDL=%s, fields=%d',
+            $statementId,
+            $start->format('Y-m-d'),
+            $end->format('Y-m-d'),
+            isset($payload['__VIEWSTATE']) ? 'present' : 'missing',
+            $payload['ctl00$Content$AccountDDL'] ?? '(not set)',
+            count($payload)
+        ));
+        // Submit button: proven via browser DevTools capture (2026-03-26).
+        // NAME: ctl00$Content$Button2  VALUE: Re-count  TYPE: submit  ID: Content_Button2
+        // Without this field, ASP.NET does a no-op postback and returns an empty grid.
+        $payload['ctl00$Content$Button2'] = 'Re-count';
 
         return $payload;
     }

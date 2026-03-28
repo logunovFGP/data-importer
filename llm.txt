@@ -1,0 +1,28 @@
+# data-importer
+
+## Module context
+- Name: data-importer
+- Role: External importer companion for Firefly III, handling remote provider authentication, mapping, conversion, and submission flows.
+- Stack: PHP (Laravel), PHP 8.x+, Node.js for frontend asset build tooling.
+
+## Repository structure
+- `app/`: core import services, validators, conversion routines, controllers, jobs, repositories.
+- `resources/`: Vue/Vite frontend for importer UI and schema assets.
+- `routes/`: HTTP and API route wiring.
+- `config/`: provider and runtime config.
+- `database/`: migration and seed scaffolding.
+- `storage/`: runtime data, logs, debug artifacts.
+- `tests/`: unit and feature coverage split by domain areas.
+
+## Operational guidance for assistants
+- Respect module-specific `agents.md` + root `AGENTS.md`.
+- Keep shared conversion/account mapping logic in shared service classes to avoid duplication.
+- Validate and persist provider credentials intentionally; preserve graceful failure responses.
+- Maintain correct API status handling for create/update operations.
+- Do not perform destructive git operations or broad revert workflows.
+
+## Common risk areas
+- Provider auth flow edge cases and token override behavior.
+- Time range/date resolution interactions in incremental sync flows.
+- Conversion and submission consistency when API response shapes differ.
+

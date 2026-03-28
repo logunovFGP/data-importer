@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace App\Services\Shared\Conversion;
 
 use App\Exceptions\ImporterErrorException;
+use DateTimeInterface;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -32,6 +33,10 @@ use Illuminate\Support\Facades\Log;
  */
 class ConversionStatus
 {
+    public const string PULL_STEP_PENDING = 'pending';
+    public const string PULL_STEP_RUNNING = 'running';
+    public const string PULL_STEP_DONE = 'done';
+    public const string PULL_STEP_ERROR = 'error';
     public const string CONVERSION_DONE    = 'conv_done';
 
     public const string CONVERSION_ERRORED = 'conv_errored';
@@ -39,11 +44,14 @@ class ConversionStatus
     public const string CONVERSION_RUNNING = 'conv_running';
 
     public const string CONVERSION_WAITING = 'waiting_to_start';
-    public array   $errors                 = [];
-    public array   $messages               = [];
+    public array   $errors                  = [];
+    public array   $messages                = [];
     private string $status;
-    public array   $warnings               = [];
-    public array   $rateLimits             = [];
+    public array   $warnings                = [];
+    public array   $rateLimits              = [];
+    public array   $pullChecklist           = [];
+    public array   $pullProgress            = [];
+    public array   $pullCursorCandidates    = [];
 
     /**
      * ConversionStatus constructor.
@@ -73,11 +81,14 @@ class ConversionStatus
     public static function fromArray(array $array): self
     {
         $config             = new self();
-        $config->status     = $array['status'];
-        $config->errors     = $array['errors'] ?? [];
-        $config->warnings   = $array['warnings'] ?? [];
-        $config->messages   = $array['messages'] ?? [];
-        $config->rateLimits = $array['rate_limits'] ?? [];
+        $config->status               = $array['status'];
+        $config->errors               = $array['errors'] ?? [];
+        $config->warnings             = $array['warnings'] ?? [];
+        $config->messages             = $array['messages'] ?? [];
+        $config->rateLimits           = $array['rate_limits'] ?? [];
+        $config->pullChecklist        = $array['pull_checklist'] ?? [];
+        $config->pullProgress         = $array['pull_progress'] ?? [];
+        $config->pullCursorCandidates = $array['pull_cursor_candidates'] ?? [];
 
         return $config;
     }
@@ -90,7 +101,71 @@ class ConversionStatus
             'warnings'    => $this->warnings,
             'messages'    => $this->messages,
             'rate_limits' => $this->rateLimits,
+            'pull_checklist' => $this->pullChecklist,
+            'pull_progress' => $this->pullProgress,
+            'pull_cursor_candidates' => $this->pullCursorCandidates,
         ];
+    }
+
+    public function setPullProgress(int $total, int $done = 0, string $status = self::PULL_STEP_PENDING): void
+    {
+        $total = max(0, $total);
+        $done  = max(0, min($total, $done));
+        $this->pullProgress = [
+            'total'  => $total,
+            'done'   => $done,
+            'status' => $status,
+        ];
+        Log::debug(sprintf('Updated pull progress to %s/%s (%s).', $done, $total, $status));
+    }
+
+    public function incrementPullProgress(int $amount = 1): void
+    {
+        $total          = (int)($this->pullProgress['total'] ?? 0);
+        $current        = (int)($this->pullProgress['done'] ?? 0);
+        $this->pullProgress = [
+            'total'  => $total,
+            'done'   => max(0, min($total, $current + $amount)),
+            'status' => self::PULL_STEP_RUNNING,
+        ];
+        Log::debug(sprintf('Incremented pull progress to %s/%s.', $current + $amount, $total));
+    }
+
+    public function setPullChecklistItem(string $accountId, string $status, string $message = '', array $meta = []): void
+    {
+        $this->pullChecklist[$accountId] = [
+            'account_id' => $accountId,
+            'status'     => $status,
+            'message'    => $message,
+            'meta'       => $meta,
+            'updated_at' => now()->format(DateTimeInterface::ATOM),
+        ];
+    }
+
+    public function addPullCursorCandidate(string $accountId, string $date): void
+    {
+        $this->pullCursorCandidates[$accountId] = $date;
+    }
+
+    public function getPullCursorCandidates(): array
+    {
+        return $this->pullCursorCandidates;
+    }
+
+    public function getPullProgress(): array
+    {
+        return $this->pullProgress;
+    }
+
+    public function getPullProgressPercentage(): int
+    {
+        $total = (int)($this->pullProgress['total'] ?? 0);
+        if (0 === $total) {
+            return 0;
+        }
+        $done = (int)($this->pullProgress['done'] ?? 0);
+
+        return (int)round(($done / $total) * 100);
     }
 
     public function addError(int $index, string $error): void

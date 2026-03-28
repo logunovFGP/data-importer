@@ -29,6 +29,9 @@ use App\Services\LunchFlow\AuthenticationValidator as LunchFlowValidator;
 use App\Services\Nordigen\AuthenticationValidator as NordigenValidator;
 use App\Services\SimpleFIN\AuthenticationValidator as SimpleFINValidator;
 use App\Services\Sophtron\AuthenticationValidator as SophtronValidator;
+use App\Services\BasisBank\AuthenticationValidator as BasisBankValidator;
+use App\Services\TBank\AuthenticationValidator as TBankValidator;
+use App\Services\TRC20\AuthenticationValidator as TRC20Validator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 
@@ -40,6 +43,9 @@ class ValidationController extends Controller
             'nordigen', 'gocardless' => $this->validateGoCardless(),
             'simplefin'              => $this->validateSimpleFIN(),
             'lunchflow'              => $this->validateLunchFlow(),
+            'basisbank'              => $this->validateBasisBank(),
+            'tbank'                  => $this->validateTBank(),
+            'trc20'                  => $this->validateTRC20(),
             'sophtron'               => $this->validateSophtron(),
             'file'                   => response()->json(['result' => 'OK']),
             default                  => response()->json(['result' => 'NOK', 'message' => 'Unknown provider']),
@@ -122,6 +128,51 @@ class ValidationController extends Controller
             return response()->json(['result' => 'NODATA']);
         }
         Log::info(sprintf('[%s] All OK in validateSimpleFIN.', config('importer.version')));
+
+        return response()->json(['result' => 'OK']);
+    }
+
+    private function validateBasisBank(): JsonResponse
+    {
+        $validator = new BasisBankValidator();
+        $result    = $validator->validate();
+
+        if (AuthenticationStatus::ERROR === $result) {
+            return response()->json(['result' => 'NOK', 'message' => 'BasisBank authentication state is invalid. Please authenticate again.']);
+        }
+        if (AuthenticationStatus::NODATA === $result) {
+            return response()->json(['result' => 'NODATA']);
+        }
+
+        return response()->json(['result' => 'OK']);
+    }
+
+    private function validateTBank(): JsonResponse
+    {
+        $validator = new TBankValidator();
+        $result    = $validator->validate();
+
+        if (AuthenticationStatus::ERROR === $result) {
+            return response()->json(['result' => 'NOK']);
+        }
+        if (AuthenticationStatus::NODATA === $result) {
+            return response()->json(['result' => 'NODATA']);
+        }
+
+        return response()->json(['result' => 'OK']);
+    }
+
+    private function validateTRC20(): JsonResponse
+    {
+        $validator = new TRC20Validator();
+        $result    = $validator->validate();
+
+        if (AuthenticationStatus::ERROR === $result) {
+            return response()->json(['result' => 'NOK']);
+        }
+        if (AuthenticationStatus::NODATA === $result) {
+            return response()->json(['result' => 'NODATA']);
+        }
 
         return response()->json(['result' => 'OK']);
     }

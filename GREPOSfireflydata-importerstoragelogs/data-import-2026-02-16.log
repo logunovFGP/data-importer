@@ -1,0 +1,18 @@
+[2026-02-16 20:03:24] testing.DEBUG: Refresh unique instance identifier: a4414971-ced8-4b62-9c3f-941adbbca7a6  
+[2026-02-16 20:03:24] testing.DEBUG: [2.0.5] Now in App\Services\Shared\Configuration\Configuration::updateDateRange  
+[2026-02-16 20:03:24] testing.DEBUG: Range is null, set all to NULL.  
+[2026-02-16 20:03:24] testing.DEBUG: Now in parseImportJob("e37e6cfa-5c21-4e89-bbfa-f5961b51fae6")  
+[2026-02-16 20:03:24] testing.DEBUG: App\Services\Shared\Authentication\SecretManager::getAccessToken  
+[2026-02-16 20:03:24] testing.DEBUG: There is a token in the session.  
+[2026-02-16 20:03:24] testing.DEBUG: Token is not empty, return it.  
+[2026-02-16 20:03:24] testing.DEBUG: Hydrated import job configuration with shared access token.  
+[2026-02-16 20:03:24] testing.DEBUG: Now in flow("unsupported-flow")  
+[2026-02-16 20:03:24] testing.DEBUG: [2.0.5] Now in App\Services\Shared\Configuration\Configuration::updateDateRange  
+[2026-02-16 20:03:24] testing.DEBUG: Range is null, set all to NULL.  
+[2026-02-16 20:03:24] testing.DEBUG: Create generic account from {"id":"basis-account-1","name":"BasisBank account","currency_code":"GEL","iban":"","bban":"","status":"active","extra":[]} 
+[2026-02-16 20:03:24] testing.DEBUG: No base url in getBaseUrl() session, will return config variable.  
+[2026-02-16 20:03:24] testing.DEBUG: App\Services\Shared\Authentication\SecretManager::getAccessToken  
+[2026-02-16 20:03:24] testing.DEBUG: No access token in session, will return header or config variable.  
+[2026-02-16 20:03:24] testing.DEBUG: Access token in header is empty, will be ignored.  
+[2026-02-16 20:03:24] testing.DEBUG: Access token is null, use config instead.  
+[2026-02-16 20:03:24] testing.WARNING: Missing authentication context for Firefly III account loading  

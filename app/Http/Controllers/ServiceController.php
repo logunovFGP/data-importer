@@ -29,6 +29,9 @@ use App\Services\LunchFlow\AuthenticationValidator as LunchFlowValidator;
 use App\Services\Nordigen\AuthenticationValidator as NordigenValidator;
 use App\Services\SimpleFIN\AuthenticationValidator as SimpleFINValidator;
 use App\Services\Spectre\AuthenticationValidator as SpectreValidator;
+use App\Services\BasisBank\AuthenticationValidator as BasisBankValidator;
+use App\Services\TBank\AuthenticationValidator as TBankValidator;
+use App\Services\TRC20\AuthenticationValidator as TRC20Validator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -54,6 +57,9 @@ class ServiceController extends Controller
             'simplefin'              => $this->validateSimpleFIN(),
             'spectre'                => $this->validateSpectre(request()),
             'lunchflow'              => $this->validateLunchFlow(),
+            'basisbank'              => $this->validateBasisBank(),
+            'tbank'                  => $this->validateTBank(),
+            'trc20'                  => $this->validateTRC20(),
             'file'                   => response()->json(['result' => 'OK']),
             default                  => response()->json(['result' => 'NOK', 'message' => 'Unknown provider']),
         };
@@ -127,6 +133,51 @@ class ServiceController extends Controller
         }
         if (AuthenticationStatus::NODATA === $result) {
             // send user error:
+            return response()->json(['result' => 'NODATA']);
+        }
+
+        return response()->json(['result' => 'OK']);
+    }
+
+    public function validateBasisBank(): JsonResponse
+    {
+        $validator = new BasisBankValidator();
+        $result    = $validator->validate();
+
+        if (AuthenticationStatus::ERROR === $result) {
+            return response()->json(['result' => 'NOK']);
+        }
+        if (AuthenticationStatus::NODATA === $result) {
+            return response()->json(['result' => 'NODATA']);
+        }
+
+        return response()->json(['result' => 'OK']);
+    }
+
+    public function validateTBank(): JsonResponse
+    {
+        $validator = new TBankValidator();
+        $result    = $validator->validate();
+
+        if (AuthenticationStatus::ERROR === $result) {
+            return response()->json(['result' => 'NOK']);
+        }
+        if (AuthenticationStatus::NODATA === $result) {
+            return response()->json(['result' => 'NODATA']);
+        }
+
+        return response()->json(['result' => 'OK']);
+    }
+
+    public function validateTRC20(): JsonResponse
+    {
+        $validator = new TRC20Validator();
+        $result    = $validator->validate();
+
+        if (AuthenticationStatus::ERROR === $result) {
+            return response()->json(['result' => 'NOK']);
+        }
+        if (AuthenticationStatus::NODATA === $result) {
             return response()->json(['result' => 'NODATA']);
         }
 

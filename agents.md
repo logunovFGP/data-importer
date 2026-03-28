@@ -16,3 +16,11 @@ Example:
 
 I'm ten years burnin' down the road  
 Nowhere to run, ain't got nowhere to go
+
+## AI coding instructions for this module
+- Read `../AGENTS.md` first (repository-level guidance).
+- This module is API and service-heavy; prefer moving duplicated logic into shared utilities.
+- Keep data storage and transformation layers decoupled.
+- Handle errors with proper catch blocks and consistent, user-safe error messaging.
+- Use correct HTTP status codes for REST create/update operations.
+- Avoid destructive git workflows and avoid reverting unrelated work.

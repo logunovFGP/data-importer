@@ -28,4 +28,37 @@ return [
         'description'        => 'Transaction description',
         'internal_reference' => 'Internal reference',
     ],
+    'import_types'         => [
+        'manual'           => [
+            'label'       => 'Generic file import (manual setup)',
+            'description' => 'No preset; configure CSV/CAMT settings manually.',
+            'defaults'    => [],
+        ],
+        'tbank_csv_export' => [
+            'label'       => 'TBank from CSV export',
+            'description' => 'Preset for TBank CSV export with semicolon separator and composite pseudo identifier.',
+            'defaults'    => [
+                'content_type'                => 'csv',
+                'headers'                     => true,
+                'delimiter'                   => 'semicolon',
+                'date'                        => 'd.m.Y H:i:s',
+                'roles'                       => [
+                    0  => 'date_transaction',
+                    6  => 'amount-comma-separated',
+                    9  => 'category-name',
+                    10 => 'note',
+                    11 => 'description',
+                ],
+                'do_mapping'                  => [],
+                'duplicate_detection_method'  => 'cell',
+                'unique_column_index'         => 0,
+                'unique_column_type'          => 'internal_reference',
+                'pseudo_identifier'           => [
+                    'source_columns' => [0, 2, 6, 11],
+                    'separator'      => '|',
+                    'role'           => 'internal_reference',
+                ],
+            ],
+        ],
+    ],
 ];

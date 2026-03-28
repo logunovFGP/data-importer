@@ -42,6 +42,15 @@
                                 @if('spectre' === $flow)
                                     Spectre?
                                 @endif
+                                @if('basisbank' === $flow)
+                                    BasisBank?
+                                @endif
+                                @if('tbank' === $flow)
+                                    TBank?
+                                @endif
+                                @if('trc20' === $flow)
+                                    TRC-20?
+                                @endif
                             </small>
                         </div>
 
@@ -139,8 +148,55 @@
                                value="{{ $configuration->getDateNotAfter() }}">
                     </div>
                 </div>
+
+                @if('basisbank' === $flow || 'tbank' === $flow || 'trc20' === $flow)
+                    <div class="form-group row mt-4 mb-3">
+                        <div class="col-sm-3">
+                            Incremental sync
+                        </div>
+                        <div class="col-sm-9">
+                            <div class="form-check">
+                                <input type="hidden" name="incremental_sync_enabled" value="0">
+                                <input
+                                    id="incremental_sync_enabled"
+                                    type="checkbox"
+                                    name="incremental_sync_enabled"
+                                    value="1"
+                                    class="form-check-input"
+                                    @if($configuration->isIncrementalSyncEnabled()) checked @endif
+                                >
+                                <label class="form-check-label" for="incremental_sync_enabled">Enable incremental sync</label>
+                            </div>
+                            <div class="form-text text-muted">
+                                Enabled: each successful import remembers the last pulled date per account and uses it as
+                                the next "from" date (minus the lookback below).
+                            </div>
+                            <div class="mt-2">
+                                <label class="form-label" for="incremental_lookback_days">Lookback days</label>
+                                <input
+                                    class="form-control"
+                                    id="incremental_lookback_days"
+                                    name="incremental_lookback_days"
+                                    type="number"
+                                    min="0"
+                                    max="365"
+                                    value="{{ $configuration->getIncrementalLookbackDays() }}">
+                                <div class="form-text text-muted">
+                                    The importer remembers the last successful pulled date per account and subtracts this value for the next run.
+                                    <br>Examples (if last successful pulled date is <strong>2026-02-16</strong>):
+                                    <br><strong>0</strong> = next "from" date is <strong>2026-02-16</strong> (no overlap)
+                                    <br><strong>1</strong> = next "from" date is <strong>2026-02-15</strong> (1-day overlap)
+                                    <br><strong>3</strong> = next "from" date is <strong>2026-02-13</strong> (safer overlap for delayed postings)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 <!-- end of date range options -->
+
+
+

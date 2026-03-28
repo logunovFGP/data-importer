@@ -110,6 +110,9 @@
                 "file",
                 "simplefin",
                 "lunchflow",
+                "basisbank",
+                "tbank",
+                "trc20",
                 "sophtron"
             ]
         },
@@ -168,6 +171,22 @@
         },
         "lunch_flow_api_key": {
             "type": "string"
+        },
+        "basis_bank_api_token": {
+            "type": "string"
+        },
+        "basis_bank_consent_id": {
+            "type": "string"
+        },
+        "t_bank_api_token": {
+            "type": "string"
+        },
+        "incremental_sync_enabled": {
+            "type": "boolean"
+        },
+        "incremental_lookback_days": {
+            "type": "integer",
+            "minimum": 0
         },
         "conversion": {
             "type": "boolean"

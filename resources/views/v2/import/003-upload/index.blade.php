@@ -46,6 +46,21 @@
                             Simply check the "Use demo mode" option below.
                         </p>
                         @endif
+                        @if('basisbank' === $flow)
+                        <p>
+                            Use this form to override your BasisBank API token for this import run. If your token requires a Consent-ID, add it here as well.
+                        </p>
+                        @endif
+                        @if('tbank' === $flow)
+                        <p>
+                            Use this form to override your TBank API token for this import run.
+                        </p>
+                        @endif
+                        @if('trc20' === $flow)
+                        <p>
+                            Use this form to override your TRC-20 API key and wallet list for this USDT import run.
+                        </p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -64,6 +79,15 @@
                             <!-- SimpleFIN options -->
                             @if('simplefin' === $flow)
                                 @include('import.003-upload.partials.simplefin')
+                            @endif
+                            @if('basisbank' === $flow)
+                                @include('import.003-upload.partials.basisbank')
+                            @endif
+                            @if('tbank' === $flow)
+                                @include('import.003-upload.partials.tbank')
+                            @endif
+                            @if('trc20' === $flow)
+                                @include('import.003-upload.partials.trc20')
                             @endif
 
                             <!-- Importable FILE -->

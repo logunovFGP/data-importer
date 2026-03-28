@@ -63,6 +63,15 @@ This application is for people who want to track their finances, keep an eye on 
 
 Many more features are listed in the [documentation](https://docs.firefly-iii.org/).
 
+## BasisBank and TBank Incremental Sync
+
+- You can enable incremental sync in the importer configuration for `basisbank` and `tbank`.
+- After a successful submission, the importer stores the latest pulled transaction date per account in local state.
+- On the next import, if no explicit `date_not_before` is provided, it uses that stored date minus the configured lookback as the start date.
+- For safety, a small overlap can be configured with `lookback days` to avoid missing transactions due to provider-side delays.
+- Duplicate transactions are still detected during submission and skipped from import.
+- The cursor is updated only after a completed successful submission, not on failed or errored runs.
+
 ## Contributing
 
 You can contact me at [james@firefly-iii.org](mailto:james@firefly-iii.org), you may open an issue in the [main repository](https://github.com/firefly-iii/firefly-iii) or contact me through [gitter](https://gitter.im/firefly-iii/firefly-iii) and [Mastodon](https://fosstodon.org/@ff3).

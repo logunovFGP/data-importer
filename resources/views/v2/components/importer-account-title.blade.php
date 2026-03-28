@@ -86,14 +86,92 @@
                 </small>
             @endif
         </div>
+        @php
+            $accountIban = trim((string)($account['import_account']->iban ?? ''));
+            if ('' === $accountIban) {
+                $accountIban = trim((string)(($account['import_account']->extra['IBAN'] ?? '') ?: ''));
+            }
+            $accountNumber = trim((string)($account['import_account']->bban ?? ''));
+            if ('' === $accountNumber) {
+                $accountNumber = trim((string)(($account['import_account']->extra['BBAN'] ?? '') ?: ''));
+            }
+        @endphp
+        @if('' !== $accountIban || '' !== $accountNumber)
+            <div class="mt-2 small text-muted">
+                @if('' !== $accountIban)
+                    <div><strong>IBAN:</strong> <code>{{ $accountIban }}</code></div>
+                @endif
+                @if('' !== $accountNumber)
+                    <div><strong>Account number:</strong> <code>{{ $accountNumber }}</code></div>
+                @endif
+            </div>
+        @endif
 
         {{-- Display 'mapped_to' if available --}}
         {{-- Display 'extra' fields if any --}}
-        @php $extraData = (array)($account['import_account']->extra ?? []); @endphp
+        @php
+            $extraData = (array)($account['import_account']->extra ?? []);
+            $mergedSourcesRaw = $extraData['Merged sources'] ?? [];
+            $mergedSources = [];
+            if (is_array($mergedSourcesRaw)) {
+                foreach ($mergedSourcesRaw as $entry) {
+                    if (!is_array($entry)) {
+                        continue;
+                    }
+                    $mergedSources[] = [
+                        'id'       => trim((string)($entry['id'] ?? '')),
+                        'base_id'  => trim((string)($entry['base_id'] ?? '')),
+                        'kind'     => strtolower(trim((string)($entry['kind'] ?? 'account'))),
+                        'currency' => strtoupper(trim((string)($entry['currency'] ?? ''))),
+                        'name'     => trim((string)($entry['name'] ?? '')),
+                        'iban'     => trim((string)($entry['iban'] ?? '')),
+                        'bban'     => trim((string)($entry['bban'] ?? '')),
+                    ];
+                }
+            }
+        @endphp
+        @if(count($mergedSources) > 1)
+            <div class="mt-2 pt-2 border-top border-secondary">
+                <div class="small fw-bold text-muted mb-2">Combined source group</div>
+                <div class="border rounded p-2">
+                    @foreach($mergedSources as $source)
+                        <div class="border rounded bg-light p-2">
+                            <div class="small fw-semibold">
+                                {{ 'card' === ($source['kind'] ?? '') ? 'Card source' : 'Account source' }}
+                                @if('' !== ($source['currency'] ?? ''))
+                                    ({{ $source['currency'] }})
+                                @endif
+                            </div>
+                            @if('' !== ($source['name'] ?? ''))
+                                <div class="small text-muted">{{ $source['name'] }}</div>
+                            @endif
+                            <div class="small text-muted">
+                                @if('' !== ($source['base_id'] ?? ''))
+                                    Base ID: <code>{{ $source['base_id'] }}</code>
+                                @elseif('' !== ($source['id'] ?? ''))
+                                    ID: <code>{{ $source['id'] }}</code>
+                                @endif
+                                @if('' !== ($source['iban'] ?? ''))
+                                    <span class="ms-2">IBAN: <code>{{ $source['iban'] }}</code></span>
+                                @elseif('' !== ($source['bban'] ?? ''))
+                                    <span class="ms-2">BBAN: <code>{{ $source['bban'] }}</code></span>
+                                @endif
+                            </div>
+                        </div>
+                        @if(!$loop->last)
+                            <div class="text-center fw-bold my-1">+</div>
+                        @endif
+                    @endforeach
+                </div>
+                <div class="small text-muted mt-1">
+                    Sources above are grouped and mapped as one import stream to the Firefly III account on the right.
+                </div>
+            </div>
+        @endif
         @if(count($extraData) > 0)
             <div class="mt-2 pt-2 border-top border-secondary">
                 @foreach($extraData as $key => $item)
-                    @if(!empty($item) && is_scalar($item))
+                    @if(!in_array((string)$key, ['Merged sources', 'Merged source count'], true) && !empty($item) && is_scalar($item))
                     <div class="d-flex justify-content-between align-items-center small text-muted mb-1">
                         <span>{{ ucfirst(str_replace(['_', '-'], ' ', $key)) }}:</span>
                         <span>{{ $item }}</span>
@@ -101,6 +179,119 @@
                     @endif
                 @endforeach
             </div>
+        @endif
+
+        @php
+            $preflightMap = is_array($currencyPreflight ?? null) ? $currencyPreflight : [];
+            $preflight = $preflightMap[$accountId] ?? null;
+        @endphp
+        @if(is_array($preflight))
+            @php
+                $preflightStatus = (string)($preflight['status'] ?? 'ok');
+                $preflightMessage = trim((string)($preflight['message'] ?? ''));
+                $preflightHint = trim((string)($preflight['api_hint'] ?? ''));
+                $migrationStatus = trim((string)($preflight['migration_status'] ?? 'none'));
+                $migrationMessage = trim((string)($preflight['migration_message'] ?? ''));
+                $migrationLegacyKey = trim((string)($preflight['migration_legacy_key'] ?? ''));
+                $selectedCode = strtoupper(trim((string)($preflight['source_currency'] ?? '')));
+                $manualDetails = (string)old('currency_preflight_details.' . $accountId, (string)($preflight['manual_details'] ?? ''));
+                $manualCustomCode = strtoupper(trim((string)old('currency_preflight_code_custom.' . $accountId, '')));
+                $manualSelectedCode = strtoupper(trim((string)old('currency_preflight_code.' . $accountId, $selectedCode)));
+                $currencyOptions = is_array($currencyPreflightCodes ?? null) ? $currencyPreflightCodes : [];
+                foreach (($preflight['sample_currencies'] ?? []) as $sampleCurrency) {
+                    $sample = strtoupper(trim((string)$sampleCurrency));
+                    if ('' !== $sample && !in_array($sample, $currencyOptions, true)) {
+                        $currencyOptions[] = $sample;
+                    }
+                }
+                if ('' !== $selectedCode && !in_array($selectedCode, $currencyOptions, true)) {
+                    $currencyOptions[] = $selectedCode;
+                }
+                sort($currencyOptions);
+                $alertClass = 'alert-info';
+                if ('mismatch' === $preflightStatus) {
+                    $alertClass = 'alert-danger';
+                }
+                if ('needs_currency' === $preflightStatus) {
+                    $alertClass = 'alert-warning';
+                }
+            @endphp
+
+            @if('none' !== $migrationStatus)
+                <div class="alert @if('success' === $migrationStatus) alert-success @else alert-warning @endif mt-3 mb-0 p-2">
+                    <div class="small fw-bold">
+                        Mapping migration
+                        @if('success' === $migrationStatus)
+                            <span class="badge bg-success ms-1">auto-mapped</span>
+                        @else
+                            <span class="badge bg-warning text-dark ms-1">needs review</span>
+                        @endif
+                    </div>
+                    @if('' !== $migrationMessage)
+                        <div class="small">{{ $migrationMessage }}</div>
+                    @endif
+                    @if('' !== $migrationLegacyKey)
+                        <div class="small mt-1">Legacy source key: <code>{{ $migrationLegacyKey }}</code></div>
+                    @endif
+                </div>
+            @endif
+
+            @if('ok' !== $preflightStatus)
+                <div class="alert {{ $alertClass }} mt-3 mb-0 p-2">
+                    <div class="small fw-bold">Currency preflight</div>
+                    @if('' !== $preflightMessage)
+                        <div class="small">{{ $preflightMessage }}</div>
+                    @endif
+                    @if('' !== $preflightHint)
+                        <div class="small mt-1">
+                            Suggested API update: <code>{{ $preflightHint }}</code>
+                        </div>
+                    @endif
+                    @if('needs_currency' === $preflightStatus)
+                        <div class="mt-2">
+                            <label class="form-label form-label-sm mb-1" for="currency-preflight-code-{{ $accountId }}">Select account currency</label>
+                            <select
+                                class="form-control form-control-sm"
+                                id="currency-preflight-code-{{ $accountId }}"
+                                name="currency_preflight_code[{{ $accountId }}]"
+                            >
+                                <option value="">Select currency</option>
+                                @foreach($currencyOptions as $currencyCode)
+                                    @php $normalizedOption = strtoupper(trim((string)$currencyCode)); @endphp
+                                    @if('' !== $normalizedOption)
+                                        <option value="{{ $normalizedOption }}" @if($manualSelectedCode === $normalizedOption) selected @endif>{{ $normalizedOption }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label form-label-sm mb-1" for="currency-preflight-custom-{{ $accountId }}">Or enter custom ISO code</label>
+                            <input
+                                type="text"
+                                class="form-control form-control-sm"
+                                id="currency-preflight-custom-{{ $accountId }}"
+                                name="currency_preflight_code_custom[{{ $accountId }}]"
+                                value="{{ $manualCustomCode }}"
+                                maxlength="3"
+                                placeholder="e.g. GEL"
+                            />
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label form-label-sm mb-1" for="currency-preflight-details-{{ $accountId }}">Currency details</label>
+                            <input
+                                type="text"
+                                class="form-control form-control-sm"
+                                id="currency-preflight-details-{{ $accountId }}"
+                                name="currency_preflight_details[{{ $accountId }}]"
+                                value="{{ $manualDetails }}"
+                                maxlength="255"
+                                placeholder="Optional details (symbol, precision, provider note)"
+                            />
+                        </div>
+                    @endif
+                    <input type="hidden" name="currency_preflight_fingerprint[{{ $accountId }}]" value="{{ (string)($preflight['fingerprint'] ?? '') }}"/>
+                </div>
+            @endif
         @endif
     </div>
 </div>

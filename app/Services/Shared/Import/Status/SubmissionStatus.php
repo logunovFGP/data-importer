@@ -38,7 +38,10 @@ class SubmissionStatus
     public array   $warnings               = [];
     public int     $currentTransaction     = 0;
     public int     $totalTransactions      = 0;
+    public int     $uniqueTransactions     = 0;
+    public int     $duplicateTransactions  = 0;
     public int     $progressPercentage     = 0;
+    public array   $performance            = [];
 
     /**
      * ImportJobStatus constructor.
@@ -46,6 +49,7 @@ class SubmissionStatus
     public function __construct()
     {
         $this->status = self::SUBMISSION_WAITING;
+        $this->performance = $this->defaultPerformanceBuckets();
     }
 
     public function setStatus(string $status): void
@@ -98,7 +102,10 @@ class SubmissionStatus
         $config->messages           = $array['messages'] ?? [];
         $config->currentTransaction = $array['currentTransaction'] ?? 0;
         $config->totalTransactions  = $array['totalTransactions'] ?? 0;
+        $config->uniqueTransactions = $array['uniqueTransactions'] ?? 0;
+        $config->duplicateTransactions = $array['duplicateTransactions'] ?? 0;
         $config->progressPercentage = $array['progressPercentage'] ?? 0;
+        $config->performance        = $array['performance'] ?? $config->defaultPerformanceBuckets();
 
         return $config;
     }
@@ -112,7 +119,50 @@ class SubmissionStatus
             'messages'           => $this->messages,
             'currentTransaction' => $this->currentTransaction,
             'totalTransactions'  => $this->totalTransactions,
+            'uniqueTransactions' => $this->uniqueTransactions,
+            'duplicateTransactions' => $this->duplicateTransactions,
             'progressPercentage' => $this->progressPercentage,
+            'performance'        => $this->performance,
+        ];
+    }
+
+    public function setTotals(int $totalTransactions, int $uniqueTransactions, int $duplicateTransactions): void
+    {
+        $this->totalTransactions      = max(0, $totalTransactions);
+        $this->uniqueTransactions     = max(0, $uniqueTransactions);
+        $this->duplicateTransactions  = max(0, $duplicateTransactions);
+    }
+
+    public function addPerformanceSample(string $bucket, float $milliseconds, int $count = 1): void
+    {
+        if (!array_key_exists($bucket, $this->performance)) {
+            $this->performance[$bucket] = ['count' => 0, 'milliseconds' => 0.0, 'average_ms' => 0.0];
+        }
+        $currentCount                                  = max(0, (int)($this->performance[$bucket]['count'] ?? 0));
+        $currentMilliseconds                           = (float)($this->performance[$bucket]['milliseconds'] ?? 0.0);
+        $newCount                                      = $currentCount + max(1, $count);
+        $newMilliseconds                               = $currentMilliseconds + max(0.0, $milliseconds);
+        $this->performance[$bucket]['count']           = $newCount;
+        $this->performance[$bucket]['milliseconds']    = round($newMilliseconds, 3);
+        $this->performance[$bucket]['average_ms']      = round($newMilliseconds / max(1, $newCount), 3);
+    }
+
+    public function setPerformanceMeta(string $bucket, array $meta): void
+    {
+        if (!array_key_exists($bucket, $this->performance)) {
+            $this->performance[$bucket] = ['count' => 0, 'milliseconds' => 0.0, 'average_ms' => 0.0];
+        }
+        $this->performance[$bucket]['meta'] = $meta;
+    }
+
+    private function defaultPerformanceBuckets(): array
+    {
+        return [
+            'duplicate_checks'        => ['count' => 0, 'milliseconds' => 0.0, 'average_ms' => 0.0],
+            'firefly_submissions'     => ['count' => 0, 'milliseconds' => 0.0, 'average_ms' => 0.0],
+            'tag_updates'             => ['count' => 0, 'milliseconds' => 0.0, 'average_ms' => 0.0],
+            'disk_saves'              => ['count' => 0, 'milliseconds' => 0.0, 'average_ms' => 0.0],
+            'duplicate_index_preload' => ['count' => 0, 'milliseconds' => 0.0, 'average_ms' => 0.0, 'meta' => []],
         ];
     }
 }
