@@ -52,7 +52,7 @@ class ImportServiceAccount
     {
         // probably simpleFIN.
         if (is_array($account)) {
-            $timestamp  = (int)$account['balance-date'] ?? 0;
+            $timestamp  = (int)($account['balance-date'] ?? 0);
             $dateString = '';
             if ($timestamp > 100) {
                 $carbon     = Carbon::createFromTimestamp($timestamp);
