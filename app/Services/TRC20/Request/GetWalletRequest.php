@@ -6,6 +6,7 @@ namespace App\Services\TRC20\Request;
 
 use App\Services\Shared\Request\BearerJsonRequest;
 use App\Services\TRC20\Support\TRC20AddressValidator;
+use Illuminate\Support\Facades\Log;
 
 class GetWalletRequest extends BearerJsonRequest
 {
@@ -20,7 +21,7 @@ class GetWalletRequest extends BearerJsonRequest
     }
 
     /**
-     * Fetch details for one wallet.
+     * Fetch details for one wallet from TronGrid.
      *
      * @return array<string, mixed>
      */
@@ -28,10 +29,6 @@ class GetWalletRequest extends BearerJsonRequest
     {
         $wallet = trim($this->wallet);
         if (!TRC20AddressValidator::isValid($wallet)) {
-            return [];
-        }
-
-        if ('' === $wallet) {
             return [];
         }
 
@@ -44,44 +41,32 @@ class GetWalletRequest extends BearerJsonRequest
             ) ?? [];
         }
 
-        $payload = $this->getJson(
-            (string)config('trc20.wallets_endpoint'),
-            $this->requestHeaders(),
-            $this->buildQuery($wallet)
-        );
-        $rows    = $this->extractRows($payload);
-        if ([] === $rows) {
+        // TronGrid: GET /v1/accounts/{address}
+        $endpoint = sprintf((string)config('trc20.wallets_endpoint'), $wallet);
+
+        Log::debug(sprintf('TRC20: fetching wallet info for %s from TronGrid endpoint: %s', $wallet, $endpoint));
+
+        $payload = $this->getJson($endpoint, $this->requestHeaders(), []);
+
+        if (isset($payload['success']) && false === $payload['success']) {
+            $errorMsg = $payload['error'] ?? $payload['statusMessage'] ?? 'Unknown TronGrid error';
+            Log::error(sprintf('TRC20: TronGrid API error for wallet %s: %s', $wallet, $errorMsg));
+
             return [];
         }
 
-        return $this->normalizeWallet($rows[0]) ?? [];
-    }
+        // TronGrid returns { data: [ { address: ..., balance: ..., trc20: [...] } ] }
+        $data = $payload['data'] ?? [];
+        if (!is_array($data) || 0 === count($data)) {
+            // Account exists on chain but has no activity — still valid
+            Log::info(sprintf('TRC20: wallet %s returned empty data from TronGrid — treating as valid with zero balance.', $wallet));
 
-    private function buildQuery(string $wallet): array
-    {
-        return [
-            'address' => $wallet,
-            'token'   => self::CURRENCY,
-        ];
-    }
-
-    private function extractRows(array $payload): array
-    {
-        if (isset($payload['data']) && is_array($payload['data']) && array_is_list($payload['data'])) {
-            return $payload['data'];
+            return $this->normalizeWallet(['address' => $wallet]) ?? [];
         }
 
-        if (isset($payload['data']) && is_array($payload['data'])) {
-        return array_filter([
-                $payload['data'],
-            ], is_array(...));
-        }
+        $accountData = is_array($data[0] ?? null) ? $data[0] : $data;
 
-        if (array_is_list($payload)) {
-            return $payload;
-        }
-
-        return [];
+        return $this->normalizeWallet($accountData) ?? [];
     }
 
     private function requestHeaders(): array
@@ -93,19 +78,36 @@ class GetWalletRequest extends BearerJsonRequest
 
     private function normalizeWallet(array $row): ?array
     {
-        $walletId = trim((string)($row['address'] ?? $row['addressHex'] ?? $row['addressList'] ?? $row['id'] ?? ''));
+        $walletId = trim((string)($row['address'] ?? ''));
         if ('' === $walletId) {
             return null;
         }
 
+        // Extract USDT balance from TronGrid trc20 array if available
+        $usdtBalance = '0';
+        $trc20Tokens = $row['trc20'] ?? [];
+        if (is_array($trc20Tokens)) {
+            $usdtContract = strtolower(trim((string)config('trc20.usdt_contract_address', '')));
+            foreach ($trc20Tokens as $token) {
+                if (is_array($token)) {
+                    foreach ($token as $contractAddr => $balance) {
+                        if ('' !== $usdtContract && strtolower($contractAddr) === $usdtContract) {
+                            $usdtBalance = (string)$balance;
+                        }
+                    }
+                }
+            }
+        }
+
         return [
-            'id'               => $walletId,
-            'name'             => (string)($row['name'] ?? $row['address'] ?? $walletId),
+            'id'                => $walletId,
+            'name'              => (string)($row['name'] ?? $walletId),
             'institution_name'  => 'TRC20',
             'institution_logo'  => '',
-            'provider'         => 'trc20',
-            'currency'         => self::CURRENCY,
-            'status'           => (string)($row['status'] ?? 'active'),
+            'provider'          => 'trc20',
+            'currency'          => self::CURRENCY,
+            'status'            => 'active',
+            'balance'           => $usdtBalance,
         ];
     }
 }

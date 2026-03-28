@@ -72,7 +72,7 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
         $wallets       = SecretManager::getWallets($configuration);
         $errors        = new MessageBag();
 
-        Log::debug(sprintf('TRC20 collectAccounts: apiKey length=%d, wallets count=%d, wallets=%s', strlen($apiKey), count($wallets), json_encode($wallets)));
+        Log::debug(sprintf('TRC20 collectAccounts: apiKey present=%s, wallets count=%d', '' !== $apiKey ? 'yes' : 'no', count($wallets)));
 
         if ('' === trim($apiKey)) {
             Log::warning('TRC20 collectAccounts: REJECTED — API key is empty');
@@ -98,7 +98,7 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
             return $errors;
         }
 
-        Log::debug('TRC20 collectAccounts: validation passed, fetching wallets from Tronscan...');
+        Log::debug('TRC20 collectAccounts: validation passed, fetching wallets from TronGrid...');
         $request = new GetWalletsRequest($apiKey, $wallets);
         $request->setTimeOut((float)config('importer.connection.timeout'));
 

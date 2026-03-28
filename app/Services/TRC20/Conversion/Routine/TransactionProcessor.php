@@ -17,6 +17,9 @@ use App\Services\TRC20\Authentication\SecretManager;
 use App\Services\TRC20\Request\GetTransactionsRequest;
 use App\Services\TRC20\Request\GetWalletsRequest;
 use App\Services\TRC20\Support\TRC20AddressValidator;
+use App\Services\TRC20\Support\TRC20AmountParser;
+use App\Services\TRC20\Support\TRC20Constants;
+use App\Services\TRC20\Support\TRC20TokenFilter;
 use App\Services\LunchFlow\Model\Transaction;
 use App\Services\TRC20\Response\GetTransactionsResponse;
 use Carbon\Carbon;
@@ -27,7 +30,6 @@ class TransactionProcessor
     use CreatesAccounts;
 
     private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s';
-    private const string CURRENCY_USDT = 'USDT';
 
     private ImportJob $importJob;
     private array $accounts;
@@ -258,7 +260,7 @@ class TransactionProcessor
             return null;
         }
 
-        if (!$this->isUSDTTransaction($row)) {
+        if (!TRC20TokenFilter::isUSDT($row)) {
             Log::debug(sprintf('TRC20: skipped non-USDT transaction row for wallet %s.', $wallet));
 
             return null;
@@ -270,8 +272,8 @@ class TransactionProcessor
             return null;
         }
 
-        $amountRaw = $this->parseAmount($row);
-        if (null === $amountRaw) {
+        $amountParsed = TRC20AmountParser::parseAsFloat($row);
+        if (null === $amountParsed) {
             $this->importJob->conversionStatus->addWarning(
                 0,
                 sprintf('TRC20 transaction for wallet %s has no numeric amount and was ignored.', $wallet)
@@ -279,7 +281,7 @@ class TransactionProcessor
             return null;
         }
 
-        $amount = $this->normalizeAmount($amountRaw);
+        $amount = round(abs($amountParsed), 12);
         if (0.0 === $amount) {
             $this->importJob->conversionStatus->addWarning(0, sprintf('Transaction in TRC20 row for %s has an amount of zero and was ignored.', $wallet));
 
@@ -337,11 +339,11 @@ class TransactionProcessor
             $description = sprintf('TRC20 %s transfer %s', $isOutgoing ? 'outgoing' : 'incoming', $txId);
         }
 
-        $symbol = strtoupper(trim((string)($row['token_symbol'] ?? $row['currency'] ?? self::CURRENCY_USDT)));
+        $symbol = strtoupper(trim((string)($row['token_symbol'] ?? $row['currency'] ?? TRC20Constants::CURRENCY_USDT)));
         if ('' === $symbol) {
-            $symbol = self::CURRENCY_USDT;
+            $symbol = TRC20Constants::CURRENCY_USDT;
         }
-        if (self::CURRENCY_USDT !== $symbol) {
+        if (TRC20Constants::CURRENCY_USDT !== $symbol) {
             $this->importJob->conversionStatus->addWarning(0, sprintf('TRC20 transaction %s for %s was ignored due to non-USDT symbol.', $txId, $wallet));
 
             return null;
@@ -356,7 +358,7 @@ class TransactionProcessor
             'merchant'       => $counterparty,
             'description'    => $description,
             'token_symbol'   => $symbol,
-            'token_contract' => $this->resolveTokenContract($row),
+            'token_contract' => TRC20TokenFilter::extractContract($row),
             'from_address'   => $fromAddress,
             'to_address'     => $toAddress,
         ];
@@ -393,29 +395,9 @@ class TransactionProcessor
         }
     }
 
-    private function isUSDTTransaction(array $row): bool
-    {
-        $symbol = strtoupper(trim((string)($row['token_symbol'] ?? $row['currency'] ?? $row['token'] ?? $row['symbol'] ?? '')));
-        if ('' !== $symbol && $symbol !== self::CURRENCY_USDT) {
-            return false;
-        }
-
-        $contract = $this->resolveTokenContract($row);
-        $configuredContract = strtolower(trim((string)config('trc20.usdt_contract_address', '')));
-
-        if ('' === $configuredContract) {
-            return true;
-        }
-        if ('' === $contract) {
-            return false;
-        }
-
-        return $contract === $configuredContract;
-    }
-
     private function extractTransactionId(array $row): string
     {
-        return trim((string)($row['txID'] ?? $row['tx_id'] ?? $row['transaction_id'] ?? $row['hash'] ?? $row['id'] ?? ''));
+        return trim((string)($row['transaction_id'] ?? $row['txID'] ?? $row['tx_id'] ?? $row['hash'] ?? $row['id'] ?? ''));
     }
 
     private function buildTransactionId(
@@ -426,60 +408,12 @@ class TransactionProcessor
         string $date,
         string $index
     ): string {
-        $seed = [
-            $wallet,
-            $fromAddress,
-            $toAddress,
-            $amount,
-            $date,
-        ];
+        $seed = [$wallet, $fromAddress, $toAddress, $amount, $date];
         if ('' !== trim($index)) {
             $seed[] = trim($index);
         }
 
         return hash('sha256', json_encode($seed, JSON_THROW_ON_ERROR));
-    }
-
-    private function parseAmount(array $row): ?float
-    {
-        $rowAmount = $row['amount'] ?? null;
-        if (null === $rowAmount) {
-            $rowAmount = $row['value'] ?? null;
-        }
-        if (null === $rowAmount && is_array($row['tokenInfo'] ?? null)) {
-            $rowAmount = $row['tokenInfo']['amount'] ?? null;
-        }
-        if (null === $rowAmount) {
-            $rowAmount = $row['quant'] ?? null;
-        }
-        $amount    = $this->extractAmountValue($rowAmount);
-
-        return null === $amount ? null : (float)$amount;
-    }
-
-    private function extractAmountValue(mixed $value): ?string
-    {
-        if (null === $value) {
-            return null;
-        }
-        if (is_array($value) || is_object($value)) {
-            return null;
-        }
-
-        $stringValue = trim((string)$value);
-        if ('' === $stringValue) {
-            return null;
-        }
-        if (!is_numeric($stringValue)) {
-            return null;
-        }
-
-        return $stringValue;
-    }
-
-    private function normalizeAmount(float $amount): float
-    {
-        return round(abs($amount), 12);
     }
 
     private function extractDate(array $row): ?Carbon
@@ -662,13 +596,4 @@ class TransactionProcessor
         ];
     }
 
-    private function resolveTokenContract(array $row): string
-    {
-        $tokenInfo = $row['tokenInfo'] ?? [];
-        if (!is_array($tokenInfo)) {
-            $tokenInfo = [];
-        }
-
-        return strtolower(trim((string)($row['token_contract'] ?? $tokenInfo['address'] ?? $tokenInfo['tokenId'] ?? $row['token_id'] ?? $row['contract_address'] ?? '')));
-    }
 }

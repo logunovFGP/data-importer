@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\TRC20\Support;
 
+use App\Exceptions\ImporterHttpException;
+
 class TRC20AddressValidator
 {
     public const string TRC20_ADDRESS_HEX = '/^(0x)?41[0-9a-f]{40}$/i';
@@ -47,5 +49,38 @@ class TRC20AddressValidator
         }
 
         return null;
+    }
+
+    /**
+     * Validate and deduplicate wallet addresses. Throws on invalid format.
+     *
+     * @param  array<string> $wallets
+     * @return array<string>
+     * @throws ImporterHttpException
+     */
+    public static function normalizeAndValidate(array $wallets): array
+    {
+        $normalized = [];
+        $invalid    = [];
+        foreach ($wallets as $wallet) {
+            $value = trim((string)$wallet);
+            if ('' === $value) {
+                continue;
+            }
+            if (!self::isValid($value)) {
+                $invalid[] = $value;
+                continue;
+            }
+            if (!in_array($value, $normalized, true)) {
+                $normalized[] = $value;
+            }
+        }
+
+        $invalid = array_values(array_unique($invalid));
+        if ([] !== $invalid) {
+            throw new ImporterHttpException(sprintf('Invalid TRC20 wallet format(s): %s', implode(', ', $invalid)));
+        }
+
+        return $normalized;
     }
 }

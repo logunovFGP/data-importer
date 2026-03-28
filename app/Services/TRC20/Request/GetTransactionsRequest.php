@@ -9,10 +9,13 @@ use App\Services\TRC20\Response\GetTransactionsResponse;
 use App\Services\Shared\Request\BearerJsonRequest;
 use App\Services\Shared\Support\CurrencyCode;
 use App\Services\TRC20\Support\TRC20AddressValidator;
+use App\Services\TRC20\Support\TRC20AmountParser;
+use App\Services\TRC20\Support\TRC20Constants;
+use App\Services\TRC20\Support\TRC20TokenFilter;
+use Illuminate\Support\Facades\Log;
 
 class GetTransactionsRequest extends BearerJsonRequest
 {
-    private const string CURRENCY = 'USDT';
     private readonly int $pageSize;
 
     public function __construct(
@@ -21,7 +24,7 @@ class GetTransactionsRequest extends BearerJsonRequest
         ?int $pageSize = null
     ) {
         parent::__construct((string)config('trc20.api_url'), $this->apiKey);
-        $this->pageSize = $pageSize ?? (int)config('trc20.page_size', 100);
+        $this->pageSize = $pageSize ?? (int)config('trc20.page_size', 200);
     }
 
     /**
@@ -29,7 +32,7 @@ class GetTransactionsRequest extends BearerJsonRequest
      */
     public function get(?string $dateFrom = null, ?string $dateTo = null, ?string $cursor = null): GetTransactionsResponse
     {
-        $wallets = $this->normalizeWallets($this->wallets);
+        $wallets = TRC20AddressValidator::normalizeAndValidate($this->wallets);
         if (0 === count($wallets)) {
             return $this->emptyResponse();
         }
@@ -47,11 +50,11 @@ class GetTransactionsRequest extends BearerJsonRequest
                         'id'             => sprintf('trc20-%s-%s', $wallet, date('Ymd')),
                         'accountId'      => $wallet,
                         'amount'         => '123.45',
-                        'currency'       => self::CURRENCY,
+                        'currency'       => TRC20Constants::CURRENCY_USDT,
                         'date'           => date('Y-m-d'),
                         'merchant'       => 'TRC20 Demo Recipient',
                         'description'    => 'TRC20 demo transaction',
-                        'token_symbol'   => self::CURRENCY,
+                        'token_symbol'   => TRC20Constants::CURRENCY_USDT,
                         'from_address'   => $wallet,
                         'to_address'     => 'TGdemoRecipientAddress',
                     ],
@@ -63,38 +66,57 @@ class GetTransactionsRequest extends BearerJsonRequest
             return $response;
         }
 
-        $payload   = $this->getJson(
-            (string)config('trc20.transactions_endpoint'),
-            $this->requestHeaders(),
-            $this->buildQuery($wallets, $dateFrom, $dateTo, $cursor)
-        );
-        $rows      = $this->extractRows($payload);
-        if (0 === count($rows)) {
+        // TronGrid requires per-wallet queries (address in path)
+        $allNormalized = [];
+        $lastCursor    = $cursor;
+
+        foreach ($wallets as $wallet) {
+            $endpoint = sprintf((string)config('trc20.transactions_endpoint'), $wallet);
+            $query    = $this->buildQuery($dateFrom, $dateTo, $lastCursor);
+
+            Log::debug(sprintf('TRC20: fetching transactions for wallet %s from TronGrid endpoint: %s', $wallet, $endpoint));
+
+            $payload  = $this->getJson($endpoint, $this->requestHeaders(), $query);
+
+            if (isset($payload['success']) && false === $payload['success']) {
+                $errorMsg = $payload['error'] ?? $payload['statusMessage'] ?? 'Unknown TronGrid error';
+                Log::error(sprintf('TRC20: TronGrid API error for wallet %s: %s', $wallet, $errorMsg));
+                throw new ImporterHttpException(sprintf('TronGrid API error: %s', $errorMsg));
+            }
+
+            $rows = $payload['data'] ?? [];
+            if (!is_array($rows)) {
+                Log::warning(sprintf('TRC20: unexpected response format for wallet %s — "data" is not an array.', $wallet));
+                $rows = [];
+            }
+
+            Log::debug(sprintf('TRC20: received %d rows for wallet %s.', count($rows), $wallet));
+
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $transaction = $this->normalizeTransaction($row, $wallets);
+                if (null !== $transaction) {
+                    $allNormalized[] = $transaction;
+                }
+            }
+
+            // Extract fingerprint for pagination
+            $lastCursor = $this->extractFingerprint($payload);
+        }
+
+        if (0 === count($allNormalized)) {
+            Log::info('TRC20: 0 transactions matched after normalization.');
             return $this->emptyResponse();
         }
 
-        $nextCursor = $this->extractCursor($payload);
-        $normalized = [];
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-
-            $transaction = $this->normalizeTransaction($row, $wallets);
-            if (null === $transaction) {
-                continue;
-            }
-
-            $normalized[] = $transaction;
-        }
-
-        usort($normalized, static function (array $left, array $right): int {
+        usort($allNormalized, static function (array $left, array $right): int {
             return strcmp((string)($right['date'] ?? ''), (string)($left['date'] ?? ''));
         });
 
-        $response = new GetTransactionsResponse($normalized);
-        $response->setNextCursor($nextCursor);
+        $response = new GetTransactionsResponse($allNormalized);
+        $response->setNextCursor($lastCursor);
         $response->processData();
 
         return $response;
@@ -113,7 +135,7 @@ class GetTransactionsRequest extends BearerJsonRequest
             if (!is_array($row)) {
                 continue;
             }
-            $currency = CurrencyCode::normalizeOrEmpty((string)($row['currency'] ?? $row['token_symbol'] ?? self::CURRENCY));
+            $currency = CurrencyCode::normalizeOrEmpty((string)($row['currency'] ?? $row['token_symbol'] ?? TRC20Constants::CURRENCY_USDT));
             if ('' === $currency) {
                 continue;
             }
@@ -141,84 +163,54 @@ class GetTransactionsRequest extends BearerJsonRequest
         ];
     }
 
-    private function buildQuery(array $wallets, ?string $dateFrom, ?string $dateTo, ?string $cursor): array
+    private function buildQuery(?string $dateFrom, ?string $dateTo, ?string $fingerprint): array
     {
         $query = [
-            'address' => implode(',', $wallets),
-            'token'   => self::CURRENCY,
-            'limit'   => $this->pageSize,
+            'only_confirmed' => 'true',
+            'limit'          => $this->pageSize,
+            'order_by'       => 'block_timestamp,asc',
         ];
 
-        $fromTimestamp = $this->toUnixTimestamp($dateFrom);
+        $contractAddress = (string)config('trc20.usdt_contract_address', '');
+        if ('' !== $contractAddress) {
+            $query['contract_address'] = $contractAddress;
+        }
+
+        $fromTimestamp = $this->toMillisecondTimestamp($dateFrom);
         if (null !== $fromTimestamp) {
-            $query['from']           = (string)$dateFrom;
-            $query['from_timestamp'] = (string)$fromTimestamp;
-            $query['start']          = (string)$fromTimestamp;
+            $query['min_timestamp'] = $fromTimestamp;
         }
 
-        $toTimestamp = $this->toUnixTimestamp($dateTo);
+        $toTimestamp = $this->toMillisecondTimestamp($dateTo);
         if (null !== $toTimestamp) {
-            $query['to']             = (string)$dateTo;
-            $query['to_timestamp']   = (string)$toTimestamp;
-            $query['end']            = (string)$toTimestamp;
+            $query['max_timestamp'] = $toTimestamp;
         }
 
-        if (null !== $cursor && '' !== trim($cursor)) {
-            $query['cursor'] = $cursor;
+        if (null !== $fingerprint && '' !== trim($fingerprint)) {
+            $query['fingerprint'] = $fingerprint;
         }
 
         return $query;
     }
 
-    private function extractRows(array $payload): array
+    private function extractFingerprint(array $payload): ?string
     {
-        if (isset($payload['data']) && is_array($payload['data']) && array_is_list($payload['data'])) {
-            return $payload['data'];
-        }
-        if (isset($payload['data']) && is_array($payload['data']) && isset($payload['data']['transfers']) && is_array($payload['data']['transfers'])) {
-            return $payload['data']['transfers'];
-        }
-        if (isset($payload['token_transfers']) && is_array($payload['token_transfers']) && array_is_list($payload['token_transfers'])) {
-            return $payload['token_transfers'];
-        }
-        if (isset($payload['transactions']) && is_array($payload['transactions'])) {
-            return array_is_list($payload['transactions']) ? $payload['transactions'] : [];
-        }
-        if (isset($payload['transfers']) && is_array($payload['transfers']) && array_is_list($payload['transfers'])) {
-            return $payload['transfers'];
-        }
-        if (array_is_list($payload)) {
-            return $payload;
+        $fingerprint = $payload['meta']['fingerprint'] ?? null;
+        if (null !== $fingerprint && '' !== trim((string)$fingerprint)) {
+            return (string)$fingerprint;
         }
 
-        return [];
-    }
-
-    private function extractCursor(array $payload): ?string
-    {
-        if (isset($payload['nextCursor']) && '' !== trim((string)$payload['nextCursor'])) {
-            return (string)$payload['nextCursor'];
-        }
-        if (isset($payload['cursor']) && '' !== trim((string)$payload['cursor'])) {
-            return (string)$payload['cursor'];
-        }
-        if (isset($payload['meta']['next_cursor']) && '' !== trim((string)$payload['meta']['next_cursor'])) {
-            return (string)$payload['meta']['next_cursor'];
-        }
-        if (isset($payload['page_info']['next']) && '' !== trim((string)$payload['page_info']['next'])) {
-            return (string)$payload['page_info']['next'];
-        }
         return null;
     }
 
     private function normalizeTransaction(array $row, array $wallets): ?array
     {
-        if (!$this->isTargetToken($row)) {
+        if (!TRC20TokenFilter::isUSDT($row)) {
             return null;
         }
 
-        $fromAddress = $this->normalizeWallet((string)($row['from_address'] ?? $row['ownerAddress'] ?? $row['fromAddress'] ?? $row['from'] ?? ''));
-        $toAddress   = $this->normalizeWallet((string)($row['to_address'] ?? $row['toAddress'] ?? $row['to'] ?? ''));
+        $fromAddress = trim((string)($row['from'] ?? ''));
+        $toAddress   = trim((string)($row['to'] ?? ''));
 
         $isOutgoing = '' !== $fromAddress && TRC20AddressValidator::walletInList($fromAddress, $wallets);
         $isIncoming = '' !== $toAddress && TRC20AddressValidator::walletInList($toAddress, $wallets);
@@ -232,11 +224,8 @@ class GetTransactionsRequest extends BearerJsonRequest
             return null;
         }
 
-        $amount = $this->normalizeAmount($row);
-        if (null === $amount) {
-            return null;
-        }
-        if (0.0 === $amount) {
+        $amount = TRC20AmountParser::parseAsFloat($row);
+        if (null === $amount || 0.0 === $amount) {
             return null;
         }
         if ($isOutgoing) {
@@ -248,153 +237,35 @@ class GetTransactionsRequest extends BearerJsonRequest
             return null;
         }
 
-        $txId = $this->extractTransactionId($row);
+        $txId = trim((string)($row['transaction_id'] ?? ''));
         if ('' === $txId) {
             try {
                 $txId = hash(
                     'sha256',
-                    json_encode([
-                        $accountId,
-                        $fromAddress,
-                        $toAddress,
-                        $amount,
-                        $date,
-                    ], JSON_THROW_ON_ERROR)
+                    json_encode([$accountId, $fromAddress, $toAddress, $amount, $date], JSON_THROW_ON_ERROR)
                 );
-            } catch (\Throwable $e) {
+            } catch (\Throwable) {
                 return null;
             }
         }
 
         $counterparty = $isOutgoing ? $toAddress : $fromAddress;
-        $memo        = trim((string)($row['memo'] ?? $row['note'] ?? $row['txInfo'] ?? $row['contractData'] ?? ''));
-        $description = trim((string)($row['data'] ?? $memo));
-        if ('' === $description && '' !== $txId) {
-            $description = sprintf('TRC20 transfer %s', $txId);
-        }
+        $description  = sprintf('TRC20 transfer %s', $txId);
 
         return [
             'id'             => $txId,
             'accountId'      => $accountId,
             'amount'         => (string)$amount,
-            'currency'       => self::CURRENCY,
+            'currency'       => TRC20Constants::CURRENCY_USDT,
             'date'           => $date,
             'merchant'       => $counterparty,
             'description'    => $description,
-            'token_symbol'   => self::CURRENCY,
-            'token_contract' => $this->extractTokenContract($row),
+            'token_symbol'   => TRC20Constants::CURRENCY_USDT,
+            'token_contract' => TRC20TokenFilter::extractContract($row),
             'from_address'   => $fromAddress,
             'to_address'     => $toAddress,
             'raw_token_row'  => $row,
         ];
-    }
-
-    private function extractTransactionId(array $row): string
-    {
-        return trim((string)($row['txID'] ?? $row['tx_id'] ?? $row['transaction_id'] ?? $row['hash'] ?? $row['id'] ?? ''));
-    }
-
-    private function isTargetToken(array $row): bool
-    {
-        $symbol = strtoupper(trim((string)($row['token'] ?? $row['symbol'] ?? $row['tokenName'] ?? $row['tokenInfo']['symbol'] ?? '')));
-        if ('' !== $symbol && $symbol !== self::CURRENCY) {
-            return false;
-        }
-
-        $contract = strtolower(trim($this->extractTokenContract($row)));
-        if ('' === $symbol && '' === $contract) {
-            return true;
-        }
-
-        $configuredContract = strtolower(trim((string)config('trc20.usdt_contract_address', '')));
-        if ('' === $configuredContract) {
-            return true;
-        }
-
-        if ('' === $contract) {
-            return false;
-        }
-
-        return $contract === $configuredContract;
-    }
-
-    private function normalizeAmount(array $row): ?float
-    {
-        $value    = (string)($row['amount'] ?? $row['value'] ?? $row['tokenInfo']['amount'] ?? $row['quant'] ?? '');
-        $decimals = (int)($row['decimals'] ?? $row['tokenInfo']['decimals'] ?? 0);
-        if ('' === trim($value)) {
-            return null;
-        }
-
-        if (is_numeric($value)) {
-            $amount = (float)$value;
-            if ($decimals > 0 && str_contains($value, '.') === false) {
-                $amount = $amount / (10 ** $decimals);
-            }
-            return $amount;
-        }
-
-        return null;
-    }
-
-    private function normalizeDate(array $row): ?string
-    {
-        $rawDate = $row['block_ts'] ?? $row['block_timestamp'] ?? $row['timestamp'] ?? $row['time'] ?? $row['created_at'] ?? null;
-        if (is_numeric($rawDate)) {
-            $timestamp = (int)$rawDate;
-            if ($timestamp > 9999999999) {
-                $timestamp = intdiv($timestamp, 1000);
-            }
-            if ($timestamp < 0) {
-                return null;
-            }
-
-            return date('Y-m-d', $timestamp);
-        }
-
-        if (is_string($rawDate) && strlen($rawDate) > 0) {
-            $ts = strtotime($rawDate);
-            if (false !== $ts) {
-                return date('Y-m-d', $ts);
-            }
-            $normalized = substr(trim($rawDate), 0, 10);
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $normalized) === 1) {
-                return $normalized;
-            }
-        }
-
-        return null;
-    }
-
-    private function normalizeWallets(array $wallets): array
-    {
-        $normalized = [];
-        $invalid    = [];
-        foreach ($wallets as $wallet) {
-            $value = trim((string)$wallet);
-            if (!TRC20AddressValidator::isValid($value)) {
-                $invalid[] = $value;
-
-                continue;
-            }
-            if (!in_array($value, $normalized, true)) {
-                $normalized[] = $value;
-            }
-        }
-
-        if (0 !== count($invalid)) {
-            $invalid = array_values(array_unique(array_filter($invalid, static fn(string $wallet): bool => '' !== $wallet)));
-            if (0 !== count($invalid)) {
-                throw new ImporterHttpException(sprintf('Invalid TRC20 wallet format(s): %s', implode(', ', $invalid)));
-            }
-        }
-
-        return $normalized;
-    }
-
-    private function normalizeWallet(string $wallet): string
-    {
-        return trim($wallet);
     }
 
     public function getPageSize(): int
@@ -402,12 +273,7 @@ class GetTransactionsRequest extends BearerJsonRequest
         return $this->pageSize;
     }
 
-    private function extractTokenContract(array $row): string
-    {
-        return (string)($row['tokenInfo']['address'] ?? $row['tokenInfo']['tokenId'] ?? $row['token_id'] ?? $row['contract_address'] ?? '');
-    }
-
-    private function toUnixTimestamp(?string $value): ?int
+    private function toMillisecondTimestamp(?string $value): ?int
     {
         if (null === $value || '' === trim($value)) {
             return null;
@@ -418,7 +284,7 @@ class GetTransactionsRequest extends BearerJsonRequest
             return null;
         }
 
-        return max(0, $timestamp);
+        return max(0, $timestamp * 1000);
     }
 
     private function emptyResponse(): GetTransactionsResponse
@@ -437,10 +303,7 @@ class GetTransactionsRequest extends BearerJsonRequest
             if ('' === $normalized) {
                 continue;
             }
-            if (!array_key_exists($normalized, $counter)) {
-                $counter[$normalized] = 0;
-            }
-            $counter[$normalized]++;
+            $counter[$normalized] = ($counter[$normalized] ?? 0) + 1;
         }
         if ([] === $counter) {
             return '';

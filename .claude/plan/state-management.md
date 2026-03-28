@@ -157,9 +157,9 @@ Currently only available on the submit page. Add to configure, convert, and mapp
 
 ## Checklist
 
-- [ ] Phase 1: ImportStateManager created with step validation
-- [ ] Phase 2: ImportStepGuard middleware registered on routes
-- [ ] Phase 3: Provider auth persisted to job JSON
-- [ ] Phase 4: "Resume import" on index page
-- [ ] Phase 5: "Start over" preserves Firefly III auth
-- [ ] Phase 6: "Download configuration" on all steps
+- [x] Phase 1: ImportStateManager created with step validation
+- [x] Phase 2: ImportStepGuard middleware registered on routes
+- [x] Phase 3: Provider auth persisted to job JSON (via ProviderSecretStore + ImportJob.providerAuth)
+- [x] Phase 4: "Resume import" on index page (IndexController.getRecentJobs, <24h, resumable states)
+- [x] Phase 5: "Start over" preserves Firefly III auth (flush captures/restores baseUrl, accessToken, etc.)
+- [x] Phase 6: "Download configuration" on configure, mapping, convert, and submit views
