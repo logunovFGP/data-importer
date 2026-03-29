@@ -80,4 +80,33 @@ td:not(:hover) .hidden-edit-button {
     visibility: hidden;
 }
 
+/* Importer data display utilities */
+.importer-data-table {
+    font-size: 0.8rem;
 
+    code {
+        font-size: 0.75rem;
+        color: var(--bs-body-color);
+        background: none;
+    }
+
+    th {
+        font-weight: 500;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+}
+
+.importer-activity-pre {
+    font-size: 0.8rem;
+    max-height: 250px;
+    overflow-y: auto;
+    background: var(--bs-body-bg);
+    margin-bottom: 0;
+    padding: 0.5rem;
+}
+
+.progress-sm {
+    height: 8px;
+}

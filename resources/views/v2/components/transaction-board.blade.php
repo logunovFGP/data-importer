@@ -24,7 +24,7 @@
             </small>
         </div>
         <div class="table-responsive">
-            <table class="table table-sm table-striped mb-0" style="font-size: 0.8rem;">
+            <table class="table table-sm table-striped mb-0 importer-data-table">
                 <thead>
                     <tr class="text-muted">
                         <th style="width: 2rem;"></th>
@@ -46,13 +46,13 @@
                                 <span x-show="tx.status === 'error'" class="fas fa-times-circle text-danger" :title="tx.message || 'Error'" aria-hidden="true"></span>
                                 <span x-show="tx.status === 'pending'" class="fas fa-clock text-muted" title="Pending" aria-hidden="true"></span>
                             </td>
-                            <td><code x-text="tx.tx_id" style="font-size: 0.75rem;"></code></td>
+                            <td><code x-text="tx.tx_id" ></code></td>
                             <td class="text-end font-monospace" x-text="tx.amount + ' ' + tx.currency"></td>
                             <td class="text-center">
                                 <span x-show="tx.direction === 'incoming'" class="text-success">&larr;</span>
                                 <span x-show="tx.direction === 'outgoing'" class="text-danger">&rarr;</span>
                             </td>
-                            <td><code x-text="tx.counterparty" style="font-size: 0.75rem;"></code></td>
+                            <td><code x-text="tx.counterparty" ></code></td>
                             <td class="text-muted" x-text="tx.date"></td>
                         </tr>
                     </template>

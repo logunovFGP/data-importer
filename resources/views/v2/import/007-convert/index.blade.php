@@ -111,7 +111,7 @@
                                                 </span>
                                             </div>
                                             <div class="mt-2" x-show="hasNestedPullProgress(item)">
-                                                <div class="progress" style="height: 8px;">
+                                                <div class="progress progress-sm">
                                                     <div class="progress-bar"
                                                          role="progressbar"
                                                          :class="getNestedPullBarClass(item)"
@@ -185,13 +185,38 @@
             </div>
         </div>
 
-        <!-- New Account Creation Section (SimpleFIN + Nordigen + Lunch Flow) -->
+        {{-- Transaction board + Activity log — live monitoring group --}}
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                @include('components.transaction-board')
+            </div>
+        </div>
+
+        <div class="row mt-3" x-show="activityLog.length > 0">
+            <div class="col-lg-10 offset-lg-1">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Activity log</span>
+                        <button class="btn btn-sm btn-outline-secondary" type="button"
+                                @click="activityExpanded = !activityExpanded"
+                                x-text="activityExpanded ? 'Collapse' : 'Expand'">
+                        </button>
+                    </div>
+                    <div class="card-body p-0" x-show="activityExpanded" x-transition>
+                        <pre class="importer-activity-pre"
+                             x-ref="activityPre"><template x-for="entry in activityLog"><span class="text-muted" x-text="'[' + entry.time + '] '"></span><span x-text="entry.message + '\n'"></span></template></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Account creation forms — setup section (before clicking Start job) --}}
         @if(config('importer.providers.'.$flow.'.supports_new_accounts') && count($newAccountsToCreate) > 0)
             <div class="row mt-3">
                 <div class="col-lg-10 offset-lg-1">
-                    <div class="card border-warning">
-                        <div class="card-header">
-                            <h5 class="mb-0"><span class="fas fa-plus-circle"></span> New accounts to create</h5>
+                    <div class="card border-warning-subtle">
+                        <div class="card-header bg-warning bg-opacity-10">
+                            <h5 class="mb-0"><span class="fas fa-plus-circle me-1"></span> New accounts to create</h5>
                         </div>
                         <div class="card-body">
                             <p class="text-muted">
@@ -235,8 +260,7 @@
                                                                name="account_currency"
                                                                value="{{ $accountData['currency'] ?? 'EUR' }}"
                                                                maxlength="12" required>
-                                                        <small class="form-text text-muted">3-letter currency
-                                                            code</small>
+                                                        <small class="form-text text-muted">Currency code</small>
                                                     </div>
 
                                                     <div class="form-group mb-2">
@@ -264,31 +288,6 @@
                 </div>
             </div>
         @endif
-        <!-- end of simplefin code -->
-
-        <div class="row mt-3">
-            <div class="col-lg-10 offset-lg-1">
-                @include('components.transaction-board')
-            </div>
-        </div>
-
-        <div class="row mt-3" x-show="activityLog.length > 0">
-            <div class="col-lg-10 offset-lg-1">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>Activity log</span>
-                        <button class="btn btn-sm btn-outline-secondary" type="button"
-                                @click="activityExpanded = !activityExpanded"
-                                x-text="activityExpanded ? 'Collapse' : 'Expand'">
-                        </button>
-                    </div>
-                    <div class="card-body p-0" x-show="activityExpanded" x-transition>
-                        <pre class="mb-0 p-2" style="max-height: 250px; overflow-y: auto; font-size: 0.8rem; background: var(--bs-body-bg);"
-                             x-ref="activityPre"><template x-for="entry in activityLog"><span class="text-muted" x-text="'[' + entry.time + '] '"></span><span x-text="entry.message + '\n'"></span></template></pre>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
