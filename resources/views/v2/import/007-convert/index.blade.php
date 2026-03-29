@@ -5,6 +5,66 @@
     <span id="data-helper" data-flow="{{ $flow }}" data-identifier="{{ $identifier }}" data-url="{{ $nextUrl }}"></span>
 
     <div class="container" x-data="index">
+        <style>
+            .submit-log-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            @@media (max-width: 991.98px) {
+                .submit-log-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .submit-log-pane {
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                background: #fff;
+                min-height: 260px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .submit-log-pane-header {
+                padding: 8px 12px;
+                border-bottom: 1px solid #e9ecef;
+                font-weight: 700;
+                background: #f8f9fa;
+            }
+
+            .submit-log-pane-body {
+                padding: 10px 12px;
+                max-height: 320px;
+                overflow-y: auto;
+                overflow-x: hidden;
+                font-size: 0.92rem;
+            }
+
+            .submit-log-entry {
+                padding-bottom: 8px;
+                margin-bottom: 8px;
+                border-bottom: 1px dashed #e9ecef;
+            }
+
+            .submit-log-entry:last-child {
+                border-bottom: 0;
+                margin-bottom: 0;
+                padding-bottom: 0;
+            }
+
+            .submit-log-line {
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .submit-log-entry ul,
+            .submit-log-entry ol {
+                margin-bottom: 0;
+                padding-left: 18px;
+            }
+        </style>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
                 <h1>{{ $mainTitle }}</h1>
@@ -28,7 +88,10 @@
             </div>
         </div>
         <div id="app">
-            <div class="row mt-3">
+            {{-- ============================================================ --}}
+            {{-- Conversion card — phase === 'conversion'                     --}}
+            {{-- ============================================================ --}}
+            <div class="row mt-3" x-show="'conversion' === phase">
                 <div class="col-lg-10 offset-lg-1">
                     <div class="card">
                         <div class="card-header">
@@ -255,7 +318,8 @@
                             </div>
                             <x-conversion-messages/>
                         </div>
-                        <div x-show="showWhenDone()" class="card-body">
+                        {{-- conv_done with redirect countdown (non-submit nextUrl, e.g. mapping) --}}
+                        <div x-show="showWhenDone() && !nextUrlIsSubmit" class="card-body">
                             <p>
                                 <span class="fas fa-check-circle text-success"></span>
                                 The conversion routine has finished!
@@ -267,6 +331,14 @@
                                     Skip to next step <span class="fas fa-arrow-right"></span>
                                 </button>
                             </div>
+                        </div>
+                        {{-- conv_done auto-transitioning to submission --}}
+                        <div x-show="showWhenDone() && nextUrlIsSubmit" class="card-body">
+                            <p>
+                                <span class="fas fa-check-circle text-success"></span>
+                                The conversion routine has finished! Starting submission&hellip;
+                            </p>
+                            <x-conversion-messages/>
                         </div>
                         <div x-show="showWhenDoneEmpty()" class="card-body">
                             <div class="alert alert-warning mb-3">
@@ -299,6 +371,151 @@
                             </template>
                             <x-conversion-messages/>
                             <button class="btn btn-warning mt-2" @click="retryConversion">Retry conversion</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ============================================================ --}}
+            {{-- Submission card — shown when phase === 'submission'           --}}
+            {{-- (auto-transitioned from conversion when nextUrl is submit)    --}}
+            {{-- ============================================================ --}}
+            <div class="row mt-3" x-show="showSubmissionPhase()">
+                <div class="col-lg-10 offset-lg-1">
+                    <div class="card">
+                        <div class="card-header">
+                            Data submission to Firefly III
+                        </div>
+                        <div x-show="showSubmissionWaiting()" class="card-body">
+                            <p><span class="fas fa-cog fa-spin"></span> Please wait for the submission to start..</p>
+                        </div>
+                        <div x-show="showSubmissionTooManyChecks()" class="card-body">
+                            <p>
+                                <em class="fa-solid fa-clock"></em>
+                                <strong>Job Still Running</strong> - The import submission is taking longer than expected (<span x-text="checkCount"></span> seconds) but is likely still processing in the background.
+                            </p>
+                            <p>
+                                Large imports with many transactions can take 20+ minutes to complete. The automatic status checking has been paused to prevent system overload.
+                            </p>
+                            <div class="alert alert-info">
+                                <strong>What you can do:</strong>
+                                <ul class="mb-2">
+                                    <li>Click "Refresh Status" below to check if the job has completed</li>
+                                    <li>Check your Firefly III installation directly to see if transactions are appearing</li>
+                                    <li>Wait a few more minutes and try refreshing this page</li>
+                                </ul>
+                                <button x-show="manualRefreshAvailable" @click="refreshSubmissionStatus()" class="btn btn-primary btn-sm">
+                                    <span class="fas fa-sync-alt"></span> Refresh Status
+                                </button>
+                            </div>
+                        </div>
+                        <div x-show="showSubmissionPostError()" class="card-body">
+                            <p class="text-danger">
+                                The submission could not be started, or failed due to an error. Please check the log files.
+                                Sorry about this :(
+                            </p>
+                            <p x-show="'' !== post.result" x-text="post.result"></p>
+                            @include('import.007-convert._submission-messages')
+                            <button class="btn btn-warning mt-2" @click="retrySubmission">Retry submission</button>
+                        </div>
+
+                        <div x-show="showSubmissionRunning()" class="card-body">
+                            <p>
+                                <span class="fas fa-cog fa-spin"></span> The submission is running, please wait. Messages may appear below the progress bar.
+                            </p>
+                            <div class="progress">
+                                <div aria-valuemax="100" aria-valuemin="0"
+                                     :aria-valuenow="getSubmissionProgressPercentage()"
+                                     :class="hasSubmissionProgressData() ? 'progress-bar' : 'progress-bar progress-bar-striped progress-bar-animated'"
+                                     role="progressbar"
+                                     :style="'width: ' + getSubmissionProgressWidth()"></div>
+                            </div>
+                            <div x-show="hasSubmissionProgressData()" class="text-center mt-2">
+                                <small class="text-muted" x-text="getSubmissionProgressDisplay()"></small>
+                            </div>
+                            <div x-show="getSubmissionSummary()" class="text-center mt-2">
+                                <small class="text-muted" x-text="getSubmissionSummary()"></small>
+                            </div>
+                            <div x-show="hasSubmissionPerformanceData()" class="mt-3">
+                                <div class="card">
+                                    <div class="card-header">Submission performance telemetry</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm mb-0">
+                                            <thead>
+                                            <tr>
+                                                <th>Phase</th>
+                                                <th class="text-end">Calls</th>
+                                                <th class="text-end">Avg ms</th>
+                                                <th class="text-end">Total ms</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <template x-for="row in getSubmissionPerformanceRows()" :key="row.key">
+                                                <tr>
+                                                    <td x-text="row.label"></td>
+                                                    <td class="text-end" x-text="row.count"></td>
+                                                    <td class="text-end" x-text="row.avg"></td>
+                                                    <td class="text-end" x-text="row.total"></td>
+                                                </tr>
+                                            </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            @include('import.007-convert._submission-messages')
+                        </div>
+                        <div x-show="showSubmissionDone()" class="card-body">
+                            <p>
+                                The submission routine has finished. Errors and messages can be seen below.
+                            </p>
+                            <div class="row mt-3 mb-3">
+                                <div class="col-lg-12">
+                                    <a href="{{ config('importer.vanity_url', config('importer.url')) }}" class="btn btn-success btn-lg me-2" target="_blank">
+                                        View in Firefly III
+                                    </a>
+                                    <a href="{{ route('index') }}" class="btn btn-primary btn-lg">
+                                        Start new import
+                                    </a>
+                                </div>
+                            </div>
+                            <p x-show="getSubmissionSummary()" class="text-muted small" x-text="getSubmissionSummary()"></p>
+                            <div x-show="hasSubmissionPerformanceData()" class="mt-3">
+                                <div class="card">
+                                    <div class="card-header">Submission performance telemetry</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm mb-0">
+                                            <thead>
+                                            <tr>
+                                                <th>Phase</th>
+                                                <th class="text-end">Calls</th>
+                                                <th class="text-end">Avg ms</th>
+                                                <th class="text-end">Total ms</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <template x-for="row in getSubmissionPerformanceRows()" :key="row.key">
+                                                <tr>
+                                                    <td x-text="row.label"></td>
+                                                    <td class="text-end" x-text="row.count"></td>
+                                                    <td class="text-end" x-text="row.avg"></td>
+                                                    <td class="text-end" x-text="row.total"></td>
+                                                </tr>
+                                            </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            @include('import.007-convert._submission-messages')
+                        </div>
+                        <div x-show="showSubmissionError()" class="card-body">
+                            <p class="text-danger">
+                                The submission could not be started, or failed due to an error. Please check the log files.
+                                Sorry about this :(
+                            </p>
+                            @include('import.007-convert._submission-messages')
+                            <button class="btn btn-warning mt-2" @click="retrySubmission">Retry submission</button>
                         </div>
                     </div>
                 </div>
