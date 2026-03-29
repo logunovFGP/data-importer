@@ -10,6 +10,11 @@
                 <h1>{{ $mainTitle }}</h1>
             </div>
         </div>
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+                @include('components.step-indicator', ['flow' => $flow, 'currentStepNum' => 2])
+            </div>
+        </div>
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">
                 @include('components.step-navigation', [
