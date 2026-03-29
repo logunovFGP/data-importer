@@ -39,6 +39,7 @@ use GrumpyDictator\FFIIIApiSupport\Request\GetSearchAccountRequest;
 use GrumpyDictator\FFIIIApiSupport\Response\GetAccountsResponse;
 use GrumpyDictator\FFIIIApiSupport\Response\Response;
 use GrumpyDictator\FFIIIApiSupport\Response\ValidationErrorResponse;
+use App\Services\Shared\Request\PostCurrencyRequest;
 use Illuminate\Support\Facades\Log;
 
 class AccountMapper
@@ -192,10 +193,21 @@ class AccountMapper
             if ($response instanceof ValidationErrorResponse) {
                 $errors = $response->errors->toArray();
                 if ($this->hasCurrencyCodeValidationError($errors) && array_key_exists('currency_code', $payload)) {
-                    Log::warning(sprintf('Currency "%s" is not available in Firefly III for account "%s". Retrying without explicit currency code.', (string)$payload['currency_code'], $accountName));
-                    unset($payload['currency_code']);
-                    $request->setBody($payload);
-                    $response = $this->makeApiCallWithRetry($request, $accountName);
+                    $currencyCode = (string)$payload['currency_code'];
+                    Log::info(sprintf('Currency "%s" not in Firefly III. Attempting to create it for account "%s".', $currencyCode, $accountName));
+
+                    // Try to auto-create the missing currency
+                    $currencyCreated = $this->ensureCurrencyExists($currencyCode);
+                    if ($currencyCreated) {
+                        Log::info(sprintf('Currency "%s" created. Retrying account creation with currency.', $currencyCode));
+                        $request->setBody($payload);
+                        $response = $this->makeApiCallWithRetry($request, $accountName);
+                    } else {
+                        Log::warning(sprintf('Could not create currency "%s". Retrying account without currency code.', $currencyCode));
+                        unset($payload['currency_code']);
+                        $request->setBody($payload);
+                        $response = $this->makeApiCallWithRetry($request, $accountName);
+                    }
                 }
             }
 
@@ -461,5 +473,53 @@ class AccountMapper
 
         return array_any($retryableErrors, fn ($retryableError) => false !== stripos($errorMessage, $retryableError));
 
+    }
+
+    private function ensureCurrencyExists(string $code): bool
+    {
+        $url   = $this->resolveBaseUrl();
+        $token = $this->resolveAccessToken();
+
+        try {
+            $request = new PostCurrencyRequest($url, $token);
+            $request->setBody([
+                'name'           => $code,
+                'code'           => $code,
+                'symbol'         => $code,
+                'decimal_places' => 6,
+                'enabled'        => true,
+            ]);
+            $response = $request->post();
+
+            if ($response instanceof ValidationErrorResponse) {
+                $errors = $response->errors->toArray();
+                // If the currency already exists (unique constraint), that's fine
+                $alreadyExists = false;
+                foreach ($errors as $field => $messages) {
+                    foreach ((array)$messages as $msg) {
+                        if (is_string($msg) && (stripos($msg, 'already') !== false || stripos($msg, 'taken') !== false)) {
+                            $alreadyExists = true;
+                        }
+                    }
+                }
+                if ($alreadyExists) {
+                    Log::info(sprintf('Currency "%s" already exists in Firefly III.', $code));
+
+                    // Enable it if it was disabled
+                    return true;
+                }
+                Log::warning(sprintf('Failed to create currency "%s": %s', $code, json_encode($errors)));
+
+                return false;
+            }
+
+            Log::info(sprintf('Created currency "%s" in Firefly III.', $code));
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning(sprintf('Exception creating currency "%s": %s', $code, $e->getMessage()));
+
+            return false;
+        }
     }
 }

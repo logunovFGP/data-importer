@@ -40,6 +40,10 @@ let index = function () {
         transactionCount: -1,
         activityLog: [],
         activityExpanded: true,
+        transactionBoard: [],
+        transactionBoardTotal: 0,
+        transactionBoardHidden: 0,
+        boardExpanded: true,
         messages: {
             messages: [],
             warnings: [],
@@ -457,6 +461,11 @@ let index = function () {
                         const el = this.$refs.activityPre;
                         if (el) el.scrollTop = el.scrollHeight;
                     });
+                }
+                if (Array.isArray(response.data.transaction_board)) {
+                    this.transactionBoard = response.data.transaction_board;
+                    this.transactionBoardTotal = response.data.transaction_board_total || 0;
+                    this.transactionBoardHidden = response.data.transaction_board_hidden || 0;
                 }
                 if ('conv_running' === this.pageStatus.status && 0 === this.runtime.runningStartedAt) {
                     this.runtime.runningStartedAt = this.runtime.lastSeenAt;

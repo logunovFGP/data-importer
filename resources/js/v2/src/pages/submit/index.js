@@ -49,6 +49,10 @@ let index = function () {
         performance: {},
         activityLog: [],
         activityExpanded: true,
+        transactionBoard: [],
+        transactionBoardTotal: 0,
+        transactionBoardHidden: 0,
+        boardExpanded: true,
         checkCount: 0,
         maxCheckCount: 1200,
         longRunningNotice: false,
@@ -254,6 +258,11 @@ let index = function () {
                         const el = this.$refs.activityPre;
                         if (el) el.scrollTop = el.scrollHeight;
                     });
+                }
+                if (Array.isArray(response.data.transaction_board)) {
+                    this.transactionBoard = response.data.transaction_board;
+                    this.transactionBoardTotal = response.data.transaction_board_total || 0;
+                    this.transactionBoardHidden = response.data.transaction_board_hidden || 0;
                 }
 
                 // job has not started yet. Let's wait.

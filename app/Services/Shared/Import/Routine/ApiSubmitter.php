@@ -176,6 +176,24 @@ class ApiSubmitter
 
             // Update progress tracking using sequential iteration position instead of sparse line index.
             $this->importJob->submissionStatus->updateProgress($position, $count);
+
+            // Add board entry for this transaction
+            $txDescription = (string)($line['transactions'][0]['description'] ?? 'Transaction #' . $position);
+            $txAmount      = (string)($line['transactions'][0]['amount'] ?? '0');
+            $txCurrency    = (string)($line['transactions'][0]['currency_code'] ?? '');
+            $txDate        = (string)($line['transactions'][0]['date'] ?? '');
+            $txExternalId  = (string)($line['transactions'][0]['external_id'] ?? '');
+            $shortTxId     = strlen($txExternalId) > 14 ? substr($txExternalId, 0, 10) . '..' . substr($txExternalId, -2) : ($txExternalId ?: '#' . $position);
+            $this->importJob->submissionStatus->addBoardEntry([
+                'tx_id'        => $shortTxId,
+                'amount'       => $txAmount,
+                'currency'     => $txCurrency,
+                'direction'    => str_starts_with($txAmount, '-') ? 'outgoing' : 'incoming',
+                'counterparty' => substr($txDescription, 0, 20),
+                'date'         => $txDate,
+                'status'       => 'pending',
+                'message'      => '',
+            ]);
             // first do local duplicate transaction check (the "cell" method):
             $duplicateCheckStartedAt = microtime(true);
             $unique    = $this->uniqueTransaction($index, $line);
@@ -187,6 +205,7 @@ class ApiSubmitter
                 Log::debug(sprintf('Transaction #%d is NOT unique.', $index + 1));
                 ++$duplicateCount;
                 ++$batchDuplicates;
+                $this->importJob->submissionStatus->updateBoardEntryStatus($shortTxId, 'duplicate');
                 $this->importJob->submissionStatus->setTotals($count, $importedCount, $duplicateCount);
                 if ($this->shouldPersistProgress($position, $count)) {
                     $this->persistImportJob();
@@ -200,6 +219,9 @@ class ApiSubmitter
             if ([] !== $groupInfo) {
                 ++$importedCount;
                 ++$batchImported;
+                $this->importJob->submissionStatus->updateBoardEntryStatus($shortTxId, 'submitted');
+            } else {
+                $this->importJob->submissionStatus->updateBoardEntryStatus($shortTxId, 'error', 'Submission returned empty');
             }
             $this->rememberExternalIdsFromLine($line, $groupInfo);
             $tagStartedAt = microtime(true);

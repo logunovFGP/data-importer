@@ -19,9 +19,17 @@ class SecretManager
 
     public static function getApiKey(?Configuration $configuration = null): string
     {
+        // Priority: session (current request) > configuration object (import job)
+        // > provider secret store (disk) > env config
         $sessionKey = (string)session()->get(self::API_KEY, '');
         if ('' !== $sessionKey) {
             return $sessionKey;
+        }
+
+        // Configuration object holds the key saved during the upload step — most recent user input
+        $configurationKey = (string)$configuration?->getTrc20ApiKey();
+        if ('' !== $configurationKey) {
+            return $configurationKey;
         }
 
         $storedKey = self::getStoredString(self::API_KEY);
@@ -29,12 +37,7 @@ class SecretManager
             return $storedKey;
         }
 
-        $configKey = (string)config('trc20.api_key', '');
-        if ('' !== $configKey) {
-            return $configKey;
-        }
-
-        return (string)$configuration?->getTrc20ApiKey();
+        return (string)config('trc20.api_key', '');
     }
 
     public static function getWallets(?Configuration $configuration = null): array
@@ -64,6 +67,7 @@ class SecretManager
         $value = trim($apiKey);
         session()->put(self::API_KEY, $value);
         self::saveToStore(self::API_KEY, $value);
+        Log::debug(sprintf('TRC20 API key saved (length=%d, ends=%s)', strlen($value), substr($value, -4)));
     }
 
     public static function saveWallets(string $wallets): void

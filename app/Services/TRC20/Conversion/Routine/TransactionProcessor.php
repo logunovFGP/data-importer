@@ -143,14 +143,20 @@ class TransactionProcessor
                     ConversionStatus::PULL_STEP_ERROR,
                     sprintf('Could not fetch transactions from TRC20: %s', $e->getMessage())
                 );
-                $return[$rawWallet] = [];
+                // No transactions for this wallet — nothing to add to $return
                 $this->importJob->conversionStatus->incrementPullProgress();
                 $this->saveConversionStatus();
 
                 continue;
             }
 
-            $return[$rawWallet] = $transactions;
+            // Group transactions by their composite accountId (wallet|SYMBOL)
+            // so GenerateTransactions can look up $this->accounts[$accountId] correctly.
+            foreach ($transactions as $tx) {
+                $txAccountId = $tx->account ?? $rawWallet;
+                $return[$txAccountId] ??= [];
+                $return[$txAccountId][] = $tx;
+            }
             $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Fetched %d transaction(s)', $shortWallet, count($transactions)));
             $this->importJob->conversionStatus->addPullCursorCandidate(
                 $rawWallet,
@@ -266,6 +272,22 @@ class TransactionProcessor
             }
             $this->seenTransactionIds[$externalId] = true;
             $return[]                              = $transaction;
+
+            // Add to live transaction board
+            $shortTxId = strlen($externalId) > 14 ? substr($externalId, 0, 10) . '..' . substr($externalId, -2) : $externalId;
+            $amount    = (string)($normalized['amount'] ?? '0');
+            $merchant  = (string)($normalized['merchant'] ?? '');
+            $shortMerchant = strlen($merchant) > 12 ? substr($merchant, 0, 8) . '..' . substr($merchant, -4) : $merchant;
+            $this->importJob->conversionStatus->addBoardEntry([
+                'tx_id'        => $shortTxId,
+                'amount'       => $amount,
+                'currency'     => (string)($normalized['currency'] ?? $normalized['token_symbol'] ?? ''),
+                'direction'    => str_starts_with($amount, '-') ? 'outgoing' : 'incoming',
+                'counterparty' => $shortMerchant,
+                'date'         => (string)($normalized['date'] ?? ''),
+                'status'       => 'fetched',
+                'message'      => '',
+            ]);
         }
 
         return $return;
@@ -439,7 +461,7 @@ class TransactionProcessor
 
     private function extractDate(array $row): ?Carbon
     {
-        $rawDate = $row['block_ts'] ?? $row['block_timestamp'] ?? $row['timestamp'] ?? $row['time'] ?? $row['created_at'] ?? null;
+        $rawDate = $row['date'] ?? $row['block_ts'] ?? $row['block_timestamp'] ?? $row['timestamp'] ?? $row['time'] ?? $row['created_at'] ?? null;
         if (null === $rawDate) {
             return null;
         }

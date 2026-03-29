@@ -53,6 +53,9 @@ class ConversionStatus
     public array   $pullProgress            = [];
     public array   $pullCursorCandidates    = [];
     public array   $activityLog             = [];
+    public array   $transactionBoard        = [];
+    public int     $transactionBoardTotal   = 0;
+    public int     $transactionBoardHidden  = 0;
 
     /**
      * ConversionStatus constructor.
@@ -91,6 +94,9 @@ class ConversionStatus
         $config->pullProgress         = $array['pull_progress'] ?? [];
         $config->pullCursorCandidates = $array['pull_cursor_candidates'] ?? [];
         $config->activityLog          = $array['activity_log'] ?? [];
+        $config->transactionBoard     = $array['transaction_board'] ?? [];
+        $config->transactionBoardTotal = $array['transaction_board_total'] ?? 0;
+        $config->transactionBoardHidden = $array['transaction_board_hidden'] ?? 0;
 
         return $config;
     }
@@ -107,6 +113,9 @@ class ConversionStatus
             'pull_progress' => $this->pullProgress,
             'pull_cursor_candidates' => $this->pullCursorCandidates,
             'activity_log' => $this->activityLog,
+            'transaction_board' => $this->transactionBoard,
+            'transaction_board_total' => $this->transactionBoardTotal,
+            'transaction_board_hidden' => $this->transactionBoardHidden,
         ];
     }
 
@@ -119,6 +128,28 @@ class ConversionStatus
         if (count($this->activityLog) > 200) {
             $this->activityLog = array_slice($this->activityLog, -200);
         }
+    }
+
+    public function addBoardEntry(array $entry): void
+    {
+        $this->transactionBoardTotal++;
+        $this->transactionBoard[] = $entry;
+        if (count($this->transactionBoard) > 100) {
+            $this->transactionBoard = array_slice($this->transactionBoard, -100);
+        }
+        $this->transactionBoardHidden = max(0, $this->transactionBoardTotal - count($this->transactionBoard));
+    }
+
+    public function updateBoardEntryStatus(string $txId, string $status, string $message = ''): void
+    {
+        foreach ($this->transactionBoard as &$entry) {
+            if (($entry['tx_id'] ?? '') === $txId) {
+                $entry['status']  = $status;
+                $entry['message'] = $message;
+                break;
+            }
+        }
+        unset($entry);
     }
 
     public function setPullProgress(int $total, int $done = 0, string $status = self::PULL_STEP_PENDING): void

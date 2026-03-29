@@ -43,6 +43,9 @@ class SubmissionStatus
     public int     $progressPercentage     = 0;
     public array   $performance            = [];
     public array   $activityLog            = [];
+    public array   $transactionBoard       = [];
+    public int     $transactionBoardTotal  = 0;
+    public int     $transactionBoardHidden = 0;
 
     /**
      * ImportJobStatus constructor.
@@ -108,6 +111,9 @@ class SubmissionStatus
         $config->progressPercentage = $array['progressPercentage'] ?? 0;
         $config->performance        = $array['performance'] ?? $config->defaultPerformanceBuckets();
         $config->activityLog        = $array['activity_log'] ?? [];
+        $config->transactionBoard   = $array['transaction_board'] ?? [];
+        $config->transactionBoardTotal = $array['transaction_board_total'] ?? 0;
+        $config->transactionBoardHidden = $array['transaction_board_hidden'] ?? 0;
 
         return $config;
     }
@@ -126,6 +132,9 @@ class SubmissionStatus
             'progressPercentage' => $this->progressPercentage,
             'performance'        => $this->performance,
             'activity_log'       => $this->activityLog,
+            'transaction_board'  => $this->transactionBoard,
+            'transaction_board_total' => $this->transactionBoardTotal,
+            'transaction_board_hidden' => $this->transactionBoardHidden,
         ];
     }
 
@@ -138,6 +147,28 @@ class SubmissionStatus
         if (count($this->activityLog) > 200) {
             $this->activityLog = array_slice($this->activityLog, -200);
         }
+    }
+
+    public function addBoardEntry(array $entry): void
+    {
+        $this->transactionBoardTotal++;
+        $this->transactionBoard[] = $entry;
+        if (count($this->transactionBoard) > 100) {
+            $this->transactionBoard = array_slice($this->transactionBoard, -100);
+        }
+        $this->transactionBoardHidden = max(0, $this->transactionBoardTotal - count($this->transactionBoard));
+    }
+
+    public function updateBoardEntryStatus(string $txId, string $status, string $message = ''): void
+    {
+        foreach ($this->transactionBoard as &$entry) {
+            if (($entry['tx_id'] ?? '') === $txId) {
+                $entry['status']  = $status;
+                $entry['message'] = $message;
+                break;
+            }
+        }
+        unset($entry);
     }
 
     public function setTotals(int $totalTransactions, int $uniqueTransactions, int $duplicateTransactions): void

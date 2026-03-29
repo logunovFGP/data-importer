@@ -266,6 +266,12 @@
         @endif
         <!-- end of simplefin code -->
 
+        <div class="row mt-3">
+            <div class="col-lg-10 offset-lg-1">
+                @include('components.transaction-board')
+            </div>
+        </div>
+
         <div class="row mt-3" x-show="activityLog.length > 0">
             <div class="col-lg-10 offset-lg-1">
                 <div class="card">

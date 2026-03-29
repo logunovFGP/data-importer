@@ -127,6 +127,11 @@ class ImportJob implements Arrayable
         // Log::debug('Restoring service accounts');
         /** @var array $item */
         foreach ($array['service_accounts'] as $item) {
+            if (!is_array($item) || !array_key_exists('class', $item)) {
+                // Plain array service account (e.g., from TRC20 GetWalletRequest)
+                $importJob->serviceAccounts[] = $item;
+                continue;
+            }
             $class                        = $item['class'];
             $importJob->serviceAccounts[] = $class::fromArray($item);
         }
@@ -166,9 +171,9 @@ class ImportJob implements Arrayable
         $serviceAccounts     = [];
         $applicationAccounts = [];
 
-        /** @var LunchFlowAccount|NordigenAccount|SimpleFINAccount $serviceAccount */
+        /** @var LunchFlowAccount|NordigenAccount|SimpleFINAccount|array $serviceAccount */
         foreach ($this->serviceAccounts as $serviceAccount) {
-            $serviceAccounts[] = $serviceAccount->toArray();
+            $serviceAccounts[] = is_array($serviceAccount) ? $serviceAccount : $serviceAccount->toArray();
         }
         $keys                = [Constants::ASSET_ACCOUNTS, Constants::LIABILITIES];
         foreach ($keys as $key) {

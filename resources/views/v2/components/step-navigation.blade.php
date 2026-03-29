@@ -1,11 +1,11 @@
-@props([
-    'backUrl' => null,
-    'backLabel' => 'Go back',
-    'identifier' => null,
-    'flow' => null,
-    'showDownloadConfig' => false,
-    'currentStep' => null,
-])
+@php
+    $backUrl          = $backUrl ?? null;
+    $backLabel        = $backLabel ?? 'Go back';
+    $identifier       = $identifier ?? null;
+    $flow             = $flow ?? null;
+    $showDownloadConfig = $showDownloadConfig ?? false;
+    $currentStep      = $currentStep ?? null;
+@endphp
 
 @if($currentStep)
 <nav aria-label="Import progress" class="mb-1">
