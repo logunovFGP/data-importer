@@ -43,6 +43,115 @@
                                 will be converted to Firefly III compatible transactions. Please press <strong>Start
                                     job</strong> to start.
                             </p>
+
+                            {{-- Account creation forms (inline, before Start button) --}}
+                            @if(config('importer.providers.'.$flow.'.supports_new_accounts') && count($newAccountsToCreate) > 0)
+                                <div class="card border-warning-subtle mb-3">
+                                    <div class="card-header bg-warning bg-opacity-10 d-flex justify-content-between align-items-center"
+                                         role="button"
+                                         data-bs-toggle="collapse"
+                                         data-bs-target="#newAccountsCollapse"
+                                         aria-expanded="true"
+                                         aria-controls="newAccountsCollapse">
+                                        <h6 class="mb-0">
+                                            <span class="fas fa-plus-circle me-1"></span>
+                                            New accounts to create
+                                            <span class="badge bg-warning text-dark ms-1">{{ count($newAccountsToCreate) }}</span>
+                                        </h6>
+                                        <span class="fas fa-chevron-down"></span>
+                                    </div>
+                                    <div id="newAccountsCollapse" class="collapse show">
+                                        <div class="card-body">
+                                            <p class="text-muted">
+                                                The following accounts will be created in Firefly III before importing
+                                                transactions. You can customize their settings below or proceed with the
+                                                default values.
+                                            </p>
+
+                                            @foreach($newAccountsToCreate as $accountId => $accountData)
+                                                <div class="card mb-3">
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <h6 class="card-title">{{ $accountData['name'] ?? 'New account' }}</h6>
+                                                                <small class="text-muted">Account: {{ $accountId }}</small>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <form class="new-account-form"
+                                                                      data-account-id="{{ $accountId }}">
+                                                                    <input type="hidden" name="liability_type"
+                                                                           value="{{ $accountData['liability_type'] ?? '' }}">
+                                                                    <input type="hidden" name="liability_direction"
+                                                                           value="{{ $accountData['liability_direction'] ?? '' }}">
+                                                                    <div class="form-group mb-2">
+                                                                        <label class="form-label">Account name:</label>
+                                                                        <input type="text"
+                                                                               class="form-control form-control-sm"
+                                                                               name="account_name"
+                                                                               value="{{ $accountData['name'] ?? '' }}"
+                                                                               required>
+                                                                    </div>
+
+                                                                    <div class="form-group mb-2">
+                                                                        <label class="form-label">Account type:</label>
+                                                                        <select class="form-control form-control-sm"
+                                                                                name="account_type" required>
+                                                                            <option value="asset"
+                                                                                    @if($accountData['type'] === 'asset') selected @endif>
+                                                                                Asset account
+                                                                            </option>
+                                                                            <option value="liabilities"
+                                                                                    @if($accountData['type'] === 'liabilities') selected @endif>
+                                                                                Liability account
+                                                                            </option>
+                                                                        </select>
+                                                                        <small class="form-text text-muted">Smart
+                                                                            default: asset account (recommended for most
+                                                                            accounts)
+                                                                        </small>
+                                                                    </div>
+
+                                                                    <div class="form-group mb-2">
+                                                                        <label class="form-label">Currency:</label>
+                                                                        <input type="text"
+                                                                               class="form-control form-control-sm"
+                                                                               name="account_currency"
+                                                                               value="{{ $accountData['currency'] ?? 'EUR' }}"
+                                                                               maxlength="12" required>
+                                                                        <small class="form-text text-muted">Currency
+                                                                            code
+                                                                        </small>
+                                                                    </div>
+
+                                                                    <div class="form-group mb-2">
+                                                                        <label class="form-label">Opening balance
+                                                                            (optional):
+                                                                        </label>
+                                                                        <input type="number" step="0.01"
+                                                                               class="form-control form-control-sm"
+                                                                               name="opening_balance"
+                                                                               placeholder="0.00">
+                                                                    </div>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+
+                                            <div class="alert alert-info mb-0">
+                                                <small>
+                                                    <span class="fas fa-info-circle"></span>
+                                                    These accounts will be created automatically when you start the
+                                                    conversion process. You can modify the details above or proceed with
+                                                    the defaults.
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
                             <p>
                                 <button class="btn btn-success float-end text-white" type="button"
                                         @click="startJobButton">Start job
@@ -148,10 +257,16 @@
                         </div>
                         <div x-show="showWhenDone()" class="card-body">
                             <p>
-                                <span class="fas fa-sync fa-spin"></span> The conversion routine has finished 🎉. Please
-                                wait to be redirected!
+                                <span class="fas fa-check-circle text-success"></span>
+                                The conversion routine has finished!
+                                Redirecting in <strong x-text="redirectCountdown"></strong>&hellip;
                             </p>
                             <x-conversion-messages/>
+                            <div class="mt-2">
+                                <button class="btn btn-primary" type="button" @click="skipToNextStep">
+                                    Skip to next step <span class="fas fa-arrow-right"></span>
+                                </button>
+                            </div>
                         </div>
                         <div x-show="showWhenDoneEmpty()" class="card-body">
                             <div class="alert alert-warning mb-3">
@@ -214,85 +329,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- Account creation forms — setup section (before clicking Start job) --}}
-        @if(config('importer.providers.'.$flow.'.supports_new_accounts') && count($newAccountsToCreate) > 0)
-            <div class="row mt-3">
-                <div class="col-lg-10 offset-lg-1">
-                    <div class="card border-warning-subtle">
-                        <div class="card-header bg-warning bg-opacity-10">
-                            <h5 class="mb-0"><span class="fas fa-plus-circle me-1"></span> New accounts to create</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="text-muted">
-                                The following accounts will be created in Firefly III before importing transactions. You
-                                can customize their settings below or proceed with the default values.
-                            </p>
-
-                            @foreach($newAccountsToCreate as $accountId => $accountData)
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="card-title">{{ $accountData['name'] ?? 'New account' }}</h6>
-                                                <small class="text-muted">Account: {{ $accountId }}</small>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <form class="new-account-form" data-account-id="{{ $accountId }}">
-                                                    <input type="hidden" name="liability_type" value="{{ $accountData['liability_type'] ?? '' }}">
-                                                    <input type="hidden" name="liability_direction" value="{{ $accountData['liability_direction'] ?? '' }}">
-                                                    <div class="form-group mb-2">
-                                                        <label class="form-label">Account name:</label>
-                                                        <input type="text" class="form-control form-control-sm"
-                                                               name="account_name"
-                                                               value="{{ $accountData['name'] ?? '' }}" required>
-                                                    </div>
-
-                                                    <div class="form-group mb-2">
-                                                        <label class="form-label">Account type:</label>
-                                                        <select class="form-control form-control-sm" name="account_type"
-                                                                required>
-                                                            <option value="asset" @if($accountData['type'] === 'asset') selected @endif>Asset account</option>
-                                                            <option value="liabilities" @if($accountData['type'] === 'liabilities') selected @endif>Liability account</option>
-                                                        </select>
-                                                        <small class="form-text text-muted">Smart default: asset account
-                                                            (recommended for most accounts)</small>
-                                                    </div>
-
-                                                    <div class="form-group mb-2">
-                                                        <label class="form-label">Currency:</label>
-                                                        <input type="text" class="form-control form-control-sm"
-                                                               name="account_currency"
-                                                               value="{{ $accountData['currency'] ?? 'EUR' }}"
-                                                               maxlength="12" required>
-                                                        <small class="form-text text-muted">Currency code</small>
-                                                    </div>
-
-                                                    <div class="form-group mb-2">
-                                                        <label class="form-label">Opening balance (optional):</label>
-                                                        <input type="number" step="0.01"
-                                                               class="form-control form-control-sm"
-                                                               name="opening_balance" placeholder="0.00">
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-
-                            <div class="alert alert-info">
-                                <small>
-                                    <span class="fas fa-info-circle"></span>
-                                    These accounts will be created automatically when you start the conversion process.
-                                    You can modify the details above or proceed with the defaults.
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endif
 
         <div class="row mt-3">
             <div class="col-lg-10 offset-lg-1">

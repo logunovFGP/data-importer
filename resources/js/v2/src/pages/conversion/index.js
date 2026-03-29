@@ -38,6 +38,8 @@ let index = function () {
             done: false,
         },
         transactionCount: -1,
+        redirectCountdown: 0,
+        redirectTimerHandle: null,
         activityLog: [],
         activityExpanded: true,
         transactionBoard: [],
@@ -326,6 +328,8 @@ let index = function () {
             });
         },
         retryConversion() {
+            this.cancelRedirectCountdown();
+            this.redirectCountdown = 0;
             this.post.errored = false;
             this.post.done = false;
             this.post.result = '';
@@ -435,6 +439,27 @@ let index = function () {
         redirectToImport() {
             window.location.href = this.nextUrl;
         },
+        startRedirectCountdown() {
+            this.cancelRedirectCountdown();
+            this.redirectCountdown = 3;
+            this.redirectTimerHandle = window.setInterval(function () {
+                this.redirectCountdown = this.redirectCountdown - 1;
+                if (this.redirectCountdown <= 0) {
+                    this.cancelRedirectCountdown();
+                    this.redirectToImport();
+                }
+            }.bind(this), 1000);
+        },
+        cancelRedirectCountdown() {
+            if (null !== this.redirectTimerHandle) {
+                window.clearInterval(this.redirectTimerHandle);
+                this.redirectTimerHandle = null;
+            }
+        },
+        skipToNextStep() {
+            this.cancelRedirectCountdown();
+            this.redirectToImport();
+        },
         getJobStatus(force = false) {
             if (true === this.polling.inFlight) {
                 return;
@@ -504,10 +529,7 @@ let index = function () {
                         console.log('Zero transactions found; staying on conversion page.');
                         return;
                     }
-                    setTimeout(function () {
-                        console.log('Do redirect!')
-                        this.redirectToImport();
-                    }.bind(this), 2000);
+                    this.startRedirectCountdown();
                     return;
                 }
                 if ('conv_errored' === this.pageStatus.status) {
