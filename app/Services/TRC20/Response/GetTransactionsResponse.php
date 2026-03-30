@@ -16,6 +16,7 @@ class GetTransactionsResponse extends Response implements Iterator, Countable
     private array $raw = [];
     private ?string $nextCursor = null;
     private int $position = 0;
+    private bool $processed = false;
 
     public function __construct(private readonly array $data)
     {
@@ -98,10 +99,14 @@ class GetTransactionsResponse extends Response implements Iterator, Countable
 
     public function processData(): void
     {
+        if ($this->processed) {
+            return;
+        }
         foreach ($this->raw as $row) {
             $row['accountId'] = (string)($row['accountId'] ?? '');
             $this->collection->push(Transaction::fromArray($row));
         }
+        $this->processed = true;
     }
 
     public function count(): int
@@ -109,7 +114,7 @@ class GetTransactionsResponse extends Response implements Iterator, Countable
         return $this->collection->count();
     }
 
-    public function current(): Transaction
+    public function current(): ?Transaction
     {
         return $this->collection->get($this->position);
     }

@@ -80,7 +80,7 @@ class ApiSubmitter
         $this->mapping       = $this->configuration->getMapping();
         $this->repository    = new ImportJobRepository();
 
-        // FIXME remove this line to crash the submission routine without the user getting an error,
+        // TODO(#83): remove this line to crash the submission routine without the user getting an error,
         $this->addTag        = $this->configuration->isAddImportTag();
         $this->availableCurrencies = [];
         $this->duplicateIndexReady = false;

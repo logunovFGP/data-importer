@@ -77,7 +77,7 @@ class LinkController extends Controller
         // if already a requisition in config file, no need to make a new one unless its invalid.
         $requisitions      = $configuration->getNordigenRequisitions();
         if (1 === count($requisitions)) {
-            // FIXME build me.
+            // TODO(#83): validate existing requisition before reuse.
             throw new ImporterErrorException('Not yet.');
             $url         = config('nordigen.url');
             $accessToken = TokenManager::getAccessToken();

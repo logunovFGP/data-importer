@@ -104,7 +104,11 @@ class RoutineManager implements RoutineManagerInterface
             $total += count($transactions);
         }
         if (0 === $total) {
-            $this->importJob->conversionStatus->addError(0, 'No transactions were downloaded from BasisBank.');
+            Log::warning('Downloaded nothing from BasisBank, will return nothing.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                '[bb-001]: No transactions were downloaded from BasisBank. The account may have no activity in the selected period.'
+            );
             $this->repository->saveToDisk($this->importJob);
 
             return true;

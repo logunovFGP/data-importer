@@ -47,6 +47,7 @@ abstract class Request
     private string $authString = '';
     private array $parameters;
     private float $timeOut     = 3.14;
+    private string $token      = '';
 
     protected string $userId;
     protected string $accessKey;
@@ -164,7 +165,7 @@ abstract class Request
      */
     protected function authenticatedJsonPost(array $json): array
     {
-        throw new ImporterHttpException('Do not execute this.');
+        throw new \BadMethodCallException('Not implemented for Sophtron provider');
 
         //        Log::debug(sprintf('Now at %s', __METHOD__));
         //        $fullUrl = sprintf('%s/%s', $this->getBase(), $this->getUrl());
@@ -273,7 +274,7 @@ abstract class Request
 
     private function logRateLimitHeaders(ResponseInterface $res, bool $fromErrorSituation): void
     {
-        throw new ImporterErrorException('Should not be necesary.');
+        throw new \BadMethodCallException('Not implemented for Sophtron provider');
 
         //        $headers = $res->getHeaders();
         //        $method  = $fromErrorSituation ? 'error' : 'debug';
@@ -303,7 +304,7 @@ abstract class Request
      */
     private function pauseForRateLimit(ResponseInterface $res, bool $fromErrorSituation): void
     {
-        throw new ImporterErrorException('Should not be necesary.');
+        throw new \BadMethodCallException('Not implemented for Sophtron provider');
 
         //        $method      = $fromErrorSituation ? 'error' : 'debug';
         //        Log::{$method}(sprintf('[%s] Now in pauseForRateLimit', config('importer.version')));
@@ -339,7 +340,7 @@ abstract class Request
 
     public static function formatTime(int $reset): string
     {
-        throw new ImporterErrorException('Should not be necesary.');
+        throw new \BadMethodCallException('Not implemented for Sophtron provider');
 
         //        $return  = '';
         //        if ($reset < 0) {
@@ -375,7 +376,7 @@ abstract class Request
 
     private function reportAndPause(string $type, int $remaining, int $reset, bool $fromErrorSituation): void
     {
-        throw new ImporterErrorException('Should not be necessary.');
+        throw new \BadMethodCallException('Not implemented for Sophtron provider');
 
         //        if ($remaining < 0) {
         //            // no need to report:

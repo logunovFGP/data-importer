@@ -11,10 +11,12 @@ use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\Shared\Authentication\SecretManager as SharedSecretManager;
 use App\Services\Shared\Conversion\ConversionStatus;
 use App\Services\Shared\Conversion\CreatesAccounts;
+use App\Services\Shared\Model\ImportServiceAccount;
 use App\Services\Shared\Preflight\ProviderCurrencyPreflightService;
 use App\Services\Shared\SyncState\SyncStateManager;
 use App\Services\TRC20\Authentication\SecretManager;
 use App\Services\TRC20\Request\GetTransactionsRequest;
+use App\Services\TRC20\Request\GetTrxTransactionsRequest;
 use App\Services\TRC20\Request\GetWalletsRequest;
 use App\Services\TRC20\Support\TRC20AddressValidator;
 use App\Services\TRC20\Support\TRC20AmountParser;
@@ -126,14 +128,14 @@ class TransactionProcessor
             $this->saveConversionStatus();
 
             try {
-                $dateFrom = $this->notBefore?->format('Y-m-d');
-                if (null === $dateFrom && $configuration->isIncrementalSyncEnabled()) {
-                    $dateFrom = $this->resolveIncrementalDateFromCursor($rawWallet);
+                $trc20DateFrom = $this->notBefore?->format('Y-m-d');
+                if (null === $trc20DateFrom && $configuration->isIncrementalSyncEnabled()) {
+                    $trc20DateFrom = $this->resolveIncrementalDateFromCursor($rawWallet);
                 }
                 $transactions = $this->downloadWalletTransactions(
                     $request,
                     $rawWallet,
-                    $dateFrom,
+                    $trc20DateFrom,
                     $this->notAfter?->format('Y-m-d')
                 );
             } catch (ImporterHttpException $e) {
@@ -169,6 +171,40 @@ class TransactionProcessor
             );
             $this->importJob->conversionStatus->incrementPullProgress();
             $this->saveConversionStatus();
+
+            // Fetch native TRX transfers for this wallet if TRX is supported
+            if (TRC20TokenFilter::isTokenInSupportedList(TRC20Constants::CURRENCY_TRX)) {
+                $trxCompositeId = sprintf('%s|%s', $rawWallet, TRC20Constants::CURRENCY_TRX);
+                if (isset($this->accounts[$trxCompositeId])) {
+                    $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Fetching native TRX transfers...', $shortWallet));
+                    $this->saveConversionStatus();
+                    try {
+                        $trxRequest = new GetTrxTransactionsRequest($apiKey, [$rawWallet]);
+                        $trxRequest->setTimeOut((float)config('importer.connection.timeout'));
+                        $trxDateFrom = $this->notBefore?->format('Y-m-d');
+                        if (null === $trxDateFrom && $configuration->isIncrementalSyncEnabled()) {
+                            $trxDateFrom = $this->resolveIncrementalDateFromCursor($rawWallet);
+                        }
+                        $trxTransactions = $this->downloadTrxTransactions(
+                            $trxRequest,
+                            $rawWallet,
+                            $trxDateFrom,
+                            $this->notAfter?->format('Y-m-d')
+                        );
+                        foreach ($trxTransactions as $tx) {
+                            $txAccountId = $tx->account ?? $trxCompositeId;
+                            $return[$txAccountId] ??= [];
+                            $return[$txAccountId][] = $tx;
+                        }
+                        $this->importJob->conversionStatus->addActivity(
+                            sprintf('Wallet %s: Fetched %d native TRX transfer(s)', $shortWallet, count($trxTransactions))
+                        );
+                    } catch (ImporterHttpException $e) {
+                        $this->importJob->conversionStatus->addWarning(0, sprintf('Could not fetch TRX transfers: %s', $e->getMessage()));
+                    }
+                    $this->saveConversionStatus();
+                }
+            }
         }
 
         return $return;
@@ -188,6 +224,58 @@ class TransactionProcessor
     public function getImportJob(): ImportJob
     {
         return $this->importJob;
+    }
+
+    /**
+     * Download native TRX transfers for a wallet using the general transactions endpoint.
+     * Same pagination pattern as downloadWalletTransactions but uses GetTrxTransactionsRequest.
+     */
+    private function downloadTrxTransactions(
+        GetTrxTransactionsRequest $request,
+        string $wallet,
+        ?string $dateFrom,
+        ?string $dateTo
+    ): array {
+        $maxPages = max(1, (int)config('trc20.max_pages', 100));
+        $page     = 0;
+        $cursor   = null;
+        $return   = [];
+        $shortWallet = substr($wallet, 0, 8) . '...' . substr($wallet, -4);
+
+        while ($page < $maxPages) {
+            if (0 >= $request->getPageSize()) {
+                break;
+            }
+
+            ++$page;
+            $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Fetching TRX page %d...', $shortWallet, $page));
+            $this->saveConversionStatus();
+
+            $response     = $request->get($dateFrom, $dateTo, $cursor);
+            $rowCount     = count($response->getRawData());
+            $transactions = $this->extractWalletTransactions($response, $wallet);
+
+            $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: TRX page %d — %d rows, %d valid', $shortWallet, $page, $rowCount, count($transactions)));
+            $this->saveConversionStatus();
+
+            if (0 === $rowCount && false === $response->hasNextCursor()) {
+                break;
+            }
+
+            $return = array_merge($return, $transactions);
+            if (!$response->hasNextCursor()) {
+                break;
+            }
+
+            $nextCursor = $response->getNextCursor();
+            if (null === $nextCursor || '' === trim($nextCursor) || $nextCursor === $cursor) {
+                break;
+            }
+
+            $cursor = $nextCursor;
+        }
+
+        return $return;
     }
 
     private function downloadWalletTransactions(
@@ -317,8 +405,8 @@ class TransactionProcessor
             return null;
         }
 
-        $amountParsed = TRC20AmountParser::parseAsFloat($row);
-        if (null === $amountParsed) {
+        $amountStr = TRC20AmountParser::parse($row);
+        if (null === $amountStr) {
             $this->importJob->conversionStatus->addWarning(
                 0,
                 sprintf('TRC20 transaction for wallet %s has no numeric amount and was ignored.', $wallet)
@@ -326,8 +414,9 @@ class TransactionProcessor
             return null;
         }
 
-        $amount = round(abs($amountParsed), 12);
-        if (0.0 === $amount) {
+        // Use bcmath to get absolute value: strip leading minus sign.
+        $absAmount = ltrim($amountStr, '-');
+        if (0 === bccomp($absAmount, '0', 12)) {
             $this->importJob->conversionStatus->addWarning(0, sprintf('Transaction in TRC20 row for %s has an amount of zero and was ignored.', $wallet));
 
             return null;
@@ -351,7 +440,9 @@ class TransactionProcessor
             return null;
         }
 
-        $amount = $isOutgoing ? -1 * abs($amount) : abs($amount);
+        // Build signed amount as plain decimal string (never scientific notation).
+        // $absAmount is already a bcmath-safe string from TRC20AmountParser::parse().
+        $signedAmount = $isOutgoing ? '-' . $absAmount : $absAmount;
 
         $counterparty = TRC20AddressValidator::addressesMatch($fromAddress, $wallet) ? $toAddress : $fromAddress;
 
@@ -362,7 +453,7 @@ class TransactionProcessor
                     $wallet,
                     $fromAddress,
                     $toAddress,
-                    $amount,
+                    $signedAmount,
                     $date->format(self::DATE_TIME_FORMAT),
                     (string)($row['index'] ?? $row['tx_index'] ?? '')
                 );
@@ -395,7 +486,7 @@ class TransactionProcessor
         return [
             'id'             => $externalId,
             'accountId'      => $perTokenAccountId,
-            'amount'         => (string)$amount,
+            'amount'         => $signedAmount,
             'currency'       => $symbol,
             'date'           => $date->format('Y-m-d'),
             'merchant'       => $counterparty,
@@ -447,7 +538,7 @@ class TransactionProcessor
         string $wallet,
         string $fromAddress,
         string $toAddress,
-        float $amount,
+        string $amount,
         string $date,
         string $index
     ): string {
@@ -583,7 +674,7 @@ class TransactionProcessor
         if (0 !== count($serviceAccounts)) {
             $normalized = [];
             foreach ($serviceAccounts as $serviceAccount) {
-                $normalized[] = $this->normalizeServiceAccount($serviceAccount);
+                $normalized[] = ImportServiceAccount::normalizeToArray($serviceAccount);
             }
 
             return $normalized;
@@ -601,42 +692,10 @@ class TransactionProcessor
 
         $normalized = [];
         foreach ($response as $account) {
-            $normalized[] = $this->normalizeServiceAccount($account);
+            $normalized[] = ImportServiceAccount::normalizeToArray($account);
         }
 
         return $normalized;
-    }
-
-    private function normalizeServiceAccount(array|object $account): array
-    {
-        if (is_array($account) && array_key_exists('currency_code', $account)) {
-            return [
-                'id'            => (string)($account['id'] ?? ''),
-                'name'          => (string)($account['name'] ?? ''),
-                'currency_code' => (string)($account['currency_code'] ?? ''),
-                'iban'          => '',
-                'bban'          => '',
-                'status'        => (string)($account['status'] ?? 'active'),
-                'extra'         => [],
-            ];
-        }
-
-        $payload = [];
-        if (is_array($account)) {
-            $payload = $account;
-        } elseif (is_object($account) && method_exists($account, 'toArray')) {
-            $payload = (array)$account->toArray();
-        }
-
-        return [
-            'id'            => (string)($payload['id'] ?? ''),
-            'name'          => (string)($payload['name'] ?? ''),
-            'currency_code' => (string)($payload['currency_code'] ?? $payload['currency'] ?? ''),
-            'iban'          => '',
-            'bban'          => '',
-            'status'        => (string)($payload['status'] ?? 'active'),
-            'extra'         => [],
-        ];
     }
 
 }

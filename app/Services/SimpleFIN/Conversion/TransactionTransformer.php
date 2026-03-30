@@ -41,6 +41,17 @@ class TransactionTransformer
 {
     use CollectsAccounts;
 
+    /**
+     * Regex patterns to strip common transaction prefixes/suffixes from descriptions.
+     * Shared between extractCounterAccountName() and normalizeForMatching().
+     */
+    private const array CLEANUP_PATTERNS = [
+        '/^(PAYMENT|DEPOSIT|TRANSFER|DEBIT|CREDIT)\s+/i',
+        '/\s+(PAYMENT|DEPOSIT|TRANSFER|DEBIT|CREDIT)$/i',
+        '/^(FROM|TO)\s+/i',
+        '/\s+\d{4}[-\/]\d{2}[-\/]\d{2}.*$/', // Remove trailing dates
+    ];
+
     private array $expenseAccounts            = [];
     private array $revenueAccounts            = [];
     private bool  $accountsCollected          = false;
@@ -82,8 +93,7 @@ class TransactionTransformer
             $type               = 'deposit';
             $sourceAccount      = $this->getCounterAccount($transactionData, true);
             $destinationAccount = $this->getFireflyAccount($simpleFINAccountData, $accountMapping, $newAccountConfig);
-        }
-        if (!$isDeposit) {
+        } else {
             $type               = 'withdrawal';
             $sourceAccount      = $this->getFireflyAccount($simpleFINAccountData, $accountMapping, $newAccountConfig);
             $destinationAccount = $this->getCounterAccount($transactionData, false);
@@ -204,14 +214,7 @@ class TransactionTransformer
         $cleaned  = trim($description);
 
         // Remove common prefixes/suffixes that don't help identify the account
-        $patterns = [
-            '/^(PAYMENT|DEPOSIT|TRANSFER|DEBIT|CREDIT)\s+/i',
-            '/\s+(PAYMENT|DEPOSIT|TRANSFER|DEBIT|CREDIT)$/i',
-            '/^(FROM|TO)\s+/i',
-            '/\s+\d{4}[-\/]\d{2}[-\/]\d{2}.*$/', // Remove trailing dates
-        ];
-
-        foreach ($patterns as $pattern) {
+        foreach (self::CLEANUP_PATTERNS as $pattern) {
             $cleaned = preg_replace($pattern, '', (string) $cleaned);
         }
 
@@ -471,17 +474,11 @@ class TransactionTransformer
         $normalized = strtolower($text);
 
         // Remove common transaction prefixes/suffixes
-        $patterns   = [
-            '/^(payment|deposit|transfer|debit|credit)\s+/i',
-            '/\s+(payment|deposit|transfer|debit|credit)$/i',
-            '/^(from|to)\s+/i',
-            '/\s+\d{4}[-\/]\d{2}[-\/]\d{2}.*$/', // Remove trailing dates
-            '/\s+#\w+.*$/', // Remove trailing reference numbers
-        ];
-
-        foreach ($patterns as $pattern) {
+        foreach (self::CLEANUP_PATTERNS as $pattern) {
             $normalized = preg_replace($pattern, '', (string) $normalized);
         }
+        // Additional pattern for matching: remove trailing reference numbers
+        $normalized = preg_replace('/\s+#\w+.*$/', '', (string) $normalized);
 
         // Remove special characters and extra spaces
         $normalized = preg_replace('/[^a-z0-9\s]/', '', (string) $normalized);

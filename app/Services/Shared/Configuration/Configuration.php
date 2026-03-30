@@ -270,23 +270,8 @@ class Configuration
         $object->nordigenRequisitions        = $data['nordigen_requisitions'] ?? [];
         $object->nordigenMaxDays             = $data['nordigen_max_days'] ?? '90';
 
-        // lunch flow configuration
-        $object->lunchFlowApiKey             = $data['lunch_flow_api_key'] ?? '';
-        $legacyLogin                          = trim((string)($data['basis_bank_api_token'] ?? ''));
-        $legacyConsent                        = trim((string)($data['basis_bank_consent_id'] ?? ''));
-        $object->basisBankLogin                = trim((string)($data['basis_bank_login'] ?? $legacyLogin));
-        $object->basisBankPassword             = trim((string)($data['basis_bank_password'] ?? $legacyConsent));
-        $object->basisBankAuthState            = trim((string)($data['basis_bank_auth_state'] ?? ''));
-        $object->basisBankSessionArtifact      = trim((string)($data['basis_bank_session_artifact'] ?? ''));
-        $object->basisBankRequestSmsCode       = (bool)($data['basis_bank_request_sms_code'] ?? false);
-        $object->basisBankTrustDevice          = (bool)($data['basis_bank_trust_device'] ?? false);
-        $object->basisBankApiToken             = $object->basisBankLogin;
-        $object->basisBankConsentId            = $object->basisBankPassword;
-        $object->tBankApiToken               = $data['t_bank_api_token'] ?? '';
-        $object->trc20ApiKey                = $data['trc20_api_key'] ?? '';
-        $object->trc20Wallets               = $data['trc20_wallets'] ?? '';
-        $object->incrementalSyncEnabled      = (bool)($data['incremental_sync_enabled'] ?? false);
-        $object->incrementalLookbackDays     = (int)($data['incremental_lookback_days'] ?? 3);
+        // provider credentials (BasisBank, TBank, TRC20, LunchFlow, incrementalSync)
+        self::hydrateProviderCredentials($object, $data);
 
         // settings for spectre + nordigen (are not in v1 anyway)
         $object->mapAllData                  = $data['map_all_data'] ?? false;
@@ -438,26 +423,8 @@ class Configuration
         $object->nordigenRequisitions        = $array['nordigen_requisitions'] ?? [];
         $object->nordigenMaxDays             = $array['nordigen_max_days'] ?? '90';
 
-        // lunch flow configuration
-        $object->lunchFlowApiKey             = $array['lunch_flow_api_key'] ?? '';
-        $legacyLogin                          = trim((string)($array['basis_bank_api_token'] ?? ''));
-        $legacyConsent                        = trim((string)($array['basis_bank_consent_id'] ?? ''));
-        $object->basisBankLogin                = trim((string)($array['basis_bank_login'] ?? $legacyLogin));
-        $object->basisBankPassword             = trim((string)($array['basis_bank_password'] ?? $legacyConsent));
-        $object->basisBankAuthState            = trim((string)($array['basis_bank_auth_state'] ?? ''));
-        $object->basisBankSessionArtifact      = trim((string)($array['basis_bank_session_artifact'] ?? ''));
-        $object->basisBankRequestSmsCode       = (bool)($array['basis_bank_request_sms_code'] ?? false);
-        $object->basisBankTrustDevice          = (bool)($array['basis_bank_trust_device'] ?? false);
-        $object->basisBankApiToken             = $object->basisBankLogin;
-        $object->basisBankConsentId            = $object->basisBankPassword;
-        $object->tBankApiToken               = $array['t_bank_api_token'] ?? '';
-        $object->trc20ApiKey                = $array['trc20_api_key'] ?? '';
-        $object->trc20Wallets               = $array['trc20_wallets'] ?? '';
-        $object->incrementalSyncEnabled      = (bool)($array['incremental_sync_enabled'] ?? false);
-        $object->incrementalLookbackDays     = (int)($array['incremental_lookback_days'] ?? 3);
-
-        // simplefin
-        $object->pendingTransactions         = $array['pending_transactions'] ?? true;
+        // provider credentials (BasisBank, TBank, TRC20, LunchFlow, incrementalSync)
+        self::hydrateProviderCredentials($object, $array);
 
         // duplicate transaction detection
         $object->duplicateDetectionMethod    = $array['duplicate_detection_method'] ?? 'classic';
@@ -551,23 +518,8 @@ class Configuration
         $object->nordigenRequisitions        = $array['nordigen_requisitions'] ?? [];
         $object->nordigenMaxDays             = $array['nordigen_max_days'] ?? '90';
 
-        // lunch flow configuration
-        $object->lunchFlowApiKey             = $array['lunch_flow_api_key'] ?? '';
-        $legacyLogin                          = trim((string)($array['basis_bank_api_token'] ?? ''));
-        $legacyConsent                        = trim((string)($array['basis_bank_consent_id'] ?? ''));
-        $object->basisBankLogin                = trim((string)($array['basis_bank_login'] ?? $legacyLogin));
-        $object->basisBankPassword             = trim((string)($array['basis_bank_password'] ?? $legacyConsent));
-        $object->basisBankAuthState            = trim((string)($array['basis_bank_auth_state'] ?? ''));
-        $object->basisBankSessionArtifact      = trim((string)($array['basis_bank_session_artifact'] ?? ''));
-        $object->basisBankRequestSmsCode       = (bool)($array['basis_bank_request_sms_code'] ?? false);
-        $object->basisBankTrustDevice          = (bool)($array['basis_bank_trust_device'] ?? false);
-        $object->basisBankApiToken             = $object->basisBankLogin;
-        $object->basisBankConsentId            = $object->basisBankPassword;
-        $object->tBankApiToken               = $array['t_bank_api_token'] ?? '';
-        $object->trc20ApiKey                = $array['trc20_api_key'] ?? '';
-        $object->trc20Wallets               = $array['trc20_wallets'] ?? '';
-        $object->incrementalSyncEnabled      = (bool)($array['incremental_sync_enabled'] ?? false);
-        $object->incrementalLookbackDays     = (int)($array['incremental_lookback_days'] ?? 3);
+        // provider credentials (BasisBank, TBank, TRC20, LunchFlow, incrementalSync)
+        self::hydrateProviderCredentials($object, $array);
 
         $object->groupedTransactionHandling  = $array['grouped_transaction_handling'] ?? 'single';
         $object->useEntireOpposingAddress    = $array['use_entire_opposing_address'] ?? false;
@@ -866,6 +818,11 @@ class Configuration
         return $this->uniqueColumnType;
     }
 
+    public function setUniqueColumnType(string $type): void
+    {
+        $this->uniqueColumnType = $type;
+    }
+
     public function getPseudoIdentifier(): ?array
     {
         return count($this->pseudoIdentifier) > 0 ? $this->pseudoIdentifier : null;
@@ -992,6 +949,38 @@ class Configuration
     {
         $array = $this->toArray();
         unset($array['mapping'], $array['do_mapping'], $array['roles']);
+
+        return $array;
+    }
+
+    /**
+     * Credential keys that must be stripped from exported/downloadable configuration files.
+     *
+     * WHY: toArray() includes plaintext credentials for internal session/serialization use.
+     * When users download the JSON config file, these secrets must not be included —
+     * otherwise credentials leak into files that may be shared, committed, or stored insecurely.
+     */
+    private const array EXPORT_REDACTED_KEYS = [
+        'basis_bank_login',
+        'basis_bank_password',
+        'basis_bank_session_artifact',
+        't_bank_api_token',
+        'trc20_api_key',
+        'lunch_flow_api_key',
+        'access_token',
+    ];
+
+    /**
+     * Return configuration as array with credential fields removed.
+     * Use this for any user-downloadable or file-exported configuration.
+     * Internal session/serialization should continue using toArray().
+     */
+    public function toExportArray(): array
+    {
+        $array = $this->toArray();
+        foreach (self::EXPORT_REDACTED_KEYS as $key) {
+            unset($array[$key]);
+        }
 
         return $array;
     }
@@ -1124,10 +1113,24 @@ class Configuration
                 $before                        = trim($this->dateNotBefore); // string
                 $after                         = trim($this->dateNotAfter);  // string
                 if ('' !== $before) {
-                    $before = Carbon::createFromFormat('Y-m-d', $before);
+                    try {
+                        $before = Carbon::createFromFormat('Y-m-d', $before);
+                    } catch (\Throwable $e) {
+                        throw new ImporterErrorException(sprintf('Invalid date format: %s', $this->dateNotBefore));
+                    }
+                    if (false === $before) {
+                        throw new ImporterErrorException(sprintf('Invalid date format: %s', $this->dateNotBefore));
+                    }
                 }
                 if ('' !== $after) {
-                    $after = Carbon::createFromFormat('Y-m-d', $after);
+                    try {
+                        $after = Carbon::createFromFormat('Y-m-d', $after);
+                    } catch (\Throwable $e) {
+                        throw new ImporterErrorException(sprintf('Invalid date format: %s', $this->dateNotAfter));
+                    }
+                    if (false === $after) {
+                        throw new ImporterErrorException(sprintf('Invalid date format: %s', $this->dateNotAfter));
+                    }
                 }
 
                 if ('' !== $before && '' !== $after && $before > $after) {
@@ -1140,15 +1143,22 @@ class Configuration
         }
         // sanity check right away.
         if ('' !== $this->dateNotBefore && '' !== $this->dateNotAfter) {
-            $notBefore = Carbon::createFromFormat('Y-m-d', $this->dateNotBefore);
-            $notAfter  = Carbon::createFromFormat('Y-m-d', $this->dateNotAfter);
+            try {
+                $notBefore = Carbon::createFromFormat('Y-m-d', $this->dateNotBefore);
+                $notAfter  = Carbon::createFromFormat('Y-m-d', $this->dateNotAfter);
+            } catch (\Throwable $e) {
+                throw new ImporterErrorException(sprintf('Invalid date format in sanity check: "%s" / "%s"', $this->dateNotBefore, $this->dateNotAfter));
+            }
+            if (false === $notBefore || false === $notAfter) {
+                throw new ImporterErrorException(sprintf('Invalid date format in sanity check: "%s" / "%s"', $this->dateNotBefore, $this->dateNotAfter));
+            }
             if ($notAfter->lt($notBefore)) {
                 throw new ImporterErrorException(sprintf('The date range in your configuration is invalid. The "not before" date (%s) is after the "not after" date (%s). You must correct this manually.', $this->dateNotBefore, $this->dateNotAfter));
             }
         }
     }
 
-    private static function calcDateNotBefore(string $unit, int $number): ?string
+    private static function calcDateNotBefore(string $unit, int $number): string
     {
         $functions = [
             'd' => 'subDays',
@@ -1165,7 +1175,7 @@ class Configuration
         }
         Log::error(sprintf('Could not parse date setting. Unknown key "%s"', $unit));
 
-        return null;
+        return '';
     }
 
     public function getAccessToken(): string
@@ -1380,8 +1390,14 @@ class Configuration
         $this->conversion                  = $request['conversion'];
         $this->groupedTransactionHandling  = $request['grouped_transaction_handling'];
         $this->useEntireOpposingAddress    = $request['use_entire_opposing_address'];
-        $this->newAccounts                 = $request['to_create'];
-        $this->accounts                    = $request['to_import_from'];
+        // Preserve existing accounts and new_accounts when the configure form doesn't include
+        // account mapping (e.g., TRC20 auto-discovers accounts during upload, not on the configure page).
+        if ([] !== ($request['to_create'] ?? [])) {
+            $this->newAccounts = $request['to_create'];
+        }
+        if ([] !== ($request['to_import_from'] ?? [])) {
+            $this->accounts = $request['to_import_from'];
+        }
 
 
         // config for "cell":
@@ -1394,5 +1410,29 @@ class Configuration
         // Migrate old single-column identifier to pseudo identifier format
         $this->migrateSingleIdentifierToPseudoIdentifier();
         $this->updateDateRange();
+    }
+
+    /**
+     * Hydrate provider-specific credentials from source data into the configuration object.
+     * Extracted from fromClassicFile(), fromArray(), and fromRequest() to eliminate duplication.
+     */
+    private static function hydrateProviderCredentials(self $object, array $data): void
+    {
+        $object->lunchFlowApiKey             = $data['lunch_flow_api_key'] ?? '';
+        $legacyLogin                          = trim((string)($data['basis_bank_api_token'] ?? ''));
+        $legacyConsent                        = trim((string)($data['basis_bank_consent_id'] ?? ''));
+        $object->basisBankLogin                = trim((string)($data['basis_bank_login'] ?? $legacyLogin));
+        $object->basisBankPassword             = trim((string)($data['basis_bank_password'] ?? $legacyConsent));
+        $object->basisBankAuthState            = trim((string)($data['basis_bank_auth_state'] ?? ''));
+        $object->basisBankSessionArtifact      = trim((string)($data['basis_bank_session_artifact'] ?? ''));
+        $object->basisBankRequestSmsCode       = (bool)($data['basis_bank_request_sms_code'] ?? false);
+        $object->basisBankTrustDevice          = (bool)($data['basis_bank_trust_device'] ?? false);
+        $object->basisBankApiToken             = $object->basisBankLogin;
+        $object->basisBankConsentId            = $object->basisBankPassword;
+        $object->tBankApiToken               = $data['t_bank_api_token'] ?? '';
+        $object->trc20ApiKey                = $data['trc20_api_key'] ?? '';
+        $object->trc20Wallets               = $data['trc20_wallets'] ?? '';
+        $object->incrementalSyncEnabled      = (bool)($data['incremental_sync_enabled'] ?? false);
+        $object->incrementalLookbackDays     = (int)($data['incremental_lookback_days'] ?? 3);
     }
 }

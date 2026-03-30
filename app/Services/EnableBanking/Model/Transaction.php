@@ -24,9 +24,9 @@ declare(strict_types=1);
 
 namespace App\Services\EnableBanking\Model;
 
+use App\Services\Shared\Support\TransactionIdGenerator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
-use Ramsey\Uuid\Uuid;
 
 /**
  * Class Transaction
@@ -108,14 +108,7 @@ class Transaction
 
         // Generate transaction ID if empty - use entry_reference or hash
         if ('' === $transaction->transactionId) {
-            $hash                       = hash('sha256', (string) microtime());
-            $encoded                    = json_encode($array);
-            if (json_validate($encoded)) {
-                $hash = hash('sha256', $encoded);
-            } else {
-                Log::error('Could not parse array into JSON');
-            }
-            $transaction->transactionId = sprintf('eb-%s', Uuid::uuid5(config('importer.namespace'), $hash));
+            $transaction->transactionId = TransactionIdGenerator::generateFallbackId('eb', $array);
         }
 
         return $transaction;
@@ -159,10 +152,7 @@ class Transaction
 
     public function getTransactionId(): string
     {
-        $accountId     = substr(trim((string) preg_replace('/\s+/', ' ', $this->accountUid)), 0, 125);
-        $transactionId = substr(trim((string) preg_replace('/\s+/', ' ', $this->transactionId)), 0, 125);
-
-        return trim(sprintf('%s-%s', $accountId, $transactionId));
+        return TransactionIdGenerator::buildCompositeId($this->accountUid, $this->transactionId);
     }
 
     public function getSourceName(): ?string

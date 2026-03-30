@@ -34,6 +34,8 @@ use App\Services\BasisBank\Conversion\RoutineManager as BasisBankRoutineManager;
 use App\Services\Shared\File\FileContentSherlock;
 use App\Services\SimpleFIN\Conversion\RoutineManager as SimpleFINRoutineManager;
 use App\Services\TBank\Conversion\RoutineManager as TBankRoutineManager;
+use App\Services\Spectre\Conversion\RoutineManager as SpectreRoutineManager;
+use App\Services\EnableBanking\Conversion\RoutineManager as EnableBankingRoutineManager;
 use App\Services\TRC20\Conversion\RoutineManager as TRC20RoutineManager;
 use Illuminate\Support\Facades\Log;
 
@@ -91,6 +93,12 @@ class ConversionRoutineFactory
         }
         if ('trc20' === $flow) {
             return new TRC20RoutineManager($this->importJob);
+        }
+        if ('spectre' === $flow) {
+            return new SpectreRoutineManager($this->importJob);
+        }
+        if ('eb' === $flow) {
+            return new EnableBankingRoutineManager($this->importJob);
         }
 
         throw new ImporterErrorException(sprintf('ConversionRoutineFactory cannot create a routine for import flow "%s"', $flow));

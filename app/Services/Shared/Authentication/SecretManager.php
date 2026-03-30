@@ -34,15 +34,17 @@ use SensitiveParameter;
  */
 class SecretManager
 {
+    private const array ALLOWED_SESSION_KEYS = ['sophtron_user_id', 'sophtron_access_key'];
+
     public static function getSophtronAccessKey(?ImportJob $importJob = null): string
     {
-        // FIXME needs to use constants.
+        // TODO(#83): needs to use constants.
         return self::getField('access_key', 'sophtron.access_key', 'sophtron_access_key', $importJob);
     }
 
     public static function getSophtronUserId(?ImportJob $importJob = null): string
     {
-        // FIXME needs to use constants.
+        // TODO(#83): needs to use constants.
         return self::getField('user_id', 'sophtron.user_id', 'sophtron_user_id', $importJob);
     }
 
@@ -234,6 +236,9 @@ class SecretManager
 
     public static function saveValueInSession(string $key, string $value): void
     {
+        if (!in_array($key, self::ALLOWED_SESSION_KEYS, true)) {
+            throw new \InvalidArgumentException(sprintf('Session key "%s" is not in the allowed list.', $key));
+        }
         session()->put($key, $value);
     }
 

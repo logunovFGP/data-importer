@@ -57,8 +57,9 @@ class Date implements ConverterInterface
         $string = app('steam')->cleanStringAndNewlines($value);
         $carbon = null;
 
-        if ('!' !== $this->dateFormat[0]) {
-            $this->dateFormat = sprintf('!%s', $this->dateFormat);
+        $format = $this->dateFormat;
+        if ('!' !== $format[0]) {
+            $format = sprintf('!%s', $format);
         }
 
         if ('' === $string) {
@@ -67,10 +68,10 @@ class Date implements ConverterInterface
             $carbon->startOfDay();
         }
         if ('' !== $string) {
-            Log::debug(sprintf('Date converter is going to work on "%s" using format "%s"', $string, $this->dateFormat));
+            Log::debug(sprintf('Date converter is going to work on "%s" using format "%s"', $string, $format));
 
             try {
-                $carbon = Carbon::createFromLocaleFormat($this->dateFormat, $this->dateLocale, $string);
+                $carbon = Carbon::createFromLocaleFormat($format, $this->dateLocale, $string);
             } catch (Exception|InvalidArgumentException $e) {
                 Log::error(sprintf('%s converting the date: %s', $e::class, $e->getMessage()));
                 Log::debug('Date parsing error, will return today instead.');

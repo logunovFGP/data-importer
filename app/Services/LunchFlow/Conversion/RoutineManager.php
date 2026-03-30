@@ -72,7 +72,7 @@ class RoutineManager implements RoutineManagerInterface
     private function setConfiguration(): void
     {
         $this->transactionProcessor->setImportJob($this->importJob);
-        // FIXME no need, will be overruled later anyway
+        // TODO(#83): no need, will be overruled later anyway
         $this->transactionGenerator->setImportJob($this->importJob);
     }
 
@@ -89,7 +89,7 @@ class RoutineManager implements RoutineManagerInterface
 
         // Step 3: Generate Firefly III-ready transactions.
         // first collect target accounts from Firefly III.
-        // FIXME this still feels weird. Part of this data is already inside the import job.
+        // TODO(#83): this still feels weird. Part of this data is already inside the import job.
         $this->collectTargetAccounts();
 
         // need to refresh local import job because of changes made by the previous step.

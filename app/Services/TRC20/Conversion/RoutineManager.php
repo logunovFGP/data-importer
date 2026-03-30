@@ -101,7 +101,11 @@ class RoutineManager implements RoutineManagerInterface
             $total += count($transactions);
         }
         if (0 === $total) {
-            $this->importJob->conversionStatus->addError(0, 'No transactions were downloaded from TRC20.');
+            Log::warning('Downloaded nothing from TRC20, will return nothing.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                '[trc20-001]: No transactions were downloaded from TRC20. The wallet may have no activity in the selected period.'
+            );
             $this->repository->saveToDisk($this->importJob);
 
             return true;

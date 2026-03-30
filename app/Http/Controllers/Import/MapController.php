@@ -123,8 +123,8 @@ class MapController extends Controller
 
     /**
      * Return the map data necessary for the importable file mapping based on some weird helpers.
-     * FIXME needs refactoring and proper splitting into helpers.
-     * FIXME needs renaming or specific CAMT counterpart.
+     * TODO(#83): needs refactoring and proper splitting into helpers.
+     * TODO(#83): needs renaming or specific CAMT counterpart.
      */
     private function getCSVMapInformation(ImportJob $importJob): array
     {
@@ -193,7 +193,7 @@ class MapController extends Controller
 
     /**
      * Return the map data necessary for the importable file mapping based on some weird helpers.
-     * FIXME needs refactoring and proper splitting into helpers.
+     * TODO(#83): needs refactoring and proper splitting into helpers.
      */
     private function getCamtMapInformation(ImportJob $importJob): array
     {
@@ -265,7 +265,7 @@ class MapController extends Controller
             'nordigen' === $importJob->getFlow() || 'sophtron' === $importJob->getFlow()
             || 'spectre' === $importJob->getFlow() || 'lunchflow' === $importJob->getFlow()
             || 'basisbank' === $importJob->getFlow() || 'tbank' === $importJob->getFlow() || 'trc20' === $importJob->getFlow()) {
-            // FIXME should be in a helper or something generic.
+            // TODO(#83): should be in a helper or something generic.
             // index 0, opposing account name:
             $index                        = 0;
             $opposingName                 = config('csv.import_roles.opposing-name') ?? null;

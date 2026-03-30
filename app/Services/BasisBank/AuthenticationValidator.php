@@ -10,6 +10,7 @@ use App\Services\BasisBank\Auth\BasisBankSessionState;
 use App\Services\BasisBank\Request\GetPingRequest;
 use App\Services\Enums\AuthenticationStatus;
 use App\Services\Shared\Authentication\AuthenticationValidatorInterface;
+use App\Services\Shared\Support\BooleanParser;
 use Illuminate\Support\Facades\Log;
 
 class AuthenticationValidator implements AuthenticationValidatorInterface
@@ -73,8 +74,8 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
         $login           = trim((string)($data['api_token'] ?? $data['login'] ?? ''));
         $password        = trim((string)($data['consent_id'] ?? $data['password'] ?? ''));
         $otpCode         = trim((string)($data['otp_code'] ?? ''));
-        $requestSmsCode  = $this->asBool($data['request_sms_code'] ?? null);
-        $trustDevice     = $this->asBool($data['trust_device'] ?? null);
+        $requestSmsCode  = BooleanParser::parse($data['request_sms_code'] ?? null);
+        $trustDevice     = BooleanParser::parse($data['trust_device'] ?? null);
         $authState       = trim((string)($data['auth_state'] ?? ''));
         $sessionArtifact = trim((string)($data['session_artifact'] ?? ''));
 
@@ -87,12 +88,4 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
         SecretManager::saveSessionArtifact($sessionArtifact);
     }
 
-    private function asBool(mixed $value): bool
-    {
-        return in_array(
-            strtolower((string)$value),
-            ['1', 'true', 'on', 'yes'],
-            true
-        );
-    }
 }

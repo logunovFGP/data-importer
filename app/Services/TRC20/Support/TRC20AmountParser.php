@@ -21,6 +21,12 @@ class TRC20AmountParser
             return null;
         }
 
+        // Guard against scientific notation (e.g., "1.0E-5", "1E5") which bcmath rejects.
+        // Must run BEFORE any bcmath operation.
+        if (preg_match('/[eE]/', $value)) {
+            $value = sprintf('%.12f', (float)$value);
+        }
+
         $decimals = (int)($row['token_info']['decimals'] ?? $row['decimals'] ?? TRC20Constants::USDT_DECIMALS);
 
         if ($decimals > 0 && !str_contains($value, '.')) {

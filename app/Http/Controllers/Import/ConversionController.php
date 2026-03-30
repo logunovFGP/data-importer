@@ -159,11 +159,12 @@ class ConversionController extends Controller
 
         try {
             $transactions = $routine->start();
-        } catch (ImporterErrorException $e) {
+        } catch (\Throwable $e) {
             Log::error(sprintf('[%s]: %s', config('importer.version'), $e->getMessage()));
             Log::error($e->getTraceAsString());
 
             $importJob = $routine->getImportJob();
+            $importJob->conversionStatus->addError(0, $e->getMessage());
             $importJob->conversionStatus->setStatus(ConversionStatus::CONVERSION_ERRORED);
             $this->repository->saveToDisk($importJob);
 

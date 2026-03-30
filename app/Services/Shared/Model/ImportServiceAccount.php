@@ -99,11 +99,7 @@ class ImportServiceAccount
             );
         }
         if ($account instanceof LunchFlowAccount) {
-            $iban = trim((string)($account->iban ?? ''));
-            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
-                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
-                $iban = '';
-            }
+            $iban = self::sanitizeIban(trim((string)($account->iban ?? '')));
             $bban = trim((string)($account->bban ?? ''));
             $syncIds = is_array($account->syncIds ?? null) ? $account->syncIds : [];
             $sourceExtra = is_array($account->extra ?? null) ? $account->extra : [];
@@ -156,11 +152,7 @@ class ImportServiceAccount
             );
         }
         if ($account instanceof SophtronAccount) {
-            $iban = $account->accountNumber;
-            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
-                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
-                $iban = '';
-            }
+            $iban = self::sanitizeIban($account->accountNumber);
 
             return self::fromArray(
                 [
@@ -195,11 +187,7 @@ class ImportServiceAccount
 
         /** @var NordigenAccount $account */
         foreach ($accounts as $account) {
-            $iban     = $account->getIban();
-            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
-                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
-                $iban = '';
-            }
+            $iban     = self::sanitizeIban($account->getIban());
 
             $current  = self::fromArray(
                 [
@@ -281,11 +269,7 @@ class ImportServiceAccount
     public static function fromArray(array $array): self
     {
         Log::debug('Create generic account from', $array);
-        $iban                  = (string)($array['iban'] ?? '');
-        if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
-            Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
-            $iban = '';
-        }
+        $iban                  = self::sanitizeIban((string)($array['iban'] ?? ''));
         $account               = new self();
         $extra                 = is_array($array['extra'] ?? null) ? $array['extra'] : [];
         $balanceRaw            = $array['balance'] ?? ($extra['Balance'] ?? null);
@@ -304,17 +288,31 @@ class ImportServiceAccount
         return $account;
     }
 
+    /**
+     * Convert TRC20 service accounts (plain arrays from GetWalletRequest::buildAccount)
+     * into ImportServiceAccount objects. The arrays already use the same keys as fromArray().
+     */
+    public static function convertTRC20Array(array $serviceAccounts): array
+    {
+        $return = [];
+        foreach ($serviceAccounts as $account) {
+            if (is_array($account)) {
+                $return[] = self::fromArray($account);
+            } elseif (is_object($account) && method_exists($account, 'toArray')) {
+                $return[] = self::fromArray($account->toArray());
+            }
+        }
+
+        return $return;
+    }
+
     public static function convertSophtronArray(array $serviceAccounts): array
     {
         $return = [];
 
         /** @var SophtronAccount $account */
         foreach ($serviceAccounts as $account) {
-            $iban     = $account->accountNumber;
-            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
-                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
-                $iban = '';
-            }
+            $iban     = self::sanitizeIban($account->accountNumber);
             $return[] = self::fromArray(
                 [
                     'id'            => $account->id,
@@ -344,11 +342,7 @@ class ImportServiceAccount
 
         /** @var SpectreAccount $account */
         foreach ($spectre as $account) {
-            $iban     = (string)$account->iban;
-            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
-                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
-                $iban = '';
-            }
+            $iban     = self::sanitizeIban((string)$account->iban);
             $return[] = self::fromArray(
                 [
                     'id'            => $account->id,
@@ -375,11 +369,7 @@ class ImportServiceAccount
 
         /** @var LunchFlowAccount $account */
         foreach ($lunchFlow as $account) {
-            $iban = trim((string)($account->iban ?? ''));
-            if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
-                Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
-                $iban = '';
-            }
+            $iban = self::sanitizeIban(trim((string)($account->iban ?? '')));
             $bban = trim((string)($account->bban ?? ''));
             $syncIds = is_array($account->syncIds ?? null) ? $account->syncIds : [];
             $sourceExtra = is_array($account->extra ?? null) ? $account->extra : [];
@@ -415,6 +405,56 @@ class ImportServiceAccount
         }
 
         return $return;
+    }
+
+    /**
+     * Normalize a raw service account (array or object) into a standard array shape.
+     * Handles both arrays with 'currency_code' key and generic object/array conversion.
+     */
+    public static function normalizeToArray(array|object $account): array
+    {
+        if (is_array($account) && array_key_exists('currency_code', $account)) {
+            return [
+                'id'            => (string)($account['id'] ?? ''),
+                'name'          => (string)($account['name'] ?? ''),
+                'currency_code' => (string)($account['currency_code'] ?? ''),
+                'iban'          => '',
+                'bban'          => '',
+                'status'        => (string)($account['status'] ?? 'active'),
+                'extra'         => [],
+            ];
+        }
+
+        $payload = [];
+        if (is_array($account)) {
+            $payload = $account;
+        } elseif (is_object($account) && method_exists($account, 'toArray')) {
+            $payload = (array)$account->toArray();
+        }
+
+        return [
+            'id'            => (string)($payload['id'] ?? ''),
+            'name'          => (string)($payload['name'] ?? ''),
+            'currency_code' => (string)($payload['currency_code'] ?? $payload['currency'] ?? ''),
+            'iban'          => '',
+            'bban'          => '',
+            'status'        => (string)($payload['status'] ?? 'active'),
+            'extra'         => [],
+        ];
+    }
+
+    /**
+     * Validate and sanitize an IBAN string. Returns '' if the IBAN is invalid.
+     */
+    private static function sanitizeIban(string $iban): string
+    {
+        if ('' !== $iban && false === IbanConverter::isValidIban($iban)) {
+            Log::debug(sprintf('IBAN "%s" is invalid so it will be ignored.', $iban));
+
+            return '';
+        }
+
+        return $iban;
     }
 
     private static function normalizeOptionalString(mixed $value): ?string

@@ -7,10 +7,13 @@ namespace App\Services\TRC20\Request;
 use App\Services\Shared\Request\BearerJsonRequest;
 use App\Services\TRC20\Support\TRC20AddressValidator;
 use App\Services\TRC20\Support\TRC20Constants;
+use App\Services\TRC20\Support\TRC20TokenFilter;
 use Illuminate\Support\Facades\Log;
 
 class GetWalletRequest extends BearerJsonRequest
 {
+    use TRC20RequestTrait;
+
     public function __construct(
         private readonly string $apiKey,
         private string $wallet
@@ -70,11 +73,10 @@ class GetWalletRequest extends BearerJsonRequest
      */
     private function extractTokenAccounts(string $wallet, array $accountData): array
     {
-        $accounts      = [];
-        $supportedList = $this->getSupportedTokens();
+        $accounts = [];
 
         // 1. Native TRX balance
-        if ($this->isTokenSupported(TRC20Constants::CURRENCY_TRX, $supportedList)) {
+        if (TRC20TokenFilter::isTokenInSupportedList(TRC20Constants::CURRENCY_TRX)) {
             $trxSun  = (string)($accountData['balance'] ?? '0');
             $trxBalance = bcdiv($trxSun, bcpow('10', (string)TRC20Constants::TRX_DECIMALS), TRC20Constants::TRX_DECIMALS);
             $accounts[] = $this->buildAccount($wallet, TRC20Constants::CURRENCY_TRX, 'TRON', TRC20Constants::TRX_DECIMALS, $trxBalance);
@@ -97,7 +99,7 @@ class GetWalletRequest extends BearerJsonRequest
                     $name     = $tokenInfo['name'];
                     $decimals = $tokenInfo['decimals'];
 
-                    if (!$this->isTokenSupported($symbol, $supportedList)) {
+                    if (!TRC20TokenFilter::isTokenInSupportedList($symbol)) {
                         continue;
                     }
 
@@ -173,35 +175,7 @@ class GetWalletRequest extends BearerJsonRequest
         ];
     }
 
-    private function requestHeaders(): array
-    {
-        $headers = [];
-        if ('' !== trim($this->apiKey)) {
-            $headers['TRON-PRO-API-KEY'] = $this->apiKey;
-        }
-
-        return $headers;
-    }
-
-    private function getSupportedTokens(): array
-    {
-        $raw = (string)config('trc20.supported_tokens', '');
-        if ('' === trim($raw) || '*' === trim($raw)) {
-            return [];
-        }
-
-        $tokens = array_map('trim', explode(',', $raw));
-        $tokens = array_filter($tokens, static fn(string $t): bool => '' !== $t);
-
-        return array_values(array_map('strtoupper', $tokens));
-    }
-
-    private function isTokenSupported(string $symbol, array $supportedList): bool
-    {
-        if ([] === $supportedList) {
-            return true;
-        }
-
-        return in_array(strtoupper($symbol), $supportedList, true);
-    }
+    // requestHeaders() provided by TRC20RequestTrait
+    // getSupportedTokens() and isTokenSupported() replaced by TRC20TokenFilter::getSupportedTokens()
+    // and TRC20TokenFilter::isTokenInSupportedList()
 }

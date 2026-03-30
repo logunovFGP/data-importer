@@ -31,6 +31,7 @@ use App\Models\ImportJob;
 use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\CSV\Converter\Date;
 use App\Services\Shared\Model\ImportServiceAccount;
+use App\Services\Shared\Authentication\ProviderAuthCollector;
 use App\Services\Shared\Preflight\ProviderCurrencyPreflightService;
 use App\Support\Internal\CollectsAccounts;
 use App\Support\Internal\MergesAccountLists;
@@ -83,7 +84,7 @@ class ConfigurationController extends Controller
         }
         // if the job is "contains_content", parse it. Redirect if errors occur.
         if ($doParse && 'contains_content' === $importJob->getState()) {
-            // FIXME this routine is the same as in AutoImports::importFileAsImportJob
+            // TODO(#83): this routine is the same as in AutoImports::importFileAsImportJob
             $messages = $this->repository->parseImportJob($importJob);
 
             if ($messages->count() > 0) {
@@ -165,7 +166,7 @@ class ConfigurationController extends Controller
         $configuration       = $importJob->getConfiguration();
         $doNotSkip           = 'true' === $request->get('do_not_skip');
         if (true === $configuration->isSkipForm() && false === $doNotSkip) {
-            // FIXME must also skip roles and mapping.
+            // TODO(#83): must also skip roles and mapping.
             $redirect = $this->redirectToNextstep($importJob);
 
             return view('import.004-configure.skipping')->with(compact('mainTitle', 'subTitle', 'identifier', 'redirect'));
@@ -187,7 +188,13 @@ class ConfigurationController extends Controller
         $applicationAccounts = $importJob->getApplicationAccounts();
         $serviceAccounts     = $importJob->getServiceAccounts();
         $currencies          = $importJob->getCurrencies();
-        $accounts            = $this->mergeAccountLists($flow, $applicationAccounts, $serviceAccounts);
+        try {
+            $accounts = $this->mergeAccountLists($flow, $applicationAccounts, $serviceAccounts);
+        } catch (\Throwable $e) {
+            Log::error(sprintf('Failed to merge account lists for flow "%s": %s', $flow, $e->getMessage()));
+            $accounts = [];
+            session()->flash('warning', sprintf('Could not load provider accounts: %s', $e->getMessage()));
+        }
         $camtType            = $configuration->getCamtType();
 
         return view('import.004-configure.index', compact('camtType', 'identifier', 'mainTitle', 'subTitle', 'applicationAccounts', 'configuration', 'flow', 'accounts', 'uniqueColumns', 'currencies', 'currencyPreflight', 'currencyPreflightCodes'));
@@ -202,7 +209,7 @@ class ConfigurationController extends Controller
             'lunchflow' => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
             'basisbank' => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
             'tbank'     => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
-            'trc20'     => ImportServiceAccount::convertLunchflowArray($serviceAccounts),
+            'trc20'     => ImportServiceAccount::convertTRC20Array($serviceAccounts),
             'sophtron'  => ImportServiceAccount::convertSophtronArray($serviceAccounts),
             'file'      => [],
             default     => throw new ImporterErrorException(sprintf('Cannot mergeAccountLists("%s")', $flow)),
@@ -260,6 +267,13 @@ class ConfigurationController extends Controller
                     ->withInput()
                     ->withErrors($errors);
             }
+        }
+
+        // Re-snapshot provider auth so the job JSON has the latest credentials.
+        $providerAuth = ProviderAuthCollector::collect($importJob->getFlow());
+        if ([] !== $providerAuth) {
+            $importJob->setProviderAuth($providerAuth);
+            $this->repository->saveToDisk($importJob);
         }
 
         return redirect($this->redirectToNextstep($importJob));

@@ -253,14 +253,21 @@ class TransactionProcessor
     private function resolveServiceAccountCurrency(string $serviceAccountId): string
     {
         foreach ($this->existingServiceAccounts as $serviceAccount) {
-            if (!is_object($serviceAccount)) {
-                continue;
-            }
-            if ((string)($serviceAccount->id ?? '') !== $serviceAccountId) {
+            if (is_object($serviceAccount)) {
+                $id       = (string) ($serviceAccount->id ?? '');
+                $currency = (string) ($serviceAccount->currency ?? '');
+            } elseif (is_array($serviceAccount)) {
+                $id       = (string) ($serviceAccount['id'] ?? '');
+                $currency = (string) ($serviceAccount['currency'] ?? '');
+            } else {
                 continue;
             }
 
-            return CurrencyCode::normalizeOrEmpty((string)($serviceAccount->currency ?? ''));
+            if ($id !== $serviceAccountId) {
+                continue;
+            }
+
+            return CurrencyCode::normalizeOrEmpty($currency);
         }
 
         return '';

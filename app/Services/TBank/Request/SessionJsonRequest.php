@@ -101,6 +101,24 @@ abstract class SessionJsonRequest
         return $query;
     }
 
+    /**
+     * Return the first non-empty string value from a list of candidates.
+     *
+     * @param array  $values  Candidate values (may be null, empty, or non-string)
+     * @param string $default Fallback if all candidates are empty
+     */
+    protected function firstNonEmpty(array $values, string $default = ''): string
+    {
+        foreach ($values as $value) {
+            $stringValue = trim((string)$value);
+            if ('' !== $stringValue) {
+                return $stringValue;
+            }
+        }
+
+        return $default;
+    }
+
     private function defaultHeaders(): array
     {
         $headers = [

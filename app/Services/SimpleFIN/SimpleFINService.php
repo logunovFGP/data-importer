@@ -61,7 +61,8 @@ class SimpleFINService
         if ($isValid) {
             Log::debug('Token appears to be a base64-encoded setup token, processing exchange');
             $this->accessToken = $this->exchangeClaimUrlForAccessUrl($this->setupToken);
-            Log::debug(sprintf('Successfully exchanged claim URL for access token: %s', $this->accessToken));
+            // Security: log only the host portion to avoid leaking credentials embedded in the access URL
+            Log::debug(sprintf('Successfully exchanged claim URL for access token (host: %s)', parse_url($this->accessToken, PHP_URL_HOST) ?? '(unknown)'));
         }
         if (!$isValid) {
             Log::error('Token is not a base64-encoded claim URL.');
@@ -117,7 +118,8 @@ class SimpleFINService
     public function fetchAccounts(): array
     {
         Log::debug(sprintf('Now at %s', __METHOD__));
-        Log::debug(sprintf('SimpleFIN fetching accounts from: %s', $this->accessToken));
+        // Security: log only the host portion of the access token URL to avoid leaking credentials
+        Log::debug(sprintf('SimpleFIN fetching accounts from host: %s', parse_url($this->accessToken, PHP_URL_HOST) ?? '(unknown)'));
 
         $request    = new AccountsRequest();
         $request->setAccessToken($this->accessToken);
@@ -203,7 +205,7 @@ class SimpleFINService
         // add a little filter to remove transactions that are pending.
         $transactions = $this->filterForPending($transactions);
 
-        Log::debug(sprintf('Found %d transactions.', $transactions));
+        Log::debug(sprintf('Found %d transactions.', count($transactions)));
 
         return $transactions;
     }

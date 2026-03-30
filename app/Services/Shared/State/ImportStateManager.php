@@ -25,19 +25,15 @@ declare(strict_types=1);
 namespace App\Services\Shared\State;
 
 use App\Models\ImportJob;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Class ImportStateManager
  *
- * Unified state manager for import jobs. Tracks the active import in the session,
- * validates step access based on job state, and provides navigation helpers.
+ * Validates step access based on job state and provides navigation helpers.
+ * No session-based "active import" tracking — the URL {identifier} is the source of truth.
  */
 class ImportStateManager
 {
-    private const string SESSION_ACTIVE_IMPORT = 'active_import_identifier';
-    private const string SESSION_ACTIVE_FLOW   = 'active_import_flow';
-
     // Step ordering for validation
     private const array STEP_ORDER = [
         'authenticate' => 0,
@@ -58,40 +54,6 @@ class ImportStateManager
         'convert'   => ['configured_and_roles_defined', 'configured_roles_map_in_place', 'ready_for_submission'],
         'submit'    => ['ready_for_submission'],
     ];
-
-    /**
-     * Store the active import identifier and flow in the session.
-     */
-    public static function setActiveImport(string $identifier, string $flow): void
-    {
-        session()->put(self::SESSION_ACTIVE_IMPORT, $identifier);
-        session()->put(self::SESSION_ACTIVE_FLOW, $flow);
-    }
-
-    /**
-     * Get the active import identifier and flow from the session.
-     *
-     * @return array{identifier: string, flow: string}|null
-     */
-    public static function getActiveImport(): ?array
-    {
-        $identifier = session()->get(self::SESSION_ACTIVE_IMPORT);
-        $flow       = session()->get(self::SESSION_ACTIVE_FLOW);
-        if (null === $identifier || '' === trim((string) $identifier)) {
-            return null;
-        }
-
-        return ['identifier' => (string) $identifier, 'flow' => (string) $flow];
-    }
-
-    /**
-     * Clear the active import from the session.
-     */
-    public static function clearActiveImport(): void
-    {
-        session()->forget(self::SESSION_ACTIVE_IMPORT);
-        session()->forget(self::SESSION_ACTIVE_FLOW);
-    }
 
     /**
      * Check whether the given step is accessible for the current job state.

@@ -32,7 +32,7 @@ class BasisBankFormParser
     private const string DEVICE_PLATFORM_TYPE    = 'Windows';
     private const string DEVICE_PLATFORM_VERSION = '10';
     private const string DEVICE_THREAD_COUNT     = '8';
-    private const string DEVICE_GPU_INFO         = 'Firefly Data Importer';
+    private const string DEVICE_GPU_INFO         = 'ANGLE (Intel, Intel(R) UHD Graphics 620 Direct3D11 vs_5_0 ps_5_0, D3D11)';
     private const string DEVICE_ID_FILE           = 'basisbank_device_id';
 
     private static ?string $cachedDeviceId = null;
@@ -47,10 +47,6 @@ class BasisBankFormParser
         return $fields;
     }
 
-    public function extractFormFieldsFromLoginPage(string $html): array
-    {
-        return $this->getFormFieldsFromLoginPage($html);
-    }
 
     public function isLoginForm(string $html): bool
     {
@@ -165,29 +161,32 @@ class BasisBankFormParser
      * If these are submitted empty, the server may silently reject device binding.
      * Mirrors ZenPlugins fillDeviceInfoFields() from fetchApi.ts.
      */
-    public function fillDeviceInfoFields(array &$fields): void
+    public function fillDeviceInfoFields(array $fields): array
     {
-        foreach (array_keys($fields) as $key) {
+        $result = $fields;
+        foreach (array_keys($result) as $key) {
             $keyStr = (string)$key;
-            if ('' !== $fields[$key]) {
+            if ('' !== $result[$key]) {
                 continue;
             }
             if (preg_match('/deviceInfoBrowserType$/i', $keyStr) === 1) {
-                $fields[$key] = self::DEVICE_BROWSER_TYPE;
+                $result[$key] = self::DEVICE_BROWSER_TYPE;
             } elseif (preg_match('/deviceInfoBrowserVersion$/i', $keyStr) === 1) {
-                $fields[$key] = self::DEVICE_BROWSER_VERSION;
+                $result[$key] = self::DEVICE_BROWSER_VERSION;
             } elseif (preg_match('/deviceInfoPlatformType$/i', $keyStr) === 1) {
-                $fields[$key] = self::DEVICE_PLATFORM_TYPE;
+                $result[$key] = self::DEVICE_PLATFORM_TYPE;
             } elseif (preg_match('/deviceInfoPlatformVersion$/i', $keyStr) === 1) {
-                $fields[$key] = self::DEVICE_PLATFORM_VERSION;
+                $result[$key] = self::DEVICE_PLATFORM_VERSION;
             } elseif (preg_match('/deviceInfoThreadCount$/i', $keyStr) === 1) {
-                $fields[$key] = self::DEVICE_THREAD_COUNT;
+                $result[$key] = self::DEVICE_THREAD_COUNT;
             } elseif (preg_match('/deviceInfoGPUInfo$/i', $keyStr) === 1) {
-                $fields[$key] = self::DEVICE_GPU_INFO;
+                $result[$key] = self::DEVICE_GPU_INFO;
             } elseif (preg_match('/(device.*(id|uuid|guid|fingerprint)|fingerprint.*device)/i', $keyStr) === 1) {
-                $fields[$key] = self::getOrCreateDeviceId();
+                $result[$key] = self::getOrCreateDeviceId();
             }
         }
+
+        return $result;
     }
 
     /**
@@ -314,7 +313,8 @@ class BasisBankFormParser
             }
 
             $type = strtolower((string)$node->getAttribute('type'));
-            if (in_array($type, ['checkbox', 'radio'], true) && null === $node->getAttribute('checked')) {
+            // ASP.NET WebForms: match real browser behavior — only send checked checkboxes. Verified via HAR recordings.
+            if (in_array($type, ['checkbox', 'radio'], true) && !$node->hasAttribute('checked')) {
                 continue;
             }
             $value = trim((string)$node->getAttribute('value'));
@@ -355,7 +355,8 @@ class BasisBankFormParser
                 continue;
             }
             $type = strtolower((string)$node->getAttribute('type'));
-            if (in_array($type, ['checkbox', 'radio'], true) && null === $node->getAttribute('checked')) {
+            // ASP.NET WebForms: match real browser behavior — only send checked checkboxes. Verified via HAR recordings.
+            if (in_array($type, ['checkbox', 'radio'], true) && !$node->hasAttribute('checked')) {
                 continue;
             }
             $fields[$name] = trim((string)$node->getAttribute('value'));

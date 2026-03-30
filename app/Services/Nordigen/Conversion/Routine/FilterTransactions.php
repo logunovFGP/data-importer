@@ -40,7 +40,7 @@ class FilterTransactions
 
         /** @var array $transaction */
         foreach ($transactions as $transaction) {
-            // FIXME no real filtering takes place yet.
+            // TODO(#83): no real filtering takes place yet.
             unset($transaction['transactions'][0]['datetime']);
 
             $return[] = $transaction;

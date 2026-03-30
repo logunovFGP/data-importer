@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Shared\SyncState;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SyncStateManager
 {
@@ -49,12 +51,7 @@ class SyncStateManager
         }
 
         try {
-            $parsed = Carbon::parse($date);
-            if (false === $parsed) {
-                return null;
-            }
-
-            return $parsed;
+            return Carbon::parse($date);
         } catch (\Exception) {
             Log::warning(sprintf('Could not parse last pull date %s for key %s', $date, $key));
 
@@ -103,9 +100,9 @@ class SyncStateManager
         }
 
         $lookback = max(0, $lookbackDays);
-        $cursor->startOfDay();
+        $date     = $cursor->copy()->startOfDay();
 
-        return 0 === $lookback ? $cursor->toDateString() : $cursor->subDays($lookback)->toDateString();
+        return 0 === $lookback ? $date->toDateString() : $date->subDays($lookback)->toDateString();
     }
 
     private function buildKey(string $provider, string $contextFingerprint, string $accountId): string
@@ -121,18 +118,29 @@ class SyncStateManager
             return [];
         }
 
-        $content = trim((string)file_get_contents($path));
-        if ('' === $content) {
+        $raw = trim((string)file_get_contents($path));
+        if ('' === $raw) {
             return [];
         }
 
-        if (!json_validate($content)) {
+        // Try decrypting first (encrypted format, matching ProviderSecretStore pattern).
+        $json = null;
+        try {
+            $json = Crypt::decryptString($raw);
+        } catch (Throwable) {
+            // Legacy fallback: file may be stored as unencrypted JSON from before
+            // encryption was added. Accept it, and it will be re-encrypted on next write.
+            $json = $raw;
+            Log::info('Sync state file is not encrypted; will encrypt on next write (legacy fallback).');
+        }
+
+        if (!json_validate($json)) {
             Log::warning(sprintf('Sync state JSON is invalid, resetting state file at %s', $path));
 
             return [];
         }
 
-        $state = json_decode($content, true);
+        $state = json_decode($json, true);
         if (!is_array($state)) {
             return [];
         }
@@ -143,6 +151,11 @@ class SyncStateManager
     private function writeState(array $state): void
     {
         $path = storage_path(self::STATE_FILE);
-        file_put_contents($path, json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+        // Encrypt before writing to protect sync state at rest (matching ProviderSecretStore pattern).
+        // LOCK_EX prevents corruption from concurrent imports writing simultaneously.
+        $encrypted = Crypt::encryptString($json);
+        file_put_contents($path, $encrypted, LOCK_EX);
     }
 }

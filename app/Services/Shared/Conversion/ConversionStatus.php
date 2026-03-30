@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace App\Services\Shared\Conversion;
 
 use App\Exceptions\ImporterErrorException;
+use App\Services\Shared\Status\StatusTrackerTrait;
 use DateTimeInterface;
 use Illuminate\Support\Facades\Log;
 
@@ -33,6 +34,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ConversionStatus
 {
+    use StatusTrackerTrait;
+
     public const string PULL_STEP_PENDING = 'pending';
     public const string PULL_STEP_RUNNING = 'running';
     public const string PULL_STEP_DONE = 'done';
@@ -119,39 +122,6 @@ class ConversionStatus
         ];
     }
 
-    public function addActivity(string $message): void
-    {
-        $this->activityLog[] = [
-            'time'    => date('H:i:s'),
-            'message' => $message,
-        ];
-        if (count($this->activityLog) > 200) {
-            $this->activityLog = array_slice($this->activityLog, -200);
-        }
-    }
-
-    public function addBoardEntry(array $entry): void
-    {
-        $this->transactionBoardTotal++;
-        $this->transactionBoard[] = $entry;
-        if (count($this->transactionBoard) > 100) {
-            $this->transactionBoard = array_slice($this->transactionBoard, -100);
-        }
-        $this->transactionBoardHidden = max(0, $this->transactionBoardTotal - count($this->transactionBoard));
-    }
-
-    public function updateBoardEntryStatus(string $txId, string $status, string $message = ''): void
-    {
-        foreach ($this->transactionBoard as &$entry) {
-            if (($entry['tx_id'] ?? '') === $txId) {
-                $entry['status']  = $status;
-                $entry['message'] = $message;
-                break;
-            }
-        }
-        unset($entry);
-    }
-
     public function setPullProgress(int $total, int $done = 0, string $status = self::PULL_STEP_PENDING): void
     {
         $total = max(0, $total);
@@ -213,36 +183,11 @@ class ConversionStatus
         return (int)round(($done / $total) * 100);
     }
 
-    public function addError(int $index, string $error): void
-    {
-        $lineNo                 = $index + 1;
-        Log::debug(sprintf('Add error on index #%d (line no. %d): %s', $index, $lineNo, $error));
-
-        $this->errors[$index] ??= [];
-        $this->errors[$index][] = $error;
-    }
-
     public function addRateLimit(int $index, string $message): void
     {
         Log::error(sprintf('[c] Add rate limit message to index #%d: %s', $index, $message));
         $this->rateLimits         ??= [];
         $this->rateLimits[$index] ??= [];
         $this->rateLimits[$index][] = $message;
-    }
-
-    public function addMessage(int $index, string $message): void
-    {
-        $lineNo                   = $index + 1;
-        Log::debug(sprintf('Add message on index #%d (line no. %d): %s', $index, $lineNo, $message));
-        $this->messages[$index] ??= [];
-        $this->messages[$index][] = $message;
-    }
-
-    public function addWarning(int $index, string $warning): void
-    {
-        $lineNo                   = $index + 1;
-        Log::debug(sprintf('Add warning on index #%d (line no. %d): %s', $index, $lineNo, $warning));
-        $this->warnings[$index] ??= [];
-        $this->warnings[$index][] = $warning;
     }
 }

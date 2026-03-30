@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Log;
 
 class GetTransactionsRequest extends BearerJsonRequest
 {
+    use TRC20RequestTrait;
+
     private readonly int $pageSize;
 
     public function __construct(
@@ -71,6 +73,10 @@ class GetTransactionsRequest extends BearerJsonRequest
         $lastCursor    = $cursor;
 
         foreach ($wallets as $wallet) {
+            // Reset cursor at the start of each wallet — TronGrid fingerprints are per-address.
+            // Without this, wallet B would receive wallet A's cursor, producing wrong/empty results.
+            $lastCursor = null;
+
             $endpoint = sprintf((string)config('trc20.transactions_endpoint'), $wallet);
             $query    = $this->buildQuery($dateFrom, $dateTo, $lastCursor);
 
@@ -153,53 +159,11 @@ class GetTransactionsRequest extends BearerJsonRequest
      */
     public function detectAccountCurrency(?string $dateFrom = null, ?string $dateTo = null, int $sampleSize = 10): string
     {
-        return $this->selectDominantCurrency($this->sampleAccountCurrencies($dateFrom, $dateTo, $sampleSize));
+        return CurrencyCode::selectDominant($this->sampleAccountCurrencies($dateFrom, $dateTo, $sampleSize));
     }
 
-    private function requestHeaders(): array
-    {
-        $headers = [];
-        if ('' !== trim($this->apiKey)) {
-            $headers['TRON-PRO-API-KEY'] = $this->apiKey;
-        }
-
-        return $headers;
-    }
-
-    private function buildQuery(?string $dateFrom, ?string $dateTo, ?string $fingerprint): array
-    {
-        $query = [
-            'only_confirmed' => 'true',
-            'limit'          => $this->pageSize,
-            'order_by'       => 'block_timestamp,asc',
-        ];
-
-        $fromTimestamp = $this->toMillisecondTimestamp($dateFrom);
-        if (null !== $fromTimestamp) {
-            $query['min_timestamp'] = $fromTimestamp;
-        }
-
-        $toTimestamp = $this->toMillisecondTimestamp($dateTo);
-        if (null !== $toTimestamp) {
-            $query['max_timestamp'] = $toTimestamp;
-        }
-
-        if (null !== $fingerprint && '' !== trim($fingerprint)) {
-            $query['fingerprint'] = $fingerprint;
-        }
-
-        return $query;
-    }
-
-    private function extractFingerprint(array $payload): ?string
-    {
-        $fingerprint = $payload['meta']['fingerprint'] ?? null;
-        if (null !== $fingerprint && '' !== trim((string)$fingerprint)) {
-            return (string)$fingerprint;
-        }
-
-        return null;
-    }
+    // requestHeaders(), buildQuery(), extractFingerprint(), toMillisecondTimestamp()
+    // provided by TRC20RequestTrait
 
     private function normalizeTransaction(array $row, array $wallets): ?array
     {
@@ -227,12 +191,13 @@ class GetTransactionsRequest extends BearerJsonRequest
             return null;
         }
 
-        $amount = TRC20AmountParser::parseAsFloat($row);
-        if (null === $amount || 0.0 === $amount) {
+        $amountStr = TRC20AmountParser::parse($row);
+        if (null === $amountStr || 0 === bccomp(ltrim($amountStr, '-'), '0', 12)) {
             return null;
         }
+        $absAmountStr = ltrim($amountStr, '-');
         if ($isOutgoing) {
-            $amount = -1 * abs($amount);
+            $amountStr = '-' . $absAmountStr;
         }
 
         $date = $this->normalizeDate($row);
@@ -245,7 +210,7 @@ class GetTransactionsRequest extends BearerJsonRequest
             try {
                 $txId = hash(
                     'sha256',
-                    json_encode([$accountId, $fromAddress, $toAddress, $amount, $date], JSON_THROW_ON_ERROR)
+                    json_encode([$accountId, $fromAddress, $toAddress, $amountStr, $date], JSON_THROW_ON_ERROR)
                 );
             } catch (\Throwable) {
                 return null;
@@ -261,7 +226,7 @@ class GetTransactionsRequest extends BearerJsonRequest
         return [
             'id'             => $txId,
             'accountId'      => $perTokenAccountId,
-            'amount'         => (string)$amount,
+            'amount'         => $amountStr,
             'currency'       => $tokenSymbol,
             'date'           => $date,
             'merchant'       => $counterparty,
@@ -297,44 +262,9 @@ class GetTransactionsRequest extends BearerJsonRequest
         return date('Y-m-d', $timestamp);
     }
 
-    private function toMillisecondTimestamp(?string $value): ?int
-    {
-        if (null === $value || '' === trim($value)) {
-            return null;
-        }
-
-        $timestamp = strtotime($value);
-        if (false === $timestamp) {
-            return null;
-        }
-
-        return max(0, $timestamp * 1000);
-    }
-
     private function emptyResponse(): GetTransactionsResponse
     {
         return new GetTransactionsResponse([]);
     }
 
-    private function selectDominantCurrency(array $currencies): string
-    {
-        if ([] === $currencies) {
-            return '';
-        }
-        $counter = [];
-        foreach ($currencies as $currency) {
-            $normalized = CurrencyCode::normalizeOrEmpty((string)$currency);
-            if ('' === $normalized) {
-                continue;
-            }
-            $counter[$normalized] = ($counter[$normalized] ?? 0) + 1;
-        }
-        if ([] === $counter) {
-            return '';
-        }
-        arsort($counter);
-        $best = array_key_first($counter);
-
-        return is_string($best) ? $best : '';
-    }
 }

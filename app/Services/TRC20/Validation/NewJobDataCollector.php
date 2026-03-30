@@ -112,11 +112,40 @@ class NewJobDataCollector implements NewJobDataCollectorInterface
         Log::debug(sprintf('TRC20 collectAccounts: SUCCESS — fetched %d accounts', count($accounts)));
 
         $serviceAccounts = [];
+        $accountMap      = [];
+        $newAccounts     = [];
         foreach ($accounts as $account) {
             $serviceAccounts[] = $account;
+            $accountId   = is_array($account) ? ($account['id'] ?? '') : ((string)($account->id ?? ''));
+            $accountName = is_array($account) ? ($account['name'] ?? '') : ((string)($account->name ?? ''));
+            $currency    = is_array($account) ? ($account['currency_code'] ?? ($account['currency'] ?? '')) : ((string)($account->currencyCode ?? ''));
+            if ('' !== $accountId) {
+                // Pre-populate the configuration accounts map with composite IDs (wallet|SYMBOL => 0).
+                // The 0 means "create new Firefly III account during conversion".
+                $accountMap[$accountId] = 0;
+                $newAccounts[$accountId] = [
+                    'create'          => '1',
+                    'name'            => $accountName,
+                    'type'            => 'asset',
+                    'account_role'    => 'defaultAsset',
+                    'liability_type'  => 'debt',
+                    'liability_direction' => 'debit',
+                    'opening_balance' => null,
+                    'currency'        => $currency,
+                ];
+            }
         }
         $this->importJob->setServiceAccounts($serviceAccounts);
+
+        // Set the accounts and new account templates in configuration
+        // so the conversion step knows which wallets to fetch and how to create them.
+        $configuration = $this->importJob->getConfiguration();
+        $configuration->setAccounts($accountMap);
+        $configuration->setNewAccounts($newAccounts);
+        $this->importJob->setConfiguration($configuration);
+
         $this->repository->saveToDisk($this->importJob);
+        Log::debug(sprintf('TRC20 collectAccounts: set %d accounts in configuration: %s', count($accountMap), json_encode(array_keys($accountMap))));
 
         return $errors;
     }

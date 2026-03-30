@@ -25,12 +25,11 @@ declare(strict_types=1);
 namespace App\Services\Nordigen\Model;
 
 use App\Rules\Iban;
+use App\Services\Shared\Support\TransactionIdGenerator;
 use Carbon\Carbon;
 use Carbon\Exceptions\InvalidFormatException;
 use DateTimeInterface;
 use Illuminate\Support\Facades\Log;
-use JsonException;
-use Ramsey\Uuid\Uuid;
 use Validator;
 
 /**
@@ -189,15 +188,8 @@ class Transaction
 
         // generate transactionID if empty:
         if ('' === $object->transactionId) {
-            $hash                  = hash('sha256', (string) microtime());
-
-            try {
-                $hash = hash('sha256', json_encode($array, JSON_THROW_ON_ERROR));
-                Log::warning('Generated random transaction ID from array!');
-            } catch (JsonException $e) {
-                Log::error(sprintf('Could not parse array into JSON: %s', $e->getMessage()));
-            }
-            $object->transactionId = sprintf('ff3-%s', Uuid::uuid5(config('importer.namespace'), $hash));
+            $object->transactionId = TransactionIdGenerator::generateFallbackId('ff3', $array);
+            Log::warning('Generated random transaction ID from array!');
         }
         if ('' !== $object->transactionId) {
             Log::debug('Transaction has correct transaction ID.');
@@ -253,7 +245,7 @@ class Transaction
         // undocumented values:
         $object->endToEndId                             = $array['end_to_end_id'];
 
-        // FIXME copy paste code.
+        // TODO(#83): copy paste code.
         $object->debtorAccountIban                      = array_key_exists('iban', $array['debtor_account']) ? $array['debtor_account']['iban'] : '';
         $object->creditorAccountIban                    = array_key_exists('iban', $array['creditor_account']) ? $array['creditor_account']['iban'] : '';
 
@@ -267,14 +259,7 @@ class Transaction
 
         // generate transactionID if empty:
         if ('' === $object->transactionId) {
-            $hash                  = hash('sha256', (string) microtime());
-
-            try {
-                $hash = hash('sha256', json_encode($array, JSON_THROW_ON_ERROR));
-            } catch (JsonException $e) {
-                Log::error(sprintf('Could not parse array into JSON: %s', $e->getMessage()));
-            }
-            $object->transactionId = sprintf('ff3-%s', Uuid::uuid5(config('importer.namespace'), $hash));
+            $object->transactionId = TransactionIdGenerator::generateFallbackId('ff3', $array);
         }
 
         return $object;
@@ -334,10 +319,11 @@ class Transaction
     public function getCleanDescription(): string
     {
         $description = $this->getDescription();
-        if (str_contains("\n", $description)) {
+        if (str_contains($description, "\n")) {
             // return without newlines.
             $description = str_replace(["\n", "\t"], ' ', $description);
-            $description = preg_replace("\r", '', $description);
+            // Use str_replace for literal character removal — no regex needed, and avoids missing-delimiter bug.
+            $description = str_replace("\r", '', $description);
         }
 
         return $description;
@@ -345,13 +331,10 @@ class Transaction
 
     public function getTransactionId(): string
     {
-        // #10914 add account ID to transaction ID to make it unique.
-        $accountId     = substr(trim((string) preg_replace('/\s+/', ' ', $this->accountIdentifier)), 0, 125);
-        $transactionId = substr(trim((string) preg_replace('/\s+/', ' ', $this->transactionId)), 0, 125);
+        $result = TransactionIdGenerator::buildCompositeId($this->accountIdentifier, $this->transactionId);
+        Log::debug(sprintf('Returning transaction ID: %s', $result));
 
-        Log::debug(sprintf('Returning transaction ID: %s and %s are joined.', $accountId, $transactionId));
-
-        return trim(sprintf('%s-%s', $accountId, $transactionId));
+        return $result;
     }
 
     /**
@@ -432,8 +415,8 @@ class Transaction
             $notes        = trim(sprintf("%s\n\n%s", $notes, $exchangeInfo));
         }
 
-        // room for other fields
-        if (str_contains("\n", $this->getDescription())) {
+        // room for other fields — str_contains(haystack, needle) order was previously reversed.
+        if (str_contains($this->getDescription(), "\n")) {
             $notes .= "\n\n".$this->getDescription();
         }
 
@@ -546,7 +529,7 @@ class Transaction
             'additional_information_structured'         => $this->additionalInformationStructured,
             'balance_after_transaction'                 => $this->balanceAfterTransaction->toLocalArray(),
             'bank_transaction_code'                     => $this->bankTransactionCode,
-            'booking_date'                              => $this->bookingDate->toW3cString(),
+            'booking_date'                              => $this->bookingDate?->toW3cString() ?? '',
             'check_id'                                  => $this->checkId,
             'creditor_agent'                            => $this->creditorAgent,
             'creditor_id'                               => $this->creditorId,
@@ -568,7 +551,7 @@ class Transaction
             'transaction_id'                            => $this->getTransactionId(),
             'ultimate_creditor'                         => $this->ultimateCreditor,
             'ultimate_debtor'                           => $this->ultimateDebtor,
-            'value_date'                                => $this->valueDate->toW3cString(),
+            'value_date'                                => $this->valueDate?->toW3cString() ?? '',
             'account_identifier'                        => $this->accountIdentifier,
             // array values:
             'debtor_account'                            => ['iban'     => $this->debtorAccountIban, 'currency' => $this->debtorAccountCurrency],

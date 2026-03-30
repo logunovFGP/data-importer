@@ -105,7 +105,7 @@ abstract class Request
             ]]);
         } catch (ClientException|GuzzleException|TransferException $e) {
             $statusCode      = $e->getCode();
-            if (429 === $statusCode) {
+            if (429 === $statusCode && method_exists($e, 'getResponse') && null !== $e->getResponse()) {
                 Log::debug(sprintf('Ran into exception: %s', $e::class));
                 $this->logRateLimitHeaders($e->getResponse(), true);
                 // $this->reportRateLimit($fullUrl, $e);
@@ -243,7 +243,7 @@ abstract class Request
                 ],
             ]);
         } catch (ClientException $e) {
-            // FIXME error response, not an exception.
+            // TODO(#83): error response, not an exception.
             throw new ImporterHttpException(sprintf('AuthenticatedJsonPost: %s', $e->getMessage()), 0, $e);
         }
         $body    = (string) $res->getBody();
@@ -253,7 +253,7 @@ abstract class Request
         try {
             $json = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            // FIXME error response, not an exception.
+            // TODO(#83): error response, not an exception.
             throw new ImporterHttpException(sprintf('AuthenticatedJsonPost JSON: %s', $e->getMessage()), 0, $e);
         }
 

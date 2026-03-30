@@ -68,13 +68,20 @@ class GetAccountsRequest extends SessionJsonRequest
         if ([] === $node) {
             return;
         }
-        if (!array_is_list($node) && $this->isAccountCandidate($node)) {
-            $rows[] = $node;
-        }
+        $isCandidate = !array_is_list($node) && $this->isAccountCandidate($node);
+
+        // Collect children first; only add the parent if no child candidates were found,
+        // to avoid duplicating a parent row that wraps its own child accounts.
+        $countBefore = count($rows);
         foreach ($node as $value) {
             if (is_array($value)) {
                 $this->collectRows($value, $rows, $depth + 1);
             }
+        }
+        $childrenFound = count($rows) > $countBefore;
+
+        if ($isCandidate && !$childrenFound) {
+            $rows[] = $node;
         }
     }
 
@@ -239,15 +246,5 @@ class GetAccountsRequest extends SessionJsonRequest
         return null;
     }
 
-    private function firstNonEmpty(array $values, string $default = ''): string
-    {
-        foreach ($values as $value) {
-            $stringValue = trim((string)$value);
-            if ('' !== $stringValue) {
-                return $stringValue;
-            }
-        }
-
-        return $default;
-    }
+    // firstNonEmpty() is now provided by SessionJsonRequest parent class
 }

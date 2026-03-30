@@ -138,7 +138,7 @@ class GenerateTransactions
     }
 
     /**
-     * FIXME function is way too complex.
+     * TODO(#83): function is way too complex.
      *
      * @throws ImporterHttpException
      */
@@ -222,7 +222,7 @@ class GenerateTransactions
         // append source iban and number (if present)
         $transaction                   = $this->appendAccountFields($transaction, $entry, 'source');
 
-        // FIXME clean up mapping
+        // TODO(#83): clean up mapping
         $mappedId                      = null;
         if (isset($transaction['source_name'])) {
             Log::debug(sprintf('Check if "%s" is mapped to an account by the user.', $transaction['source_name']));
@@ -369,7 +369,7 @@ class GenerateTransactions
     }
 
     /**
-     * FIXME Method "getAccountTypes" does not exist and I'm not sure what it is supposed to do.
+     * TODO(#83): Method "getAccountTypes" does not exist and I'm not sure what it is supposed to do.
      *
      * @throws ImporterHttpException
      */
@@ -452,7 +452,7 @@ class GenerateTransactions
     private function appendNegativeAmountInfo(string $accountId, array $transaction, Transaction $entry): array
     {
         $transaction['amount']    = bcmul($entry->amount, '-1');
-        $transaction['source_id'] = (int) $this->accounts[$accountId]; // FIXME entry may not exist, then what?
+        $transaction['source_id'] = (int) $this->accounts[$accountId]; // TODO(#83): entry may not exist, then what?
 
         // append source iban and number (if present)
         $transaction              = $this->appendAccountFields($transaction, $entry, 'destination');

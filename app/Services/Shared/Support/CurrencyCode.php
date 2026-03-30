@@ -25,6 +25,36 @@ class CurrencyCode
         return $normalized;
     }
 
+    /**
+     * Given an array of currency strings, return the most frequently occurring one.
+     * Returns '' if the array is empty or contains no valid currencies.
+     */
+    public static function selectDominant(array $currencies): string
+    {
+        if ([] === $currencies) {
+            return '';
+        }
+
+        $counter = [];
+        foreach ($currencies as $currency) {
+            if (!is_string($currency) || '' === trim($currency)) {
+                continue;
+            }
+            $normalized = self::normalizeOrEmpty($currency);
+            if ('' === $normalized) {
+                continue;
+            }
+            $counter[$normalized] = ($counter[$normalized] ?? 0) + 1;
+        }
+        if ([] === $counter) {
+            return '';
+        }
+        arsort($counter);
+        $best = array_key_first($counter);
+
+        return is_string($best) ? $best : '';
+    }
+
     public static function normalizeOrEmpty(?string $raw): string
     {
         $value = strtoupper(trim((string)$raw));

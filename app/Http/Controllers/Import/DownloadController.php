@@ -53,7 +53,9 @@ class DownloadController extends Controller
     {
         $importJob     = $this->repository->find($identifier);
         $configuration = $importJob->getConfiguration();
-        $array         = $configuration->toArray();
+        // Use toExportArray() to strip credential fields from the downloadable JSON.
+        // See Configuration::EXPORT_REDACTED_KEYS for the full list of redacted keys.
+        $array         = $configuration->toExportArray();
 
         // make sure that "mapping" is an empty object when downloading.
         if (is_array($array['mapping']) && 0 === count($array['mapping'])) {

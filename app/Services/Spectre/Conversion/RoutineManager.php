@@ -51,22 +51,19 @@ class RoutineManager implements RoutineManagerInterface
     private GenerateTransactions $transactionGenerator;
     private TransactionProcessor $transactionProcessor;
 
-    public function __construct(?string $identifier)
+    private ImportJob $importJob;
+
+    public function __construct(ImportJob $importJob)
     {
         $this->allErrors            = [];
         $this->allWarnings          = [];
         $this->allMessages          = [];
         $this->allRateLimits        = [];
+        $this->importJob            = $importJob;
 
         $this->transactionProcessor = new TransactionProcessor();
         $this->transactionGenerator = new GenerateTransactions();
         $this->transactionFilter    = new FilterTransactions();
-        if (null === $identifier) {
-            // $this->generateIdentifier();
-        }
-        if (null !== $identifier) {
-            $this->identifier = $identifier;
-        }
     }
 
     #[Override]

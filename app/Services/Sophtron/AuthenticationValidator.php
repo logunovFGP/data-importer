@@ -46,7 +46,7 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
     }
 
     /**
-     * FIXME needs to point to a generic method that is somewhere inside a generic AuthenticationValidator.
+     * TODO(#83): needs to point to a generic method that is somewhere inside a generic AuthenticationValidator.
      */
     public function getData(): array
     {
@@ -55,7 +55,7 @@ class AuthenticationValidator implements AuthenticationValidatorInterface
 
     public function setData(array $data): void
     {
-        // FIXME needs to use constants.
+        // TODO(#83): needs to use constants.
         SecretManager::saveValueInSession('user_id', $data['user_id']);
         SecretManager::saveValueInSession('access_key', $data['access_key']);
     }

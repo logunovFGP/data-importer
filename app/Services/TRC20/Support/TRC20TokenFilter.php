@@ -83,11 +83,24 @@ class TRC20TokenFilter
     }
 
     /**
+     * Check if a specific token symbol is in the supported list.
+     */
+    public static function isTokenInSupportedList(string $symbol): bool
+    {
+        $list = self::getSupportedTokens();
+        if ([] === $list) {
+            return true; // empty = accept all
+        }
+
+        return in_array(strtoupper(trim($symbol)), $list, true);
+    }
+
+    /**
      * Get the list of supported token symbols from config.
      *
      * @return array<string> Uppercase symbols, or empty array for "accept all"
      */
-    private static function getSupportedTokens(): array
+    public static function getSupportedTokens(): array
     {
         $raw = (string)config('trc20.supported_tokens', '');
         if ('' === trim($raw) || '*' === trim($raw)) {

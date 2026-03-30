@@ -38,9 +38,6 @@ class RoutineManager implements RoutineManagerInterface
         return $this->transactionProcessor->getAccounts();
     }
 
-    /**
-     * @throws ImporterErrorException
-     */
     private function setConfiguration(): void
     {
         $this->transactionProcessor->setImportJob($this->importJob);
@@ -104,7 +101,11 @@ class RoutineManager implements RoutineManagerInterface
             $total += count($transactions);
         }
         if (0 === $total) {
-            $this->importJob->conversionStatus->addError(0, 'No transactions were downloaded from TBank.');
+            Log::warning('Downloaded nothing from TBank, will return nothing.');
+            $this->importJob->conversionStatus->addError(
+                0,
+                '[tbank-001]: No transactions were downloaded from TBank. The account may have no activity in the selected period.'
+            );
             $this->repository->saveToDisk($this->importJob);
 
             return true;

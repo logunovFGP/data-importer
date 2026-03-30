@@ -27,6 +27,7 @@ use App\Exceptions\ImporterErrorException;
 use App\Services\CSV\Converter\Iban as IbanConverter;
 use App\Services\Shared\Authentication\SecretManager;
 use App\Services\Shared\Model\ImportServiceAccount;
+use App\Services\Shared\Support\CurrencyCode;
 use App\Services\SimpleFIN\Request\PostAccountRequest;
 use App\Services\SimpleFIN\Response\PostAccountResponse;
 use Carbon\Carbon;
@@ -66,7 +67,7 @@ class AccountMapper
     public function findMatchingFireflyIIIAccount(ImportServiceAccount $account, ?string $expectedCurrency = null): ?Account
     {
         $this->loadFireflyIIIAccounts();
-        $expectedCurrency = $this->normalizeCurrencyCode(
+        $expectedCurrency = CurrencyCode::normalizeOrEmpty(
             null !== $expectedCurrency ? $expectedCurrency : $account->currencyCode
         );
 
@@ -127,7 +128,7 @@ class AccountMapper
     }
 
     /**
-     * FIXME merge with trait CreatesAccounts
+     * TODO(#83): merge with trait CreatesAccounts
      * Create account immediately via Firefly III API
      */
     public function createFireflyIIIAccount(ImportServiceAccount $importServiceAccount, array $config): ?Account
@@ -404,7 +405,7 @@ class AccountMapper
 
         $filtered = array_values(array_filter(
             $accounts,
-            fn (Account $candidate) => $this->normalizeCurrencyCode((string)($candidate->currencyCode ?? '')) === $expectedCurrency
+            fn (Account $candidate) => CurrencyCode::normalizeOrEmpty((string)($candidate->currencyCode ?? '')) === $expectedCurrency
         ));
 
         if (0 === count($filtered)) {
@@ -442,11 +443,6 @@ class AccountMapper
         }
 
         return null;
-    }
-
-    private function normalizeCurrencyCode(?string $currency): string
-    {
-        return strtoupper(trim((string)$currency));
     }
 
     /**

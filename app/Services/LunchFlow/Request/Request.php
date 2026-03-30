@@ -26,7 +26,6 @@ namespace App\Services\LunchFlow\Request;
 
 use App\Exceptions\ImporterHttpException;
 use App\Services\Shared\Response\Response;
-use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\TransferException;
@@ -40,7 +39,8 @@ use SensitiveParameter;
 abstract class Request
 {
     private string $base;
-    private float $timeOut = 3.14;
+    private array $parameters = [];
+    private float $timeOut    = 3.14;
     private string $url;
     private string $apiKey;
 
@@ -77,6 +77,10 @@ abstract class Request
     protected function authenticatedGet(): array
     {
         $fullUrl = sprintf('%s/%s', $this->getBase(), $this->getUrl());
+
+        if (0 !== count($this->parameters)) {
+            $fullUrl = sprintf('%s?%s', $fullUrl, http_build_query($this->parameters));
+        }
         $client  = $this->getClient();
         $body    = null;
 
@@ -155,21 +159,6 @@ abstract class Request
         // config here
 
         return new Client(['connect_timeout' => $this->timeOut]);
-    }
-
-    protected function getDefaultHeaders(): array
-    {
-        $this->expiresAt = Carbon::now()->getTimestamp() + 180;
-
-        return [
-            'App-id'        => $this->getAppId(),
-            'Secret'        => $this->getSecret(),
-            'Accept'        => 'application/json',
-            'Content-type'  => 'application/json',
-            'Cache-Control' => 'no-cache',
-            'User-Agent'    => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_a')),
-            'Expires-at'    => $this->expiresAt,
-        ];
     }
 
     public function setApiKey(#[SensitiveParameter] string $apiKey): void

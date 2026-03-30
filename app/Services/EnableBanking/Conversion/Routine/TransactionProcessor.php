@@ -32,6 +32,7 @@ use App\Services\EnableBanking\Request\GetTransactionsRequest;
 use App\Services\EnableBanking\Response\TransactionsResponse;
 use App\Services\Shared\Configuration\Configuration;
 use App\Services\Shared\Conversion\CreatesAccounts;
+use App\Services\Shared\Conversion\TransactionFilterTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -41,6 +42,7 @@ use Illuminate\Support\Facades\Log;
 class TransactionProcessor
 {
     use CreatesAccounts;
+    use TransactionFilterTrait;
 
     private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s';
 
@@ -143,69 +145,31 @@ class TransactionProcessor
 
     private function filterTransactions(TransactionsResponse $transactions): array
     {
-        Log::info(sprintf('Going to filter downloaded transactions. Original set length is %d', count($transactions)));
+        return $this->filterTransactionSet(
+            $transactions,
+            $this->configuration->getPendingTransactions(),
+            $this->notBefore,
+            $this->notAfter,
+        );
+    }
 
-        if ($this->notBefore instanceof Carbon) {
-            Log::info(sprintf('Will not grab transactions before "%s"', $this->notBefore->format('Y-m-d H:i:s')));
-        }
-        if ($this->notAfter instanceof Carbon) {
-            Log::info(sprintf('Will not grab transactions after "%s"', $this->notAfter->format('Y-m-d H:i:s')));
-        }
+    private function isTransactionPending(object $transaction): bool
+    {
+        return 'pending' === $transaction->status;
+    }
 
-        $return     = [];
-        $getPending = $this->configuration->getPendingTransactions();
+    private function getTransactionAmount(object $transaction): string
+    {
+        return $transaction->transactionAmount;
+    }
 
-        if (!$getPending) {
-            Log::info('Will NOT include pending transactions.');
-        }
-
-        foreach ($transactions as $transaction) {
-            $madeOn   = $transaction->getDate();
-
-            if (!$getPending && 'pending' === $transaction->status) {
-                Log::debug(sprintf('Skip pending transaction made on "%s".', $madeOn->format(self::DATE_TIME_FORMAT)));
-
-                continue;
-            }
-
-            if ($this->notBefore instanceof Carbon && $madeOn->lt($this->notBefore)) {
-                Log::debug(sprintf(
-                    'Skip transaction because "%s" is before "%s".',
-                    $madeOn->format(self::DATE_TIME_FORMAT),
-                    $this->notBefore->format(self::DATE_TIME_FORMAT)
-                ));
-
-                continue;
-            }
-
-            if ($this->notAfter instanceof Carbon && $madeOn->gt($this->notAfter)) {
-                Log::debug(sprintf(
-                    'Skip transaction because "%s" is after "%s".',
-                    $madeOn->format(self::DATE_TIME_FORMAT),
-                    $this->notAfter->format(self::DATE_TIME_FORMAT)
-                ));
-
-                continue;
-            }
-
-            if (0 === bccomp('0', $transaction->transactionAmount)) {
-                $this->importJob->conversionStatus->addWarning(0, sprintf(
-                    'Transaction #%s ("%s") has an amount of zero and has been ignored.',
-                    $transaction->transactionId,
-                    $transaction->getDescription()
-                ));
-                Log::debug(sprintf('Skip transaction because amount is zero: "%s".', $transaction->transactionAmount));
-
-                continue;
-            }
-
-            Log::debug(sprintf('Include transaction because date is "%s".', $madeOn->format(self::DATE_TIME_FORMAT)));
-            $return[] = $transaction;
-        }
-
-        Log::info(sprintf('After filtering, set is %d transaction(s)', count($return)));
-
-        return $return;
+    private function addZeroAmountWarning(object $transaction): void
+    {
+        $this->importJob->conversionStatus->addWarning(0, sprintf(
+            'Transaction #%s ("%s") has an amount of zero and has been ignored.',
+            $transaction->transactionId,
+            $transaction->getDescription()
+        ));
     }
 
     public function getImportJob(): ImportJob

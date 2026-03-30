@@ -6,6 +6,9 @@ namespace App\Services\BasisBank\Authentication;
 
 use App\Services\Shared\Configuration\Configuration;
 use App\Services\Shared\Secrets\ProviderSecretStore;
+use App\Services\Shared\Support\BooleanParser;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -44,14 +47,15 @@ class SecretManager
 
     public static function getLogin(?Configuration $configuration = null): string
     {
+        // Session values are encrypted at rest to protect credentials in file-based sessions.
         $sessionLogin = (string)session()->get(self::LOGIN, '');
         if ('' !== $sessionLogin) {
-            return $sessionLogin;
+            return self::decryptSessionValue($sessionLogin);
         }
 
         $legacySessionLogin = (string)session()->get(self::API_TOKEN, '');
         if ('' !== $legacySessionLogin) {
-            return $legacySessionLogin;
+            return self::decryptSessionValue($legacySessionLogin);
         }
 
         $storedLogin = self::getStoredString(self::LOGIN);
@@ -79,14 +83,15 @@ class SecretManager
 
     public static function getPassword(?Configuration $configuration = null): string
     {
+        // Session values are encrypted at rest to protect credentials in file-based sessions.
         $sessionPassword = (string)session()->get(self::PASSWORD, '');
         if ('' !== $sessionPassword) {
-            return $sessionPassword;
+            return self::decryptSessionValue($sessionPassword);
         }
 
         $legacySessionPassword = (string)session()->get(self::CONSENT_ID, '');
         if ('' !== $legacySessionPassword) {
-            return $legacySessionPassword;
+            return self::decryptSessionValue($legacySessionPassword);
         }
 
         $storedPassword = self::getStoredString(self::PASSWORD);
@@ -114,27 +119,34 @@ class SecretManager
 
     public static function saveLogin(string $login): void
     {
-        $value = trim($login);
-        session()->put(self::LOGIN, $value);
-        session()->put(self::API_TOKEN, $value);
+        $value     = trim($login);
+        // Encrypt credentials before storing in session to prevent plaintext exposure
+        // in file-based session storage (default Laravel configuration).
+        $encrypted = Crypt::encryptString($value);
+        session()->put(self::LOGIN, $encrypted);
+        session()->put(self::API_TOKEN, $encrypted);
         self::saveToStore(self::LOGIN, $value);
         self::saveToStore(self::API_TOKEN, $value);
     }
 
     public static function savePassword(string $password): void
     {
-        $value = trim($password);
-        session()->put(self::PASSWORD, $value);
-        session()->put(self::CONSENT_ID, $value);
+        $value     = trim($password);
+        // Encrypt credentials before storing in session to prevent plaintext exposure
+        // in file-based session storage (default Laravel configuration).
+        $encrypted = Crypt::encryptString($value);
+        session()->put(self::PASSWORD, $encrypted);
+        session()->put(self::CONSENT_ID, $encrypted);
         self::saveToStore(self::PASSWORD, $value);
         self::saveToStore(self::CONSENT_ID, $value);
     }
 
     public static function getOtpCode(): string
     {
+        // Session values are encrypted at rest to protect credentials in file-based sessions.
         $sessionOtp = (string)session()->get(self::OTP_CODE, '');
         if ('' !== $sessionOtp) {
-            return $sessionOtp;
+            return self::decryptSessionValue($sessionOtp);
         }
 
         return (string)config('basisbank.otp_code');
@@ -142,17 +154,14 @@ class SecretManager
 
     public static function saveOtpCode(string $otpCode): void
     {
-        session()->put(self::OTP_CODE, trim($otpCode));
+        // Encrypt OTP code before storing in session — sensitive credential.
+        session()->put(self::OTP_CODE, Crypt::encryptString(trim($otpCode)));
     }
 
     public static function getRequestSmsCode(?Configuration $configuration = null): bool
     {
         if (session()->has(self::REQUEST_SMS_CODE)) {
-            $sessionValue      = session()->get(self::REQUEST_SMS_CODE, false);
-            $normalizedSession = self::boolValue($sessionValue);
-            if (null !== $normalizedSession) {
-                return $normalizedSession;
-            }
+            return BooleanParser::parse(session()->get(self::REQUEST_SMS_CODE, false));
         }
 
         $storedValue = self::getStoredBool(self::REQUEST_SMS_CODE);
@@ -160,13 +169,13 @@ class SecretManager
             return $storedValue;
         }
 
-        if (null !== $configuration && self::boolValue($configuration->getBasisBankRequestSmsCode()) !== null) {
-            return (bool)$configuration->getBasisBankRequestSmsCode();
+        if (null !== $configuration) {
+            return BooleanParser::parse($configuration->isBasisBankRequestSmsCode());
         }
 
         $configValue = (string)config('basisbank.request_sms_code');
         if ('' !== $configValue) {
-            return self::asBool($configValue);
+            return BooleanParser::parse($configValue);
         }
 
         return true;
@@ -181,11 +190,7 @@ class SecretManager
     public static function getTrustDevice(?Configuration $configuration = null): bool
     {
         if (session()->has(self::TRUST_DEVICE)) {
-            $sessionValue      = session()->get(self::TRUST_DEVICE, false);
-            $normalizedSession = self::boolValue($sessionValue);
-            if (null !== $normalizedSession) {
-                return $normalizedSession;
-            }
+            return BooleanParser::parse(session()->get(self::TRUST_DEVICE, false));
         }
 
         $storedValue = self::getStoredBool(self::TRUST_DEVICE);
@@ -194,12 +199,12 @@ class SecretManager
         }
 
         if (null !== $configuration) {
-            return (bool)$configuration->isBasisBankTrustDevice();
+            return BooleanParser::parse($configuration->isBasisBankTrustDevice());
         }
 
         $configValue = (string)config('basisbank.trust_device');
         if ('' !== $configValue) {
-            return self::asBool($configValue);
+            return BooleanParser::parse($configValue);
         }
 
         return false;
@@ -213,9 +218,10 @@ class SecretManager
 
     public static function getAuthState(?Configuration $configuration = null): string
     {
+        // Session values are encrypted at rest to protect auth state artifacts.
         $sessionState = (string)session()->get(self::AUTH_STATE, '');
         if ('' !== $sessionState) {
-            return $sessionState;
+            return self::decryptSessionValue($sessionState);
         }
 
         $storedState = self::getStoredString(self::AUTH_STATE);
@@ -234,15 +240,17 @@ class SecretManager
     public static function saveAuthState(string $authState): void
     {
         $value = trim($authState);
-        session()->put(self::AUTH_STATE, $value);
+        // Encrypt auth state before storing in session — may contain session tokens.
+        session()->put(self::AUTH_STATE, Crypt::encryptString($value));
         self::saveToStore(self::AUTH_STATE, $value);
     }
 
     public static function getSessionArtifact(?Configuration $configuration = null): string
     {
+        // Session values are encrypted at rest to protect session artifacts (cookies, tokens).
         $sessionArtifact = (string)session()->get(self::SESSION_ARTIFACT, '');
         if ('' !== $sessionArtifact) {
-            return $sessionArtifact;
+            return self::decryptSessionValue($sessionArtifact);
         }
 
         $storedArtifact = self::getStoredString(self::SESSION_ARTIFACT);
@@ -261,7 +269,8 @@ class SecretManager
     public static function saveSessionArtifact(string $sessionArtifact): void
     {
         $value = trim($sessionArtifact);
-        session()->put(self::SESSION_ARTIFACT, $value);
+        // Encrypt session artifact before storing — may contain auth cookies/tokens.
+        session()->put(self::SESSION_ARTIFACT, Crypt::encryptString($value));
         self::saveToStore(self::SESSION_ARTIFACT, $value);
     }
 
@@ -287,23 +296,6 @@ class SecretManager
         }
     }
 
-    private static function boolValue(mixed $value): ?bool
-    {
-        if (true === $value || '1' === $value || 'true' === (string)$value || 'on' === (string)$value) {
-            return true;
-        }
-        if (false === $value || '0' === $value || 'false' === (string)$value || '' === (string)$value || 'off' === (string)$value) {
-            return false;
-        }
-
-        return null;
-    }
-
-    private static function asBool(mixed $value): bool
-    {
-        return self::boolValue($value) ?? (bool)$value;
-    }
-
     private static function store(): ProviderSecretStore
     {
         return app(ProviderSecretStore::class);
@@ -322,8 +314,11 @@ class SecretManager
     private static function getStoredBool(string $key): ?bool
     {
         $value = self::store()->get(self::PROVIDER, $key, null);
+        if (null === $value) {
+            return null;
+        }
 
-        return self::boolValue($value);
+        return BooleanParser::parse($value);
     }
 
     private static function saveToStore(string $key, mixed $value): void
@@ -332,6 +327,32 @@ class SecretManager
             self::store()->put(self::PROVIDER, $key, $value);
         } catch (Throwable $e) {
             Log::warning(sprintf('Could not persist BasisBank secret "%s": %s', $key, $e->getMessage()));
+        }
+    }
+
+    /**
+     * Decrypt a value retrieved from the session.
+     *
+     * Handles legacy plaintext values gracefully: if decryption fails (e.g. the value
+     * was stored before encryption was introduced), the raw value is returned and a
+     * deprecation warning is logged so operators can detect sessions that still contain
+     * unencrypted credentials.
+     */
+    private static function decryptSessionValue(string $value): string
+    {
+        if ('' === $value) {
+            return '';
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (DecryptException $e) {
+            Log::warning(sprintf(
+                'BasisBank session value could not be decrypted (legacy plaintext fallback): %s',
+                $e->getMessage()
+            ));
+
+            return $value;
         }
     }
 }

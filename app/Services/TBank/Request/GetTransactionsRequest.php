@@ -100,7 +100,7 @@ class GetTransactionsRequest extends SessionJsonRequest
      */
     public function detectAccountCurrency(?string $dateFrom = null, ?string $dateTo = null, int $sampleSize = 10): string
     {
-        return $this->selectDominantCurrency($this->sampleAccountCurrencies($dateFrom, $dateTo, $sampleSize));
+        return CurrencyCode::selectDominant($this->sampleAccountCurrencies($dateFrom, $dateTo, $sampleSize));
     }
 
     private function extractRows(mixed $payload): array
@@ -129,13 +129,20 @@ class GetTransactionsRequest extends SessionJsonRequest
         if ([] === $node) {
             return;
         }
-        if (!array_is_list($node) && $this->isTransactionCandidate($node)) {
-            $rows[] = $node;
-        }
+        $isCandidate = !array_is_list($node) && $this->isTransactionCandidate($node);
+
+        // Collect children first; only add the parent if no child candidates were found,
+        // to avoid duplicating a parent row that wraps its own child transactions.
+        $countBefore = count($rows);
         foreach ($node as $value) {
             if (is_array($value)) {
                 $this->collectTransactionRows($value, $rows, $depth + 1);
             }
+        }
+        $childrenFound = count($rows) > $countBefore;
+
+        if ($isCandidate && !$childrenFound) {
+            $rows[] = $node;
         }
     }
 
@@ -291,10 +298,8 @@ class GetTransactionsRequest extends SessionJsonRequest
         if (str_contains($sign, 'credit') || str_contains($sign, 'income') || str_contains($sign, 'deposit')) {
             return abs($value);
         }
-        if ($value > 0) {
-            return -1 * abs($value);
-        }
-
+        // No direction indicator found — return the raw value as-is.
+        // Previously this forced positive amounts negative, turning deposits into expenses.
         return (float)$value;
     }
 
@@ -411,40 +416,5 @@ class GetTransactionsRequest extends SessionJsonRequest
         return null;
     }
 
-    private function firstNonEmpty(array $values, string $default = ''): string
-    {
-        foreach ($values as $value) {
-            $stringValue = trim((string)$value);
-            if ('' !== $stringValue) {
-                return $stringValue;
-            }
-        }
-
-        return $default;
-    }
-
-    private function selectDominantCurrency(array $currencies): string
-    {
-        if ([] === $currencies) {
-            return '';
-        }
-        $counter = [];
-        foreach ($currencies as $currency) {
-            $normalized = CurrencyCode::normalizeOrEmpty((string)$currency);
-            if ('' === $normalized) {
-                continue;
-            }
-            if (!array_key_exists($normalized, $counter)) {
-                $counter[$normalized] = 0;
-            }
-            $counter[$normalized]++;
-        }
-        if ([] === $counter) {
-            return '';
-        }
-        arsort($counter);
-        $best = array_key_first($counter);
-
-        return is_string($best) ? $best : '';
-    }
+    // firstNonEmpty() is now provided by SessionJsonRequest parent class
 }

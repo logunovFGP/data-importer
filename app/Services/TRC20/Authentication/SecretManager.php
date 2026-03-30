@@ -67,7 +67,7 @@ class SecretManager
         $value = trim($apiKey);
         session()->put(self::API_KEY, $value);
         self::saveToStore(self::API_KEY, $value);
-        Log::debug(sprintf('TRC20 API key saved (length=%d, ends=%s)', strlen($value), substr($value, -4)));
+        Log::debug(sprintf('TRC20 API key saved (length=%d)', strlen($value)));
     }
 
     public static function saveWallets(string $wallets): void

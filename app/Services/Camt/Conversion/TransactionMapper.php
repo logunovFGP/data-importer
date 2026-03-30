@@ -40,6 +40,7 @@ class TransactionMapper
 
     private array $accountIdentificationSuffixes;
     private array $allAccounts;
+    private CamtAccountTypeResolver $accountTypeResolver;
 
     private ImportJob $importJob;
 
@@ -53,6 +54,7 @@ class TransactionMapper
         Log::debug('Constructed TransactionMapper.');
         $this->allAccounts                   = $this->getAllAccounts();
         $this->accountIdentificationSuffixes = ['id', 'iban', 'number', 'name'];
+        $this->accountTypeResolver           = new CamtAccountTypeResolver();
     }
 
     public function map(array $transactions): array
@@ -161,7 +163,7 @@ class TransactionMapper
                     break;
 
                 case 'note':
-                    // FIXME perhaps lift into separate method?
+                    // TODO(#83): perhaps lift into separate method?
                     $current['notes']       ??= '';
                     $addition                  = "  \n".implode("  \n", $data['data']);
                     $current['notes'] .= $addition;
@@ -170,28 +172,28 @@ class TransactionMapper
                     break;
 
                 case 'date_process':
-                    // FIXMEperhaps lift into separate method?
+                    // TODO(#83): perhaps lift into separate method?
                     $carbon                    = Carbon::createFromFormat('Y-m-d H:i:s', reset($data['data']));
                     $current['process_date']   = $carbon->toIso8601String();
 
                     break;
 
                 case 'date_transaction':
-                    // FIXME perhaps lift into separate method?
+                    // TODO(#83): perhaps lift into separate method?
                     $carbon                    = Carbon::createFromFormat('Y-m-d H:i:s', reset($data['data']));
                     $current['date']           = $carbon->toIso8601String();
 
                     break;
 
                 case 'date_payment':
-                    // FIXME perhaps lift into separate method?
+                    // TODO(#83): perhaps lift into separate method?
                     $carbon                    = Carbon::createFromFormat('Y-m-d H:i:s', reset($data['data']));
                     $current['payment_date']   = $carbon->toIso8601String();
 
                     break;
 
                 case 'date_book':
-                    // FIXME perhaps lift into separate method?
+                    // TODO(#83): perhaps lift into separate method?
                     $carbon                    = Carbon::createFromFormat('Y-m-d H:i:s', reset($data['data']));
                     $current['book_date']      = $carbon->toIso8601String();
                     $current['date']           = $carbon->toIso8601String();
@@ -222,17 +224,17 @@ class TransactionMapper
 
                     break;
 
-                case 'description': // FIXME think about a config value to use both values from level C and D
+                case 'description': // TODO(#83): think about a config value to use both values from level C and D
                     $current['description'] ??= '';
                     $addition                  = '';
                     if ('group' === $groupHandling || 'split' === $groupHandling) {
                         // use first description
-                        // FIXME use named field?
+                        // TODO(#83): use named field?
                         $addition = reset($data['data']);
                     }
                     if ('single' === $groupHandling) {
                         // just use the last description
-                        // FIXME use named field?
+                        // TODO(#83): use named field?
                         $addition = end($data['data']);
                     }
                     $current['description'] .= $addition;
@@ -541,7 +543,7 @@ class TransactionMapper
             }
         }
 
-        // FIXME catch all cases according lines 281 - 285 and https://docs.firefly-iii.org/fxirefly-iii/financial-concepts/transactions/#:~:text=In%20Firefly%20III%2C%20a%20transaction,slightly%20different%20from%20one%20another.
+        // TODO(#83): catch all cases according lines 281 - 285 and https://docs.firefly-iii.org/fxirefly-iii/financial-concepts/transactions/#:~:text=In%20Firefly%20III%2C%20a%20transaction,slightly%20different%20from%20one%20another.
         $sourceIsNull    = null === $accountType['source'];
         $sourceIsAsset   = 'asset' === $accountType['source'];
         $sourceIsRevenue = 'revenue' === $accountType['source'];
@@ -624,112 +626,7 @@ class TransactionMapper
 
     private function getAccountType(string $field, string $value, bool $lessThanZero): ?string
     {
-        $count    = 0;
-        $result   = null;
-        $hitField = null; // the field on which we found a match.
-        foreach ($this->allAccounts as $account) {
-            // we have a match!
-            if ((string) $account->{$field} === (string) $value) {
-                // never found a match before!
-                if (0 === $count) {
-                    Log::debug(sprintf('Recognized "%s" as a "%s"-account by its "%s".', $value, $account->type, $field));
-                    $result   = $account->type;
-                    $hitField = $field;
-                    ++$count;
-                }
-                // we found a match before, and it's different too.
-                if (0 !== $count && $account->type !== $result) {
-                    Log::warning(sprintf(
-                        'Recognized "%s" as a "%s"-account (on the "%s"-field) but ALSO as a "%s"-account (previous match was on the "%s"-field)!',
-                        $value,
-                        $result,
-                        $field,
-                        $account->type,
-                        $hitField
-                    ));
-                    // the previous result always trumps the current result because the order of accountIdentificationSuffixes
-                    Log::debug(sprintf('System will keep the previous match and assume account with %s "%s" is a "%s" account', $field, $value, $result));
-                    ++$count;
-                }
-                // we found a match before and it's different. But the data importer has found both "revenue" AND "expense" accounts. What to do?
-                $set = [$account->type, $result];
-                if (0 !== $count && $account->type !== $result && in_array('revenue', $set, true) && in_array('expense', $set, true) && $lessThanZero) {
-                    Log::warning(sprintf(
-                        'Recognized "%s" as a "%s"-account (on the "%s"-field) but ALSO as a "%s"-account (previous match was on the "%s"-field)!',
-                        $value,
-                        $result,
-                        $field,
-                        $account->type,
-                        $hitField
-                    ));
-                    Log::debug('Because amount is less than zero, we assume "expense" is the correct type.');
-                    $result = 'expense';
-
-                    ++$count;
-                }
-                // we found a match before and it's different. But: previous result was "expense", current result is "revenue"
-                if (0 !== $count && $account->type !== $result && in_array('revenue', $set, true) && in_array('expense', $set, true) && !$lessThanZero) {
-                    Log::warning(sprintf(
-                        'Recognized "%s" as a "%s"-account (on the "%s"-field) but ALSO as a "%s"-account (previous match was on the "%s"-field)!',
-                        $value,
-                        $result,
-                        $field,
-                        $account->type,
-                        $hitField
-                    ));
-                    Log::debug('Because amount is more than zero, we assume "revenue" is the correct type.');
-                    $result = 'revenue';
-
-                    ++$count;
-                }
-            }
-        }
-        if (null === $result) {
-            Log::debug(sprintf('Unable to recognize the account type of "%s" "%s", or skipped because unsure.', $field, $value));
-        }
-
-        return $result;
-    }
-
-    private function getAccountId($direction, $current): string
-    {
-        Log::debug('getAccountId');
-        foreach ($this->accountIdentificationSuffixes as $suffix) {
-            $field = sprintf('%s_%s', $direction, $suffix);
-            if (array_key_exists($field, $current)) {
-                // there is a value...
-                foreach ($this->allAccounts as $account) {
-                    // so we check all accounts for a match
-                    if ($current[$field] === $account->{$suffix}) {
-                        // we have a match
-
-                        // only select accounts that are suitable for the type of transaction
-                        if ($current['amount'] > 0) {
-                            // seems a deposit or transfer
-                            if (in_array($account->type, ['asset', 'revenue'], true)) {
-                                return (string) $account->id;
-                            }
-                        }
-
-                        if ($current['amount'] < 0) {
-                            // seems a withtrawal or transfer
-                            if (in_array($account->type, ['asset', 'expense'], true)) {
-                                return (string) $account->id;
-                            }
-                        }
-                        Log::warning(sprintf('Just mapped account "%s" (%s)', $account->id, $account->type));
-
-                        return (string) $account->id;
-                    }
-                }
-
-                // Log::warning(sprintf('Unable to map an account for "%s"',$current[$field]));
-            }
-
-            // Log::warning(sprintf('There is no field for "%s" in the transaction',$direction));
-        }
-
-        return '';
+        return $this->accountTypeResolver->resolve($this->allAccounts, $field, $value, $lessThanZero);
     }
 
     private function processAmount(string $groupHandling, array $data): string
@@ -740,16 +637,13 @@ class TransactionMapper
         if ('group' === $groupHandling || 'split' === $groupHandling) {
             Log::debug(sprintf('Group handling is "%s"', $groupHandling));
             // if multiple values, use biggest (... at index 0?)
-            // FIXME this will never work because $return is NULL the first time and abs() can't handle that.
             foreach ($data['data'] as $amount) {
                 if (null === $amount) {
                     // #8367 skip null values
                     continue;
                 }
-                if (is_string($amount)) {
-                    $amount = (float) $amount;
-                }
-                if (abs($return) < abs($amount)) {
+                $amount = (string) $amount;
+                if (bccomp($this->bcAbs($return), $this->bcAbs($amount)) < 0) {
                     Log::debug(sprintf('Amount is now "%s" instead of "%s"', $amount, $return));
                     $return = $amount;
                 }
@@ -765,47 +659,33 @@ class TransactionMapper
 
                     continue;
                 }
-                if (is_string($amount)) {
-                    $amount = (float) $amount;
-                }
+                $amount = (string) $amount;
                 Log::debug(sprintf('Amount is %s.', var_export($amount, true)));
-                // check for null first, should prevent null pointers in abs()
-                if (abs($return) < abs($amount)) {
+                if (bccomp($this->bcAbs($return), $this->bcAbs($amount)) < 0) {
                     Log::debug(sprintf('Amount is now "%s" instead of "%s"', $amount, $return));
                     $return = $amount;
                 }
             }
         }
-        if (0 === bccomp('0', (string) $return)) {
+        if (0 === bccomp('0', $return)) {
             Log::debug('Amount is ZERO, set to "0"');
             $return = '0';
         }
-        if (0 !== bccomp('0', (string) $return) && !is_string($return)) {
-            Log::debug(sprintf('Amount is %s, turn into string', var_export($return, true)));
-            $return = (string) $return;
-        }
         Log::debug(sprintf('Final amount is "%s"', $return));
 
-        return (string) $return;
+        return $return;
     }
 
-    private function validAccountInfo(string $direction, array $current): bool
+    /**
+     * Return the absolute value of a numeric string using bcmath.
+     */
+    private function bcAbs(string $value): string
     {
-        // search for existing IBAN
-        // search for existing number
-        // search for existing name, FIXME under which types?
-        foreach ($this->accountIdentificationSuffixes as $accountIdentificationSuffix) {
-            $field = sprintf('%s_%s', $direction, $accountIdentificationSuffix);
-            if (array_key_exists($field, $current)) {
-                // there is a value...
-                // so we check all accounts for a match
-                if (array_any($this->allAccounts, static fn ($account) => $current[$field] === $account->{$accountIdentificationSuffix})) {
-                    return true;
-                }
-            }
+        if (bccomp($value, '0') < 0) {
+            return bcmul($value, '-1');
         }
 
-        return false;
+        return $value;
     }
 
     public function getImportJob(): ImportJob

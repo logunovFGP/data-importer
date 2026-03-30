@@ -10,6 +10,11 @@ namespace App\Services\BasisBank\Auth;
 
 /**
  * Data carrier for BasisBank web authentication state.
+ *
+ * @mutable This class is intentionally mutable. It is passed by reference across
+ *          the multi-step auth flow (login -> OTP -> trust device). Making it
+ *          immutable would require rewriting the entire auth state machine.
+ *          See BasisBankWebAuthClient for the mutation call-sites.
  */
 class BasisBankSessionState
 {
@@ -34,6 +39,7 @@ class BasisBankSessionState
         return $this->status;
     }
 
+    /** @mutable Mutates in-place — callers hold the same reference. */
     public function setStatus(string $status): self
     {
         $this->status = trim($status);
@@ -82,6 +88,7 @@ class BasisBankSessionState
         return $this->sessionArtifact;
     }
 
+    /** @mutable Mutates in-place — callers hold the same reference. */
     public function setSessionArtifact(string $sessionArtifact): self
     {
         $this->sessionArtifact = trim($sessionArtifact);
@@ -94,6 +101,7 @@ class BasisBankSessionState
         return $this->authState;
     }
 
+    /** @mutable Mutates in-place — callers hold the same reference. */
     public function setAuthState(string $authState): self
     {
         $this->authState = trim($authState);
@@ -130,6 +138,7 @@ class BasisBankSessionState
         return $this->errorMessage;
     }
 
+    /** @mutable Mutates in-place — callers hold the same reference. */
     public function setErrorMessage(string $errorMessage): self
     {
         $this->errorMessage = trim($errorMessage);

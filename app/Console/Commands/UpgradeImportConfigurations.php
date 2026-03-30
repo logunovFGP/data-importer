@@ -94,7 +94,8 @@ final class UpgradeImportConfigurations extends Command
             return;
         }
         $configuration              = Configuration::fromFile(json_decode($content, true));
-        $newJson                    = $configuration->toArray();
+        // Use toExportArray() to strip credential fields from the exported file.
+        $newJson                    = $configuration->toExportArray();
         $newJson['mapping']         = [];
         $newJson['default_account'] = 0;
         file_put_contents($name, json_encode($newJson, JSON_PRETTY_PRINT));

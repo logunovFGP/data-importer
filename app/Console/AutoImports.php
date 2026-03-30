@@ -214,8 +214,8 @@ trait AutoImports
         Log::debug(sprintf('importFileAsImportJob: importable "%s"', $importableFile));
         Log::debug(sprintf('importFileAsImportJob: JSON       "%s"', $jsonFile));
 
-        // FIXME this is a hack. Normally, the data importer would know what import flow to use from the user's selection.
-        // FIXME but now we parse the config (which we know is valid), take the flow, and give it to the import job.
+        // TODO(#83): this is a hack. Normally, the data importer would know what import flow to use from the user's selection.
+        // TODO(#83): but now we parse the config (which we know is valid), take the flow, and give it to the import job.
         $jsonContent      = file_get_contents($jsonFile);
         $json             = json_decode($jsonContent, true);
 
@@ -231,8 +231,8 @@ trait AutoImports
         }
         $importJob        = $this->repository->markAs($importJob, 'contains_content');
 
-        // FIXME: this little routine belongs in a function or a helper.
-        // FIXME: it is duplicated
+        // TODO(#83): this little routine belongs in a function or a helper.
+        // TODO(#83): it is duplicated
         // at this point, also parse and process the uploaded configuration file string.
         $configuration    = Configuration::make();
         if ('' !== $jsonContent && null === $importJob->getConfiguration()) {
@@ -470,7 +470,7 @@ trait AutoImports
     {
         $list = ['info'  => $this->importMessages, 'warn'  => $this->importWarnings, 'error' => $this->importErrors];
 
-        // FIXME this reports to info() which ends up in the result.
+        // TODO(#83): this reports to info() which ends up in the result.
         Log::info(sprintf('There are %d message(s)', count($this->importMessages)));
         Log::info(sprintf('There are %d warning(s)', count($this->importWarnings)));
         Log::info(sprintf('There are %d error(s)', count($this->importErrors)));
@@ -607,8 +607,8 @@ trait AutoImports
 
             return;
         }
-        // FIXME this is a hack. Normally, the data importer would know what import flow to use from the user's selection.
-        // FIXME but now we parse the config (which we know is valid), take the flow, and give it to the import job.
+        // TODO(#83): this is a hack. Normally, the data importer would know what import flow to use from the user's selection.
+        // TODO(#83): but now we parse the config (which we know is valid), take the flow, and give it to the import job.
         $jsonContent           = file_get_contents($jsonFile);
         $json                  = json_decode($jsonContent, true);
 
@@ -622,8 +622,8 @@ trait AutoImports
         $importJob             = $this->repository->setImportableFileString($importJob, $importableFileContent);
         $importJob             = $this->repository->markAs($importJob, 'contains_content');
 
-        // FIXME: this little routine belongs in a function or a helper.
-        // FIXME: it is duplicated
+        // TODO(#83): this little routine belongs in a function or a helper.
+        // TODO(#83): it is duplicated
         // at this point, also parse and process the uploaded configuration file string.
         $configuration         = Configuration::make();
         if ('' !== $jsonContent && null === $importJob->getConfiguration()) {

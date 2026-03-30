@@ -59,7 +59,7 @@ abstract class AbstractTransaction
 
     public function getDate(int $index): string
     {
-        // FIXME loop level D for the date that belongs to the index
+        // TODO(#83): loop level D for the date that belongs to the index
         return (string) $this->levelC->getValueDate()->format(self::TIME_FORMAT);
     }
 
@@ -173,7 +173,8 @@ abstract class AbstractTransaction
                     ;
                 }
 
-                return '';
+                // Previously returned '' instead of $return, discarding the computed family code.
+                return $return;
 
             case 'entryBtcSubFamilyCode':
                 $return          = '';
@@ -217,7 +218,7 @@ abstract class AbstractTransaction
                 if (0 === count($this->levelD) || !array_key_exists($index, $this->levelD)) {
                     Log::debug('There is no info for this thing.');
 
-                    // FIXME return nothing?
+                    // TODO(#83): return nothing?
                     return $result;
                 }
 
@@ -238,12 +239,12 @@ abstract class AbstractTransaction
             case 'entryDetailRemittanceInformationStructuredBlockAdditionalRemittanceInformation':
                 // this is level D, so grab from level C or loop.
                 if (0 === count($this->levelD) || !array_key_exists($index, $this->levelD)) {
-                    // FIXME return nothing?
+                    // TODO(#83): return nothing?
                     return '';
                 }
 
                 /** @var EntryTransactionDetail $info */
-                $info            = $this->levelD[$index]; // FIXME, check if always readable or if we need some checks like with "unstructuredBlockMessage"
+                $info            = $this->levelD[$index]; // TODO(#83): check if always readable or if we need some checks like with "unstructuredBlockMessage"
 
                 // like the unstructured block, these could be multiple blocks, so loop:
                 if (null !== $info->getRemittanceInformation() && count($info->getRemittanceInformation()->getStructuredBlocks()) > 0) {
@@ -262,8 +263,6 @@ abstract class AbstractTransaction
                 }
 
                 return '';
-
-                break;
 
             case 'entryDetailAmount':
                 // this is level D, so grab from level C or loop.
@@ -450,7 +449,7 @@ abstract class AbstractTransaction
     private function getOpposingName(RelatedParty $relatedParty): string
     {
         $opposingName = '';
-        // FIXME make depend on configuration
+        // TODO(#83): make depend on configuration
         if ('' === (string) $relatedParty->getRelatedPartyType()->getName()) {
             // there is no "name", so use the address instead
             $opposingName = $this->generateAddressLine($relatedParty->getRelatedPartyType()->getAddress());
@@ -471,6 +470,10 @@ abstract class AbstractTransaction
 
     private function generateAddressLine(?Address $address = null): string
     {
+        if (null === $address) {
+            return '';
+        }
+
         return implode(', ', $address->getAddressLines());
     }
 }

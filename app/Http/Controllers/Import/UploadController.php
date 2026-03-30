@@ -33,6 +33,7 @@ use App\Services\Shared\File\FileContentSherlock;
 use App\Services\SimpleFIN\Validation\NewJobDataCollector as SimpleFINNewJobDataCollector;
 use App\Services\Sophtron\Validation\NewJobDataCollector as SophtronNewJobDataCollector;
 use App\Services\BasisBank\Authentication\SecretManager as BasisBankSecretManager;
+use App\Services\Shared\Authentication\ProviderAuthCollector;
 use App\Services\TBank\Authentication\SecretManager as TBankSecretManager;
 use App\Services\TRC20\Authentication\SecretManager as TRC20SecretManager;
 use App\Services\BasisBank\Validation\NewJobDataCollector as BasisBankNewJobDataCollector;
@@ -160,8 +161,8 @@ class UploadController extends Controller
         $importJob     = $this->repository->setImportableFileString($importJob, $this->importableFileContent);
         $importJob     = $this->repository->markAs($importJob, 'contains_content');
 
-        // FIXME: this little routine belongs in a function or a helper.
-        // FIXME: it is duplicated
+        // TODO(#83): this little routine belongs in a function or a helper.
+        // TODO(#83): it is duplicated
         // at this point, also parse and process the uploaded configuration file string.
         $configuration = Configuration::make();
         if ('' !== $this->configFileContent && null === $importJob->getConfiguration()) {
@@ -182,7 +183,7 @@ class UploadController extends Controller
         $importJob->setConfiguration($configuration);
         $this->repository->saveToDisk($importJob);
 
-        // FIXME: validation needs to be in a factory or something.
+        // TODO(#83): validation needs to be in a factory or something.
         // do validation for all configurations.
         switch ($flow) {
             default:
@@ -282,7 +283,7 @@ class UploadController extends Controller
         }
 
         // Persist provider auth to the import job JSON so it can be restored after session loss.
-        $providerAuth = $this->collectProviderAuth($flow);
+        $providerAuth = ProviderAuthCollector::collect($flow);
         if ([] !== $providerAuth) {
             $importJob->setProviderAuth($providerAuth);
             $this->repository->saveToDisk($importJob);
@@ -494,37 +495,6 @@ class UploadController extends Controller
         return false;
     }
 
-    /**
-     * Collect the current provider auth state from the session for persistence to the import job JSON.
-     * This enables resume after session loss.
-     */
-    private function collectProviderAuth(string $flow): array
-    {
-        return match ($flow) {
-            'basisbank' => [
-                'provider'         => 'basisbank',
-                'session_artifact' => BasisBankSecretManager::getSessionArtifact(),
-                'auth_state'       => BasisBankSecretManager::getAuthState(),
-                'login'            => BasisBankSecretManager::getLogin(),
-                'password'         => BasisBankSecretManager::getPassword(),
-                'trust_device'     => BasisBankSecretManager::getTrustDevice(),
-            ],
-            'tbank' => [
-                'provider'      => 'tbank',
-                'session_id'    => TBankSecretManager::getSessionId(),
-                'cookie_header' => TBankSecretManager::getCookieHeader(),
-                'access_level'  => TBankSecretManager::getAccessLevel(),
-                'auth_state'    => TBankSecretManager::getAuthState(),
-                'device_pin'    => TBankSecretManager::getDevicePin(),
-            ],
-            'trc20' => [
-                'provider' => 'trc20',
-                'api_key'  => TRC20SecretManager::getApiKey(),
-                'wallets'  => implode(',', TRC20SecretManager::getWallets()),
-            ],
-            default => [],
-        };
-    }
 
     /**
      * @throws ImporterErrorException

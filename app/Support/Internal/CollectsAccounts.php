@@ -26,6 +26,7 @@ namespace App\Support\Internal;
 
 use App\Exceptions\ImporterHttpException;
 use App\Services\Shared\Configuration\Configuration;
+use App\Services\Shared\Model\ImportServiceAccount;
 use App\Services\Spectre\Authentication\SecretManager as SpectreSecretManager;
 use App\Services\LunchFlow\Authentication\SecretManager as LunchFlowSecretManager;
 use App\Services\BasisBank\Authentication\SecretManager as BasisBankSecretManager;
@@ -141,29 +142,9 @@ trait CollectsAccounts
         $walletsResp = $walletsReq->get();
 
         foreach ($walletsResp as $account) {
-            $return[] = $this->normalizeTRC20ServiceAccount($account);
+            $return[] = ImportServiceAccount::normalizeToArray($account);
         }
 
         return $return;
-    }
-
-    private function normalizeTRC20ServiceAccount(array|object $account): array
-    {
-        $payload = [];
-        if (is_array($account)) {
-            $payload = $account;
-        } elseif (is_object($account) && method_exists($account, 'toArray')) {
-            $payload = (array)$account->toArray();
-        }
-
-        return [
-            'id'            => (string)($payload['id'] ?? ''),
-            'name'          => (string)($payload['name'] ?? ''),
-            'currency_code' => (string)($payload['currency_code'] ?? $payload['currency'] ?? ''),
-            'iban'          => '',
-            'bban'          => '',
-            'status'        => (string)($payload['status'] ?? 'active'),
-            'extra'         => [],
-        ];
     }
 }

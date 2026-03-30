@@ -63,7 +63,7 @@ class RoutineManager
         Log::debug('Start of shared import routine.');
         $this->setConfiguration();
 
-        // FIXME again with the collecting of accounts?
+        // TODO(#83): again with the collecting of accounts?
         Log::debug('First collect account information from Firefly III.');
         $accountInfo     = $this->infoCollector->collectAccountTypes();
 
@@ -71,7 +71,6 @@ class RoutineManager
         // submit transactions to API:
         $this->apiSubmitter->setAccountInfo($accountInfo);
         $this->apiSubmitter->processTransactions();
-        $this->apiSubmitter->finishBatch();
 
         $this->importJob = $this->apiSubmitter->getImportJob();
         Log::debug(sprintf(

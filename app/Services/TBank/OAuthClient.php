@@ -6,6 +6,7 @@ namespace App\Services\TBank;
 
 use App\Exceptions\ImporterErrorException;
 use App\Services\TBank\Authentication\SecretManager;
+use App\Services\TBank\Support\CookieParser;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Cookie\SetCookie;
@@ -74,7 +75,7 @@ class OAuthClient
 
         $expectedClientState = SecretManager::getOAuthState();
         if ('' !== $expectedClientState) {
-            if ('' !== trim($clientState) && !hash_equals($expectedClientState, trim($clientState))) {
+            if ('' === trim($clientState) || !hash_equals($expectedClientState, trim($clientState))) {
                 throw new ImporterErrorException('TBank callback state mismatch. Restart authentication.');
             }
         }
@@ -83,10 +84,10 @@ class OAuthClient
         $messageCode = trim((string)($decoded['messageCode'] ?? ''));
         $sessionId   = $this->extractSessionId($decoded);
         $accessLevel = strtoupper(trim((string)($decoded['accessLevel'] ?? $decoded['payload']['accessLevel'] ?? '')));
-        $cookieHeader = $this->mergeCookieHeaders(SecretManager::getCookieHeader(), $setCookieHeaders);
-        $cookieHeader = $this->mergeCookieHeaderStrings($cookieHeader, $cookieHeaderFromJar);
+        $cookieHeader = CookieParser::mergeCookieHeaders(SecretManager::getCookieHeader(), $setCookieHeaders);
+        $cookieHeader = CookieParser::mergeCookieHeaderStrings($cookieHeader, $cookieHeaderFromJar);
         if ('' === $sessionId) {
-            $sessionId = $this->extractSessionIdFromCookieHeader($cookieHeader);
+            $sessionId = CookieParser::extractSessionIdFromCookieHeader($cookieHeader);
         }
 
         if ('AUTHCOMPLETE' !== strtoupper($messageCode) || '' === $sessionId || in_array($accessLevel, ['', 'ANONYMOUS'], true)) {
@@ -150,13 +151,13 @@ class OAuthClient
         }
 
         $sessionId = trim((string)($decoded['payload'] ?? ''));
-        $mergedCookieHeader = $this->mergeCookieHeaders($cookieHeader, $response->getHeader('Set-Cookie'));
-        $mergedCookieHeader = $this->mergeCookieHeaderStrings($mergedCookieHeader, $this->cookieHeaderFromJar($cookieJar));
+        $mergedCookieHeader = CookieParser::mergeCookieHeaders($cookieHeader, $response->getHeader('Set-Cookie'));
+        $mergedCookieHeader = CookieParser::mergeCookieHeaderStrings($mergedCookieHeader, $this->cookieHeaderFromJar($cookieJar));
         if ('' !== $mergedCookieHeader) {
             SecretManager::saveCookieHeader($mergedCookieHeader);
         }
         if ('' === $sessionId) {
-            $sessionId = $this->extractSessionIdFromCookieHeader($mergedCookieHeader);
+            $sessionId = CookieParser::extractSessionIdFromCookieHeader($mergedCookieHeader);
             if ('' === $sessionId) {
                 return false;
             }
@@ -261,68 +262,14 @@ class OAuthClient
         return trim((string)($decoded['payload'] ?? ''));
     }
 
-    private function mergeCookieHeaders(string $existingCookieHeader, array $setCookieHeaders): string
-    {
-        $cookies = [];
-        foreach ($this->cookiePairsFromCookieHeader($existingCookieHeader) as $name => $value) {
-            $cookies[$name] = $value;
-        }
-        foreach ($setCookieHeaders as $setCookieHeader) {
-            $pair = trim((string)$setCookieHeader);
-            if ('' === $pair) {
-                continue;
-            }
-            [$firstPart] = explode(';', $pair, 2);
-            if (!str_contains($firstPart, '=')) {
-                continue;
-            }
-            [$name, $value] = explode('=', $firstPart, 2);
-            $name = trim($name);
-            $value = trim($value);
-            if ('' === $name) {
-                continue;
-            }
-            if ('' === $value) {
-                unset($cookies[$name]);
-
-                continue;
-            }
-            $cookies[$name] = $value;
-        }
-
-        return implode('; ', array_map(static fn (string $name, string $value): string => sprintf('%s=%s', $name, $value), array_keys($cookies), $cookies));
-    }
-
-    private function mergeCookieHeaderStrings(string $existingCookieHeader, string $incomingCookieHeader): string
-    {
-        $cookies = [];
-        foreach ($this->cookiePairsFromCookieHeader($existingCookieHeader) as $name => $value) {
-            $cookies[$name] = $value;
-        }
-        foreach ($this->cookiePairsFromCookieHeader($incomingCookieHeader) as $name => $value) {
-            $cookies[$name] = $value;
-        }
-
-        return implode('; ', array_map(static fn (string $name, string $value): string => sprintf('%s=%s', $name, $value), array_keys($cookies), $cookies));
-    }
-
-    private function extractSessionIdFromCookieHeader(string $cookieHeader): string
-    {
-        $pairs = $this->cookiePairsFromCookieHeader($cookieHeader);
-        foreach (['psid', 'old_session_id', 'sessionid'] as $key) {
-            $value = trim((string)($pairs[$key] ?? ''));
-            if ('' !== $value) {
-                return $value;
-            }
-        }
-
-        return '';
-    }
+    // Cookie parsing methods (mergeCookieHeaders, mergeCookieHeaderStrings,
+    // extractSessionIdFromCookieHeader, cookiePairsFromCookieHeader)
+    // are now provided by CookieParser
 
     private function createCookieJar(string $cookieHeader): CookieJar
     {
         $jar = new CookieJar();
-        foreach ($this->cookiePairsFromCookieHeader($cookieHeader) as $name => $value) {
+        foreach (CookieParser::cookiePairsFromCookieHeader($cookieHeader) as $name => $value) {
             $jar->setCookie(new SetCookie(['Name' => $name, 'Value' => $value, 'Domain' => '.tbank.ru', 'Path' => '/']));
             $jar->setCookie(new SetCookie(['Name' => $name, 'Value' => $value, 'Domain' => 'www.tbank.ru', 'Path' => '/']));
         }
@@ -348,26 +295,6 @@ class OAuthClient
         }
 
         return implode('; ', array_map(static fn (string $name, string $value): string => sprintf('%s=%s', $name, $value), array_keys($cookies), $cookies));
-    }
-
-    private function cookiePairsFromCookieHeader(string $cookieHeader): array
-    {
-        $result = [];
-        foreach (explode(';', trim($cookieHeader)) as $chunk) {
-            $part = trim($chunk);
-            if ('' === $part || !str_contains($part, '=')) {
-                continue;
-            }
-            [$name, $value] = explode('=', $part, 2);
-            $name = trim($name);
-            $value = trim($value);
-            if ('' === $name || '' === $value) {
-                continue;
-            }
-            $result[$name] = $value;
-        }
-
-        return $result;
     }
 
     private function appendQuery(string $url, array $query): string

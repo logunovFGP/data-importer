@@ -6,6 +6,7 @@ namespace App\Services\TBank\Authentication;
 
 use App\Services\Shared\Secrets\ProviderSecretStore;
 use App\Services\Shared\Configuration\Configuration;
+use App\Services\TBank\Support\CookieParser;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -21,11 +22,17 @@ class SecretManager
     private const string LEGACY_LOGIN = 'tbank_login';
     private const string PROVIDER = 'tbank';
 
+    /**
+     * @deprecated Use getSessionId() instead.
+     */
     public static function getApiToken(?Configuration $configuration = null): string
     {
         return self::getSessionId($configuration);
     }
 
+    /**
+     * @deprecated Use saveSessionId() instead.
+     */
     public static function saveApiToken(string $token): void
     {
         self::saveSessionId($token);
@@ -70,7 +77,7 @@ class SecretManager
         if ('' !== $legacyConfigToken) {
             return $legacyConfigToken;
         }
-        $cookieSessionId = self::extractSessionIdFromCookieHeader(self::getCookieHeader($configuration));
+        $cookieSessionId = CookieParser::extractSessionIdFromCookieHeader(self::getCookieHeader($configuration));
         if ('' !== $cookieSessionId) {
             return $cookieSessionId;
         }
@@ -106,19 +113,15 @@ class SecretManager
             return $configValue;
         }
 
-        if (null !== $configuration && method_exists($configuration, 'getTBankCookieHeader')) {
-            return trim((string)$configuration->getTBankCookieHeader());
-        }
-
         return '';
     }
 
     public static function saveCookieHeader(string $cookieHeader): void
     {
-        $normalized = self::normalizeCookieHeader($cookieHeader);
+        $normalized = CookieParser::normalizeCookieHeader($cookieHeader);
         session()->put(self::COOKIE_HEADER, $normalized);
         self::saveToStore(self::COOKIE_HEADER, $normalized);
-        $cookieSessionId = self::extractSessionIdFromCookieHeader($normalized);
+        $cookieSessionId = CookieParser::extractSessionIdFromCookieHeader($normalized);
         if ('' !== $cookieSessionId) {
             self::saveSessionId($cookieSessionId);
         }
@@ -243,60 +246,6 @@ class SecretManager
         }
     }
 
-    private static function normalizeCookieHeader(string $cookieHeader): string
-    {
-        $input  = trim($cookieHeader);
-        if ('' === $input) {
-            return '';
-        }
-        $parts  = array_filter(array_map('trim', explode(';', $input)));
-        $result = [];
-        foreach ($parts as $part) {
-            if (!str_contains($part, '=')) {
-                continue;
-            }
-            [$name, $value] = explode('=', $part, 2);
-            $name = trim($name);
-            $value = trim($value);
-            if ('' === $name || '' === $value) {
-                continue;
-            }
-            $result[$name] = $value;
-        }
-
-        return implode('; ', array_map(static fn (string $name, string $value): string => sprintf('%s=%s', $name, $value), array_keys($result), $result));
-    }
-
-    private static function extractSessionIdFromCookieHeader(string $cookieHeader): string
-    {
-        $pairs = self::cookiePairsFromCookieHeader($cookieHeader);
-        foreach (['psid', 'old_session_id', 'sessionid'] as $key) {
-            $value = trim((string)($pairs[$key] ?? ''));
-            if ('' !== $value) {
-                return $value;
-            }
-        }
-
-        return '';
-    }
-
-    private static function cookiePairsFromCookieHeader(string $cookieHeader): array
-    {
-        $result = [];
-        foreach (explode(';', trim($cookieHeader)) as $chunk) {
-            $part = trim($chunk);
-            if ('' === $part || !str_contains($part, '=')) {
-                continue;
-            }
-            [$name, $value] = explode('=', $part, 2);
-            $name = trim($name);
-            $value = trim($value);
-            if ('' === $name || '' === $value) {
-                continue;
-            }
-            $result[$name] = $value;
-        }
-
-        return $result;
-    }
+    // Cookie parsing methods (normalizeCookieHeader, extractSessionIdFromCookieHeader,
+    // cookiePairsFromCookieHeader) are now provided by CookieParser
 }

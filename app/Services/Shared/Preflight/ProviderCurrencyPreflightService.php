@@ -686,7 +686,7 @@ class ProviderCurrencyPreflightService
     {
         $result = [];
 
-        if (preg_match_all('/\(([A-Z]{3})\)/', $display, $matches) === 1 || count($matches[1] ?? []) > 0) {
+        if (preg_match_all('/\(([A-Z]{3})\)/', $display, $matches) > 0) {
             foreach ($matches[1] as $match) {
                 $code = $this->normalizeCurrency((string)$match);
                 if ('' !== $code) {
@@ -695,7 +695,7 @@ class ProviderCurrencyPreflightService
             }
         }
 
-        if (preg_match_all('/\b([A-Z]{3})\b/', $display, $matchesText) === 1 || count($matchesText[1] ?? []) > 0) {
+        if (preg_match_all('/\b([A-Z]{3})\b/', $display, $matchesText) > 0) {
             foreach ($matchesText[1] as $match) {
                 $code = $this->normalizeCurrency((string)$match);
                 if ('' !== $code) {

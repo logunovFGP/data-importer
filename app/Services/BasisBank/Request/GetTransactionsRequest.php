@@ -6,21 +6,19 @@ namespace App\Services\BasisBank\Request;
 
 use App\Exceptions\ImporterErrorException;
 use App\Exceptions\ImporterHttpException;
-use App\Services\BasisBank\Auth\BasisBankWebAuthClient;
-use App\Services\BasisBank\Authentication\SecretManager;
+// Cross-provider shared response class; lives under LunchFlow namespace but used by BasisBank, TBank, and TRC20 as well.
 use App\Services\LunchFlow\Response\GetTransactionsResponse;
 use App\Services\Shared\Request\BearerJsonRequest;
 use App\Services\Shared\Support\CurrencyCode;
 use Carbon\Carbon;
 use DOMElement;
 use DOMXPath;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\TransferException;
 use Illuminate\Support\Facades\Log;
-use Psr\Http\Message\ResponseInterface;
 
 class GetTransactionsRequest extends BearerJsonRequest
 {
+    use BasisBankWebSessionTrait;
+
     private const string BASE_WEB_URL     = 'https://www.bankonline.ge';
     private const string CARD_MODULE_PATH = '/Handlers/CardModule.ashx';
     private const string STATEMENT_PAGE_PATH = '/Accounts/Statement/Statement.aspx';
@@ -37,6 +35,11 @@ class GetTransactionsRequest extends BearerJsonRequest
     private bool $sessionCookiesLoaded = false;
     private static array $webSessionRowsCache = [];
     private mixed $progressReporter = null;
+
+    public static function clearCache(): void
+    {
+        self::$webSessionRowsCache = [];
+    }
 
     public function __construct(
         private readonly string $apiToken,
@@ -121,7 +124,7 @@ class GetTransactionsRequest extends BearerJsonRequest
      */
     public function detectAccountCurrency(?string $dateFrom = null, ?string $dateTo = null, int $sampleSize = 10): string
     {
-        return $this->selectDominantCurrency($this->sampleAccountCurrencies($dateFrom, $dateTo, $sampleSize));
+        return CurrencyCode::selectDominant($this->sampleAccountCurrencies($dateFrom, $dateTo, $sampleSize));
     }
 
     /**
@@ -270,34 +273,6 @@ class GetTransactionsRequest extends BearerJsonRequest
         return array_slice($rows, 0, $sampleLimit);
     }
 
-    private function selectDominantCurrency(array $currencies): string
-    {
-        if ([] === $currencies) {
-            return '';
-        }
-
-        $counter = [];
-        foreach ($currencies as $currency) {
-            if (!is_string($currency) || '' === trim($currency)) {
-                continue;
-            }
-            $normalized = CurrencyCode::normalizeOrEmpty($currency);
-            if ('' === $normalized) {
-                continue;
-            }
-            if (!array_key_exists($normalized, $counter)) {
-                $counter[$normalized] = 0;
-            }
-            $counter[$normalized]++;
-        }
-        if ([] === $counter) {
-            return '';
-        }
-        arsort($counter);
-        $best = array_key_first($counter);
-
-        return is_string($best) ? $best : '';
-    }
 
     private function fetchAllWebSessionTransactions(?string $dateFrom, ?string $dateTo): array
     {
@@ -331,7 +306,8 @@ class GetTransactionsRequest extends BearerJsonRequest
 
     private function fetchPagedTransactionsForAccountQuery(?string $dateFrom, ?string $dateTo, bool $blockedOnly, string $accountQuery, ?int $limit = null): array
     {
-        $startDate = $this->formatDateOrNull($dateFrom) ?? Carbon::now()->subYears(2)->format(self::DATE_FORMAT);
+        $historyYears = (int) config('basisbank.statement_history_years', 25);
+        $startDate = $this->formatDateOrNull($dateFrom) ?? Carbon::now()->subYears($historyYears)->format(self::DATE_FORMAT);
         $endDate = $this->formatDateOrNull($dateTo) ?? Carbon::now()->format(self::DATE_FORMAT);
         $rows = [];
         $signatures = [];
@@ -361,7 +337,7 @@ class GetTransactionsRequest extends BearerJsonRequest
                     break;
                 }
 
-                $pageRows = $this->extractRowsFromPayload($payload);
+                $pageRows = $this->extractArrayPayload($payload);
                 if ([] === $pageRows) {
                     $this->emitProgress([
                         'stage'         => 'cardmodule_page',
@@ -598,429 +574,6 @@ class GetTransactionsRequest extends BearerJsonRequest
         }
 
         return '';
-    }
-
-    /**
-     * @throws ImporterHttpException
-     */
-    private function requestStatementPageWithSessionRecovery(string $statementId, ?string $dateFrom = null, ?string $dateTo = null): string
-    {
-        $attempt = 0;
-        while (true) {
-            try {
-                return $this->requestStatementPage($statementId, $dateFrom, $dateTo);
-            } catch (ImporterHttpException $e) {
-                if (!$this->isSessionRecoveryCandidate($e) || $attempt >= self::MAX_SESSION_RECOVERY_ATTEMPTS) {
-                    throw $e;
-                }
-                $attempt++;
-                $this->recoverWebSessionForCardModule(sprintf('statement-%s', $statementId), $e);
-            }
-        }
-    }
-
-    /**
-     * @throws ImporterHttpException
-     */
-    private function requestStatementPage(string $statementId, ?string $dateFrom = null, ?string $dateTo = null): string
-    {
-        $cookies = $this->getSessionCookies();
-        if ([] === $cookies) {
-            throw new ImporterHttpException('BasisBank web session is not available for statement-page retrieval.');
-        }
-
-        $client = new Client(
-            [
-                'base_uri'        => self::BASE_WEB_URL,
-                'connect_timeout' => $this->timeOut,
-                'timeout'         => $this->timeOut,
-                'verify'          => config('importer.connection.verify'),
-            ]
-        );
-
-        // The initial GET MUST include date params in the URL.
-        // Without them, the server returns a 42KB page with empty GridView1 and a tiny ViewState (~3KB).
-        // With them, the server pre-populates the grid and returns a 176KB page with full ViewState (~59KB).
-        // Proven via Playwright recording: browser navigates to Statement.aspx?ID=X&StartDay=D&StartMounth=M&StartYear=Y
-        // When dateFrom is null ("import all" mode), use the earliest date the bank supports.
-        // The Statement.aspx dropdown starts at year 2000. Using 2-year fallback would miss older data.
-        $getStart = null !== $dateFrom && '' !== trim((string)$dateFrom)
-            ? Carbon::parse($dateFrom) : Carbon::create(2000, 1, 1);
-        $getEnd = null !== $dateTo && '' !== trim((string)$dateTo)
-            ? Carbon::parse($dateTo) : Carbon::now();
-        $getUrl = sprintf(
-            '%s?ID=%s&StartDay=%s&StartMounth=%s&StartYear=%s',
-            self::STATEMENT_PAGE_PATH,
-            urlencode($statementId),
-            (string)(int)$getStart->format('d'),
-            (string)(int)$getStart->format('m'),
-            $getStart->format('Y')
-        );
-
-        try {
-            $response = $client->request(
-                'GET',
-                $getUrl,
-                [
-                    'headers'         => [
-                        'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Cookie'     => $this->buildCookieHeader($cookies),
-                        'Referer'    => sprintf('%s/Balance.aspx', self::BASE_WEB_URL),
-                        'User-Agent' => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                    ],
-                    'allow_redirects' => false,
-                ]
-            );
-        } catch (TransferException $e) {
-            $httpException = new ImporterHttpException(sprintf('BasisBank statement-page request failed for account "%s": %s', $statementId, $e->getMessage()), 0, $e);
-            $httpException->statusCode = method_exists($e, 'getResponse') && null !== $e->getResponse() ? $e->getResponse()->getStatusCode() : 0;
-            throw $httpException;
-        }
-
-        $status = (int)$response->getStatusCode();
-        $this->updateSessionCookiesFromResponse($response);
-        $location = trim((string)$response->getHeaderLine('Location'));
-        if (302 === $status) {
-            if (str_contains(strtolower($location), 'login.aspx')) {
-                $httpException = new ImporterHttpException(sprintf('BasisBank statement page requires login for account "%s".', $statementId));
-                $httpException->statusCode = $status;
-                throw $httpException;
-            }
-            if ('' === $location) {
-                $httpException = new ImporterHttpException(sprintf('BasisBank statement page returned HTTP 302 with empty location for account "%s".', $statementId));
-                $httpException->statusCode = $status;
-                throw $httpException;
-            }
-            try {
-                $redirectResponse = $client->request(
-                    'GET',
-                    $location,
-                    [
-                        'headers'         => [
-                            'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                            'Cookie'     => $this->buildCookieHeader($this->getSessionCookies()),
-                            'Referer'    => sprintf('%s%s?ID=%s', self::BASE_WEB_URL, self::STATEMENT_PAGE_PATH, urlencode($statementId)),
-                            'User-Agent' => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                        ],
-                        'allow_redirects' => true,
-                    ]
-                );
-            } catch (TransferException $e) {
-                $httpException = new ImporterHttpException(sprintf('BasisBank statement-page redirect follow-up failed for account "%s": %s', $statementId, $e->getMessage()), 0, $e);
-                $httpException->statusCode = method_exists($e, 'getResponse') && null !== $e->getResponse() ? $e->getResponse()->getStatusCode() : 0;
-                throw $httpException;
-            }
-            $redirectStatus = (int)$redirectResponse->getStatusCode();
-            $this->updateSessionCookiesFromResponse($redirectResponse);
-            if (401 === $redirectStatus || 403 === $redirectStatus || 440 === $redirectStatus) {
-                $httpException = new ImporterHttpException(sprintf('BasisBank statement page requires login for account "%s" after redirect.', $statementId));
-                $httpException->statusCode = $redirectStatus;
-                throw $httpException;
-            }
-            if ($redirectStatus < 200 || $redirectStatus >= 300) {
-                $httpException = new ImporterHttpException(sprintf('BasisBank statement-page redirect follow-up returned HTTP %d for account "%s".', $redirectStatus, $statementId));
-                $httpException->statusCode = $redirectStatus;
-                throw $httpException;
-            }
-
-            $redirectHtml = (string)$redirectResponse->getBody();
-            if ($this->containsLoginForm($redirectHtml)) {
-                throw new ImporterHttpException(sprintf('BasisBank statement page returned login form for account "%s".', $statementId));
-            }
-
-            return $redirectHtml;
-        }
-        if (401 === $status || 403 === $status || 440 === $status) {
-            $httpException = new ImporterHttpException(sprintf('BasisBank statement page denied access (%d) for account "%s".', $status, $statementId));
-            $httpException->statusCode = $status;
-            throw $httpException;
-        }
-        if ($status >= 300) {
-            $httpException = new ImporterHttpException(sprintf('BasisBank statement page returned HTTP %d for account "%s".', $status, $statementId));
-            $httpException->statusCode = $status;
-            throw $httpException;
-        }
-
-        $html = (string)$response->getBody();
-        if ($this->containsLoginForm($html)) {
-            throw new ImporterHttpException(sprintf('BasisBank statement page returned login form for account "%s".', $statementId));
-        }
-
-        Log::debug(sprintf(
-            'BasisBank statement GET response for account "%s": %d bytes, has ViewState=%s (size %d), has GridView1=%s, has AccountDDL=%s',
-            $statementId,
-            strlen($html),
-            str_contains($html, '__VIEWSTATE') ? 'yes' : 'no',
-            strlen((string)(preg_match('/name="__VIEWSTATE"[^>]*value="([^"]*)"/', $html, $m) ? $m[1] : '')),
-            str_contains($html, 'GridView1') ? 'yes' : 'no',
-            str_contains($html, 'AccountDDL') ? 'yes' : 'no'
-        ));
-        return $this->hydrateStatementPageWithPostback($client, $statementId, $html, $dateFrom, $dateTo);
-    }
-
-    private function hydrateStatementPageWithPostback(Client $client, string $statementId, string $html, ?string $dateFrom = null, ?string $dateTo = null): string
-    {
-        $payload = $this->buildStatementPostPayload($html, $statementId, $dateFrom, $dateTo);
-        if ([] === $payload) {
-            return $html;
-        }
-
-        // Build URL with date params matching the browser's pattern:
-        // Statement.aspx?ID=1608515&StartDay=26&StartMounth=3&StartYear=2026
-        // The bank expects dates in both the URL query string AND the form body.
-        $start = null !== $dateFrom && '' !== trim((string)$dateFrom)
-            ? Carbon::parse($dateFrom) : Carbon::create(2000, 1, 1);
-        $end = null !== $dateTo && '' !== trim((string)$dateTo)
-            ? Carbon::parse($dateTo) : Carbon::now();
-        $postUrl = sprintf(
-            '%s?ID=%s&StartDay=%s&StartMounth=%s&StartYear=%s',
-            self::STATEMENT_PAGE_PATH,
-            urlencode($statementId),
-            (string)(int)$start->format('d'),
-            (string)(int)$start->format('m'),
-            $start->format('Y')
-        );
-
-        Log::debug(sprintf('BasisBank statement POST URL for account "%s": %s (payload fields: %d, has Button2: %s)',
-            $statementId,
-            $postUrl,
-            count($payload),
-            isset($payload['ctl00$Content$Button2']) ? 'yes='.$payload['ctl00$Content$Button2'] : 'NO'
-        ));
-
-        try {
-            $response = $client->request(
-                'POST',
-                $postUrl,
-                [
-                    'headers' => [
-                        'Accept'       => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                        'Cookie'       => $this->buildCookieHeader($this->getSessionCookies()),
-                        'Referer'      => sprintf('%s%s', self::BASE_WEB_URL, $postUrl),
-                        'User-Agent'   => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                        'Content-Type' => 'application/x-www-form-urlencoded',
-                    ],
-                    'form_params'     => $payload,
-                    'allow_redirects' => false,
-                ]
-            );
-        } catch (TransferException $e) {
-            Log::warning(
-                sprintf(
-                    'BasisBank statement postback failed for account "%s": %s',
-                    $statementId,
-                    $e->getMessage()
-                )
-            );
-
-            return $html;
-        }
-
-        $status = (int)$response->getStatusCode();
-        $this->updateSessionCookiesFromResponse($response);
-        $location = trim((string)$response->getHeaderLine('Location'));
-        if (302 === $status) {
-            if ('' === $location || str_contains(strtolower($location), 'login.aspx')) {
-                return $html;
-            }
-            try {
-                $redirectResponse = $client->request(
-                    'GET',
-                    $location,
-                    [
-                        'headers' => [
-                            'Accept'     => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                            'Cookie'     => $this->buildCookieHeader($this->getSessionCookies()),
-                            'Referer'    => sprintf('%s%s?ID=%s', self::BASE_WEB_URL, self::STATEMENT_PAGE_PATH, urlencode($statementId)),
-                            'User-Agent' => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                        ],
-                        'allow_redirects' => true,
-                    ]
-                );
-            } catch (TransferException $e) {
-                Log::warning(
-                    sprintf(
-                        'BasisBank statement postback redirect failed for account "%s": %s',
-                        $statementId,
-                        $e->getMessage()
-                    )
-                );
-
-                return $html;
-            }
-            $this->updateSessionCookiesFromResponse($redirectResponse);
-            $redirectHtml = (string)$redirectResponse->getBody();
-            if ('' === trim($redirectHtml) || $this->containsLoginForm($redirectHtml)) {
-                return $html;
-            }
-
-            return $redirectHtml;
-        }
-        if (401 === $status || 403 === $status || 440 === $status || $status >= 300) {
-            return $html;
-        }
-
-        $postedHtml = (string)$response->getBody();
-        // Detailed diagnostics to find why GridView1 is missing
-        $hasGrid = str_contains($postedHtml, 'GridView1');
-        $hasButton2 = str_contains($postedHtml, 'Button2');
-        $hasAccountDDL = str_contains($postedHtml, 'AccountDDL');
-        $hasLoginForm = $this->containsLoginForm($postedHtml);
-        $titleMatch = preg_match('/<title[^>]*>([^<]*)<\/title>/i', $postedHtml, $titleMatches);
-        $pageTitle = $titleMatch ? trim($titleMatches[1]) : '(no title)';
-        // Extract first 500 chars of body text (strip tags) for debugging
-        $bodyPreview = substr(strip_tags($postedHtml), 0, 500);
-        $bodyPreview = preg_replace('/\s+/', ' ', $bodyPreview);
-        Log::debug(sprintf(
-            'BasisBank statement POST response for account "%s": HTTP %d, body %d bytes, has grid=%s, has Button2=%s, has AccountDDL=%s, isLoginForm=%s, title="%s"',
-            $statementId,
-            $status,
-            strlen($postedHtml),
-            $hasGrid ? 'yes' : 'no',
-            $hasButton2 ? 'yes' : 'no',
-            $hasAccountDDL ? 'yes' : 'no',
-            $hasLoginForm ? 'yes' : 'no',
-            $pageTitle
-        ));
-        Log::debug(sprintf('BasisBank statement POST body preview for account "%s": %s', $statementId, substr((string)$bodyPreview, 0, 300)));
-        if ('' === trim($postedHtml) || $this->containsLoginForm($postedHtml)) {
-            return $html;
-        }
-
-        return $postedHtml;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function buildStatementPostPayload(string $html, string $statementId, ?string $dateFrom = null, ?string $dateTo = null): array
-    {
-        $document = new \DOMDocument();
-        $loaded = @ $document->loadHTML($html);
-        if (false === $loaded) {
-            return [];
-        }
-        $xpath = new DOMXPath($document);
-        $payload = [];
-
-        $inputs = $xpath->query('//form//input[@name]');
-        if (false !== $inputs) {
-            foreach ($inputs as $input) {
-                if (!$input instanceof DOMElement) {
-                    continue;
-                }
-                $name = trim((string)$input->getAttribute('name'));
-                if ('' === $name) {
-                    continue;
-                }
-                $type = strtolower(trim((string)$input->getAttribute('type')));
-                if (in_array($type, ['checkbox', 'radio'], true) && '' === trim((string)$input->getAttribute('checked'))) {
-                    continue;
-                }
-                $payload[$name] = (string)$input->getAttribute('value');
-            }
-        }
-
-        $selects = $xpath->query('//form//select[@name]');
-        if (false !== $selects) {
-            foreach ($selects as $select) {
-                if (!$select instanceof DOMElement) {
-                    continue;
-                }
-                $name = trim((string)$select->getAttribute('name'));
-                if ('' === $name) {
-                    continue;
-                }
-                $selectedValue = '';
-                $selected = $xpath->query('.//option[@selected]', $select);
-                if (false !== $selected && $selected->length > 0) {
-                    $option = $selected->item(0);
-                    if ($option instanceof DOMElement) {
-                        $selectedValue = trim((string)$option->getAttribute('value'));
-                    }
-                }
-                if ('' === $selectedValue) {
-                    $options = $xpath->query('.//option', $select);
-                    if (false !== $options && $options->length > 0) {
-                        $option = $options->item(0);
-                        if ($option instanceof DOMElement) {
-                            $selectedValue = trim((string)$option->getAttribute('value'));
-                        }
-                    }
-                }
-                $payload[$name] = $selectedValue;
-            }
-        }
-
-        if (!array_key_exists('__VIEWSTATE', $payload) || '' === trim((string)$payload['__VIEWSTATE'])) {
-            return [];
-        }
-
-        foreach (array_keys($payload) as $key) {
-            if (str_contains($key, 'AccountDDL')) {
-                $payload[$key] = $statementId;
-            }
-        }
-        if (!isset($payload['ctl00$Content$AccountDDL'])) {
-            $payload['ctl00$Content$AccountDDL'] = $statementId;
-        }
-
-        // Use caller's date range if provided; fall back to earliest date the bank dropdown supports (year 2000).
-        // "Import all" passes null dateFrom — using subYears(2) would miss older transactions.
-        try {
-            $start = null !== $dateFrom && '' !== trim($dateFrom)
-                ? Carbon::parse($dateFrom)
-                : Carbon::create(2000, 1, 1);
-        } catch (\Exception) {
-            Log::warning(sprintf('BasisBank statement: could not parse dateFrom "%s", using year 2000 fallback.', $dateFrom));
-            $start = Carbon::create(2000, 1, 1);
-        }
-        try {
-            $end = null !== $dateTo && '' !== trim($dateTo)
-                ? Carbon::parse($dateTo)
-                : Carbon::now();
-        } catch (\Exception) {
-            Log::warning(sprintf('BasisBank statement: could not parse dateTo "%s", using today.', $dateTo));
-            $end = Carbon::now();
-        }
-
-        // Resolve form field names dynamically — BasisBank uses "mounth" (their typo, not ours).
-        $defaults = [
-            'ctl00$Content$CurDateTxt'     => $start->format(self::DATE_FORMAT),
-            'ctl00$Content$CurDateTxtEnd'  => $end->format(self::DATE_FORMAT),
-            'ctl00$Content$DDLday'         => (string)(int)$start->format('d'),
-            'ctl00$Content$DDLmounth'      => (string)(int)$start->format('m'),
-            'ctl00$Content$DDLyear'        => $start->format('Y'),
-            'ctl00$Content$DDLdayEnd'      => (string)(int)$end->format('d'),
-            'ctl00$Content$DDLmounthEnd'   => (string)(int)$end->format('m'),
-            'ctl00$Content$DDLyearEnd'     => $end->format('Y'),
-            'ctl00$Content$ReportType'     => '3',
-            '__EVENTTARGET'                => '',
-            '__EVENTARGUMENT'              => '',
-        ];
-        // Unconditionally set all defaults — ASP.NET expects ALL form fields in the POST,
-        // even if they weren't rendered as visible HTML elements in the GET response.
-        // The previous code only set fields that existed in the HTML, which caused
-        // date range fields to be missing for C/A (non-card) accounts.
-        foreach ($defaults as $key => $value) {
-            $payload[$key] = (string)$value;
-        }
-
-        Log::debug(sprintf(
-            'BasisBank statement POST payload for account "%s": dateRange=%s..%s, viewstate=%s, accountDDL=%s, fields=%d',
-            $statementId,
-            $start->format('Y-m-d'),
-            $end->format('Y-m-d'),
-            isset($payload['__VIEWSTATE']) ? 'present' : 'missing',
-            $payload['ctl00$Content$AccountDDL'] ?? '(not set)',
-            count($payload)
-        ));
-        // Submit button: proven via browser DevTools capture (2026-03-26).
-        // NAME: ctl00$Content$Button2  VALUE: Re-count  TYPE: submit  ID: Content_Button2
-        // Without this field, ASP.NET does a no-op postback and returns an empty grid.
-        $payload['ctl00$Content$Button2'] = 'Re-count';
-
-        return $payload;
     }
 
     /**
@@ -1344,18 +897,6 @@ class GetTransactionsRequest extends BearerJsonRequest
         return trim(implode(' ', $parts));
     }
 
-    private function extractStatementTransactionId(array $texts): string
-    {
-        foreach ($texts as $text) {
-            $match = [];
-            if (preg_match('/\b(RT\d{6,}|TR\d{6,}|TX\d{6,}|REF[- ]?\d{5,}|\d{10,})\b/i', $text, $match) === 1) {
-                return strtoupper(trim((string)$match[1]));
-            }
-        }
-
-        return '';
-    }
-
     private function extractConfiguredCurrencyScope(): string
     {
         $raw = trim($this->accountId);
@@ -1377,11 +918,6 @@ class GetTransactionsRequest extends BearerJsonRequest
         } catch (\Exception $e) {
             return null;
         }
-    }
-
-    private function normalizeWhitespace(string $value): string
-    {
-        return preg_replace('/\s+/u', ' ', trim($value)) ?: '';
     }
 
     /**
@@ -1463,97 +999,6 @@ class GetTransactionsRequest extends BearerJsonRequest
         }
     }
 
-    private function isSessionRecoveryCandidate(ImporterHttpException $e): bool
-    {
-        $statusCode = (int)$e->statusCode;
-        if (in_array($statusCode, [302, 401, 403, 440], true)) {
-            return true;
-        }
-        $message = strtolower($e->getMessage());
-        $needles = [
-            'session expired',
-            'authentication required',
-            'requires login',
-            'returned login form',
-            'not authorized',
-            'deadsession',
-            'web session is not available',
-            'redirect location',
-            'returned http 302',
-        ];
-        foreach ($needles as $needle) {
-            if (str_contains($message, $needle)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * @throws ImporterHttpException
-     */
-    private function recoverWebSessionForCardModule(string $funq, ImporterHttpException $trigger): void
-    {
-        $login = trim(SecretManager::getLogin());
-        $password = trim(SecretManager::getPassword());
-        if ('' === $login || '' === $password) {
-            throw $trigger;
-        }
-
-        Log::warning(
-            sprintf(
-                'BasisBank CardModule auth recovery triggered for "%s" after status %d: %s',
-                $funq,
-                (int)$trigger->statusCode,
-                $trigger->getMessage()
-            )
-        );
-
-        try {
-            $client = new BasisBankWebAuthClient();
-            $state = $client->start(
-                $login,
-                $password,
-                SecretManager::getRequestSmsCode(),
-                SecretManager::getTrustDevice(),
-                $this->resolveSessionArtifact()
-            );
-        } catch (ImporterErrorException $e) {
-            $httpException = new ImporterHttpException(sprintf('BasisBank session recovery failed for "%s": %s', $funq, $e->getMessage()), 0, $e);
-            $httpException->statusCode = (int)$trigger->statusCode;
-            throw $httpException;
-        }
-
-        $authState = '' !== trim($state->getAuthState()) ? $state->getAuthState() : $state->getStatus();
-        SecretManager::saveAuthState($authState);
-        SecretManager::saveSessionArtifact($state->getSessionArtifact());
-
-        if (!$state->isAuthenticated()) {
-            $message = trim($state->getErrorMessage());
-            if ('' === $message) {
-                $message = sprintf(
-                    'BasisBank authentication requires additional user action (%s).',
-                    strtolower($state->getStatus())
-                );
-            }
-            $httpException = new ImporterHttpException(
-                sprintf(
-                    'BasisBank session recovery requires re-authentication for "%s": %s',
-                    $funq,
-                    $message
-                )
-            );
-            $httpException->statusCode = (int)$trigger->statusCode;
-            throw $httpException;
-        }
-
-        $this->sessionCookies = $this->decodeArtifact($state->getSessionArtifact());
-        $this->sessionCookiesLoaded = true;
-
-        Log::warning(sprintf('BasisBank CardModule auth recovery succeeded for "%s"; retrying request.', $funq));
-    }
-
     private function isRetryableCardModuleFailure(ImporterHttpException $e): bool
     {
         $statusCode = (int)$e->statusCode;
@@ -1567,166 +1012,6 @@ class GetTransactionsRequest extends BearerJsonRequest
             || str_contains($message, 'gateway')
             || str_contains($message, 'rate limit')
             || str_contains($message, 'temporarily unavailable');
-    }
-
-    private function callCardModule(string $funq, array $form): array
-    {
-        $cookies = $this->getSessionCookies();
-        if ([] === $cookies) {
-            throw new ImporterHttpException('BasisBank web session is not available for transaction retrieval.');
-        }
-
-        $client = new Client(
-            [
-                'base_uri'        => self::BASE_WEB_URL,
-                'connect_timeout' => $this->timeOut,
-                'timeout'         => $this->timeOut,
-                'verify'          => config('importer.connection.verify'),
-            ]
-        );
-
-        try {
-            $response = $client->request(
-                'POST',
-                sprintf('%s?funq=%s', self::CARD_MODULE_PATH, urlencode($funq)),
-                [
-                    'headers' => [
-                        'Accept'           => 'application/json, text/javascript, */*; q=0.01',
-                        'Content-Type'     => 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'Referer'          => sprintf('%s/Products/Cards/Default.aspx', self::BASE_WEB_URL),
-                        'User-Agent'       => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                        'X-Requested-With' => 'XMLHttpRequest',
-                        'Cookie'           => $this->buildCookieHeader($cookies),
-                    ],
-                    'form_params'    => $form,
-                    'allow_redirects' => false,
-                ]
-            );
-        } catch (TransferException $e) {
-            $httpException             = new ImporterHttpException(sprintf('BasisBank CardModule request failed for "%s": %s', $funq, $e->getMessage()), 0, $e);
-            $httpException->statusCode = method_exists($e, 'getResponse') && null !== $e->getResponse() ? $e->getResponse()->getStatusCode() : 0;
-            throw $httpException;
-        }
-
-        $status = (int)$response->getStatusCode();
-        $this->updateSessionCookiesFromResponse($response);
-        $location = trim((string)$response->getHeaderLine('Location'));
-        if (302 === $status) {
-            $locationInfo = '' === $location ? '[empty Location header]' : $location;
-            Log::warning(
-                sprintf(
-                    'BasisBank CardModule redirect detected for "%s": HTTP 302 Location="%s".',
-                    $funq,
-                    $locationInfo
-                )
-            );
-            if (str_contains(strtolower($location), 'login.aspx')) {
-                $httpException             = new ImporterHttpException(sprintf('BasisBank CardModule returned HTTP 302 for "%s". Redirect Location: %s', $funq, $locationInfo));
-                $httpException->statusCode = $status;
-                throw $httpException;
-            }
-            if ('' === $location) {
-                $httpException             = new ImporterHttpException(sprintf('BasisBank CardModule returned HTTP 302 for "%s" with empty redirect location.', $funq));
-                $httpException->statusCode = $status;
-                throw $httpException;
-            }
-            try {
-                $redirectResponse = $client->request(
-                    'GET',
-                    $location,
-                    [
-                        'headers' => [
-                            'Accept'           => 'application/json, text/javascript, */*; q=0.01',
-                            'Referer'          => sprintf('%s/Products/Cards/Default.aspx', self::BASE_WEB_URL),
-                            'User-Agent'       => sprintf('FF3-data-importer/%s (%s)', config('importer.version'), config('importer.line_b')),
-                            'X-Requested-With' => 'XMLHttpRequest',
-                            'Cookie'           => $this->buildCookieHeader($this->getSessionCookies()),
-                        ],
-                        'allow_redirects' => true,
-                    ]
-                );
-            } catch (TransferException $e) {
-                $httpException             = new ImporterHttpException(sprintf('BasisBank CardModule redirect follow-up failed for "%s": %s', $funq, $e->getMessage()), 0, $e);
-                $httpException->statusCode = method_exists($e, 'getResponse') && null !== $e->getResponse() ? $e->getResponse()->getStatusCode() : 0;
-                throw $httpException;
-            }
-
-            $redirectStatus = (int)$redirectResponse->getStatusCode();
-            $this->updateSessionCookiesFromResponse($redirectResponse);
-            if (401 === $redirectStatus || 403 === $redirectStatus || 440 === $redirectStatus) {
-                $httpException             = new ImporterHttpException(sprintf('BasisBank web session expired for "%s" after redirect follow-up.', $funq));
-                $httpException->statusCode = $redirectStatus;
-                throw $httpException;
-            }
-            if ($redirectStatus < 200 || $redirectStatus >= 300) {
-                $httpException             = new ImporterHttpException(sprintf('BasisBank CardModule redirect follow-up returned HTTP %d for "%s".', $redirectStatus, $funq));
-                $httpException->statusCode = $redirectStatus;
-                throw $httpException;
-            }
-
-            $redirectBody = trim((string)$redirectResponse->getBody());
-            if ($this->isDeadSessionPayload($redirectBody)) {
-                throw new ImporterHttpException(sprintf('BasisBank web session expired while requesting "%s" (redirect follow-up).', $funq));
-            }
-            if ($this->containsLoginForm($redirectBody)) {
-                throw new ImporterHttpException(sprintf('BasisBank CardModule response requires login for "%s" (redirect follow-up).', $funq));
-            }
-            if ('' === $redirectBody || 'null' === strtolower($redirectBody)) {
-                return [];
-            }
-            $redirectDecoded = $this->coercePayload($redirectBody);
-            if (!is_array($redirectDecoded)) {
-                throw new ImporterHttpException(sprintf('BasisBank CardModule redirect follow-up response for "%s" is not JSON.', $funq));
-            }
-            Log::warning(sprintf('BasisBank CardModule redirect for "%s" was followed successfully (HTTP %d).', $funq, $redirectStatus));
-
-            return $redirectDecoded;
-        }
-        if (401 === $status || 403 === $status || 440 === $status) {
-            $httpException             = new ImporterHttpException(sprintf('BasisBank web session expired for "%s".', $funq));
-            $httpException->statusCode = $status;
-            throw $httpException;
-        }
-        if ($status < 200 || $status >= 300) {
-            $httpException             = new ImporterHttpException(sprintf('BasisBank CardModule returned HTTP %d for "%s".', $status, $funq));
-            $httpException->statusCode = $status;
-            throw $httpException;
-        }
-
-        $body = trim((string)$response->getBody());
-        if ($this->isDeadSessionPayload($body)) {
-            throw new ImporterHttpException(sprintf('BasisBank web session expired while requesting "%s".', $funq));
-        }
-        if ($this->containsLoginForm($body)) {
-            throw new ImporterHttpException(sprintf('BasisBank CardModule response requires login for "%s".', $funq));
-        }
-
-        if ('' === $body || 'null' === strtolower($body)) {
-            return [];
-        }
-        $decoded = $this->coercePayload($body);
-        if (!is_array($decoded)) {
-            throw new ImporterHttpException(sprintf('BasisBank CardModule response for "%s" is not JSON.', $funq));
-        }
-
-        return $decoded;
-    }
-
-    private function isDeadSessionPayload(mixed $payload): bool
-    {
-        if (is_string($payload)) {
-            return str_contains($payload, 'DeadSession');
-        }
-        if (is_array($payload)) {
-            if (array_key_exists('Status', $payload) && str_contains((string)$payload['Status'], 'DeadSession')) {
-                return true;
-            }
-            if (array_key_exists('status', $payload) && str_contains((string)$payload['status'], 'DeadSession')) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private function emitProgress(array $payload): void
@@ -1752,59 +1037,6 @@ class GetTransactionsRequest extends BearerJsonRequest
         } catch (\Exception $e) {
             return null;
         }
-    }
-
-    private function extractRowsFromPayload(array $payload): array
-    {
-        if (array_is_list($payload)) {
-            return $payload;
-        }
-
-        foreach (['d', 'data', 'Data', 'result', 'Result', 'transactions', 'Transactions', 'items', 'Items', 'rows', 'Rows'] as $key) {
-            if (!isset($payload[$key])) {
-                continue;
-            }
-
-            $nested = $this->coercePayload($payload[$key]);
-            if (is_array($nested) && array_is_list($nested)) {
-                return $nested;
-            }
-            if (!is_array($nested)) {
-                continue;
-            }
-            foreach (['items', 'Items', 'rows', 'Rows', 'transactions', 'Transactions'] as $nestedKey) {
-                if (!isset($nested[$nestedKey])) {
-                    continue;
-                }
-                $deeper = $this->coercePayload($nested[$nestedKey]);
-                if (is_array($deeper) && array_is_list($deeper)) {
-                    return $deeper;
-                }
-            }
-        }
-
-        return [];
-    }
-
-    private function coercePayload(mixed $payload): mixed
-    {
-        $current = $payload;
-        for ($i = 0; $i < 3; $i++) {
-            if (!is_string($current)) {
-                break;
-            }
-            $trimmed = trim($current);
-            if ('' === $trimmed || (!str_starts_with($trimmed, '{') && !str_starts_with($trimmed, '['))) {
-                break;
-            }
-            $decoded = json_decode($trimmed, true);
-            if (JSON_ERROR_NONE !== json_last_error()) {
-                break;
-            }
-            $current = $decoded;
-        }
-
-        return $current;
     }
 
     private function headers(): array
@@ -2001,158 +1233,4 @@ class GetTransactionsRequest extends BearerJsonRequest
         return trim((string)$base);
     }
 
-    private function resolveSessionArtifact(): string
-    {
-        if ('' !== trim($this->sessionArtifact)) {
-            return trim($this->sessionArtifact);
-        }
-
-        return trim(SecretManager::getSessionArtifact());
-    }
-
-    private function getSessionCookies(): array
-    {
-        if (false === $this->sessionCookiesLoaded) {
-            $this->sessionCookies = $this->decodeArtifact($this->resolveSessionArtifact());
-            $this->sessionCookiesLoaded = true;
-        }
-
-        return $this->sessionCookies;
-    }
-
-    private function decodeArtifact(string $artifact): array
-    {
-        if ('' === trim($artifact)) {
-            return [];
-        }
-
-        $decoded = base64_decode($artifact, true);
-        if (false === $decoded) {
-            $decoded = $artifact;
-        }
-
-        $data = json_decode((string)$decoded, true);
-        if (!is_array($data)) {
-            return [];
-        }
-
-        $cookies = [];
-        if (array_is_list($data)) {
-            foreach ($data as $entry) {
-                if (!is_array($entry)) {
-                    continue;
-                }
-                $name = trim((string)($entry['name'] ?? ''));
-                if ('' === $name) {
-                    continue;
-                }
-                $cookies[$name] = (string)($entry['value'] ?? '');
-            }
-
-            return $cookies;
-        }
-        foreach ($data as $name => $value) {
-            if ('' === trim((string)$name) || !is_string($value)) {
-                continue;
-            }
-            $cookies[(string)$name] = (string)$value;
-        }
-
-        return $cookies;
-    }
-
-    private function encodeArtifact(array $cookies): string
-    {
-        return base64_encode((string)json_encode($cookies));
-    }
-
-    private function updateSessionCookiesFromResponse(ResponseInterface $response): void
-    {
-        if (false === $this->sessionCookiesLoaded) {
-            $this->sessionCookies = $this->decodeArtifact($this->resolveSessionArtifact());
-            $this->sessionCookiesLoaded = true;
-        }
-        foreach ($response->getHeader('Set-Cookie') as $setCookie) {
-            $segments = explode(';', $setCookie);
-            if ([] === $segments) {
-                continue;
-            }
-            $cookiePair = trim((string)$segments[0]);
-            if ('' === $cookiePair || !str_contains($cookiePair, '=')) {
-                continue;
-            }
-            [$name, $value] = explode('=', $cookiePair, 2);
-            $name = trim((string)$name);
-            if ('' === $name) {
-                continue;
-            }
-            $this->sessionCookies[$name] = trim((string)$value);
-        }
-        SecretManager::saveSessionArtifact($this->encodeArtifact($this->sessionCookies));
-    }
-
-    private function buildCookieHeader(array $cookies): string
-    {
-        $parts = [];
-        foreach ($cookies as $name => $value) {
-            if ('' === trim((string)$name)) {
-                continue;
-            }
-            $parts[] = sprintf('%s=%s', (string)$name, (string)$value);
-        }
-
-        return implode('; ', $parts);
-    }
-
-    private function normalizeDate(string $value): string
-    {
-        try {
-            return Carbon::parse($value)->format('Y-m-d');
-        } catch (\Exception $e) {
-            return date('Y-m-d');
-        }
-    }
-
-    private function containsLoginForm(string $html): bool
-    {
-        return str_contains($html, 'id="UTXT"') && str_contains($html, 'id="PTXT"');
-    }
-
-    private function parseAmountValue(mixed $value): float
-    {
-        if (is_numeric($value)) {
-            return (float)$value;
-        }
-        if (!is_string($value)) {
-            return 0.0;
-        }
-
-        $normalized = trim(str_replace(["\u{00A0}", ' '], '', $value));
-        $negative = str_starts_with($normalized, '(') && str_ends_with($normalized, ')');
-        if ($negative) {
-            $normalized = '-'.trim($normalized, '()');
-        }
-        $normalized = preg_replace('/[^0-9,.\-]/', '', $normalized);
-        if (null === $normalized) {
-            return 0.0;
-        }
-        $normalized = (string)$normalized;
-        if ('' === $normalized || '-' === $normalized || '.' === $normalized || ',' === $normalized) {
-            return 0.0;
-        }
-
-        $comma = strrpos($normalized, ',');
-        $dot = strrpos($normalized, '.');
-        if (false !== $comma && false !== $dot && $comma > $dot) {
-            $normalized = str_replace('.', '', $normalized);
-            $normalized = str_replace(',', '.', $normalized);
-        } elseif (false !== $comma && false === $dot) {
-            $normalized = str_replace(',', '.', $normalized);
-        } else {
-            $normalized = str_replace(',', '', $normalized);
-        }
-        $normalized = preg_replace('/\.\./', '.', (string)$normalized) ?? '0';
-
-        return (float)$normalized;
-    }
 }

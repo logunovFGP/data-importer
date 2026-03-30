@@ -18,7 +18,10 @@ class PostCurrencyRequest extends Request
         $this->setUri('currencies');
     }
 
-    public function get(): Response {}
+    public function get(): Response
+    {
+        throw new \BadMethodCallException('Method not supported for PostCurrencyRequest');
+    }
 
     public function post(): Response
     {
@@ -36,8 +39,14 @@ class PostCurrencyRequest extends Request
         return new GetCurrencyResponse($data['data']);
     }
 
-    public function put(): Response {}
+    public function put(): Response
+    {
+        throw new \BadMethodCallException('Method not supported for PostCurrencyRequest');
+    }
 
-    public function delete(): Response {}
+    public function delete(): Response
+    {
+        throw new \BadMethodCallException('Method not supported for PostCurrencyRequest');
+    }
 }
 

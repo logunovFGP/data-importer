@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Log;
 trait CollectsAccounts
 {
     /**
-     * FIXME Is this not duplicate with the account search in the configuration class?
+     * TODO(#83): Is this not duplicate with the account search in the configuration class?
      *
      * @throws ImporterErrorException
      */

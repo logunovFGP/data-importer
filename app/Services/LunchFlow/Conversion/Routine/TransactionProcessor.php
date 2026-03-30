@@ -33,6 +33,7 @@ use App\Services\LunchFlow\Authentication\SecretManager;
 use App\Services\LunchFlow\Request\GetTransactionsRequest;
 use App\Services\LunchFlow\Response\GetTransactionsResponse;
 use App\Services\Shared\Conversion\CreatesAccounts;
+use App\Services\Shared\Conversion\TransactionFilterTrait;
 use App\Support\Internal\CollectsAccounts;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -44,6 +45,7 @@ class TransactionProcessor
 {
     use CollectsAccounts;
     use CreatesAccounts;
+    use TransactionFilterTrait;
 
     private ImportJob $importJob;
 
@@ -140,63 +142,34 @@ class TransactionProcessor
     private function filterTransactions(GetTransactionsResponse $transactions): array
     {
         $configuration = $this->importJob->getConfiguration();
-        Log::info(sprintf('Going to filter downloaded transactions. Original set length is %d', count($transactions)));
-        if ($this->notBefore instanceof Carbon) {
-            Log::info(sprintf('Will not grab transactions before "%s"', $this->notBefore->format('Y-m-d H:i:s')));
-        }
-        if ($this->notAfter instanceof Carbon) {
-            Log::info(sprintf('Will not grab transactions after "%s"', $this->notAfter->format('Y-m-d H:i:s')));
-        }
-        $return        = [];
-        $getPending    = $configuration->getPendingTransactions();
-        if ($getPending) {
-            Log::info('Will include pending transactions.');
-        }
-        if (!$getPending) {
-            Log::info('Will NOT include pending transactions.');
-        }
-        foreach ($transactions as $transaction) {
-            $madeOn   = $transaction->getDate();
 
-            if ($this->notBefore instanceof Carbon && $madeOn->lt($this->notBefore)) {
-                Log::debug(sprintf(
-                    'Skip transaction because "%s" is before "%s".',
-                    $madeOn->format(self::DATE_TIME_FORMAT),
-                    $this->notBefore->format(self::DATE_TIME_FORMAT)
-                ));
+        return $this->filterTransactionSet(
+            $transactions,
+            $configuration->getPendingTransactions(),
+            $this->notBefore,
+            $this->notAfter,
+        );
+    }
 
-                continue;
-            }
-            if ($this->notAfter instanceof Carbon && $madeOn->gt($this->notAfter)) {
-                Log::debug(sprintf(
-                    'Skip transaction because "%s" is after "%s".',
-                    $madeOn->format(self::DATE_TIME_FORMAT),
-                    $this->notAfter->format(self::DATE_TIME_FORMAT)
-                ));
+    private function isTransactionPending(object $transaction): bool
+    {
+        return $transaction->hold;
+    }
 
-                continue;
-            }
-            // add error if amount is zero:
-            if (0 === bccomp('0', $transaction->amount)) {
-                $this->importJob->conversionStatus->addWarning(0, sprintf(
-                    'Transaction #%s ("%s", "%s", "%s") has an amount of zero and has been ignored..',
-                    $transaction->id,
-                    $transaction->account,
-                    $transaction->getDestinationName(),
-                    $transaction->getDescription()
-                ));
-                Log::debug(sprintf('Skip transaction because amount is zero: "%s".', $transaction->amount));
+    private function getTransactionAmount(object $transaction): string
+    {
+        return $transaction->amount;
+    }
 
-                continue;
-            }
-
-            Log::debug(sprintf('Include transaction because date is "%s".', $madeOn->format(self::DATE_TIME_FORMAT)));
-
-            $return[] = $transaction;
-        }
-        Log::info(sprintf('After filtering, set is %d transaction(s)', count($return)));
-
-        return $return;
+    private function addZeroAmountWarning(object $transaction): void
+    {
+        $this->importJob->conversionStatus->addWarning(0, sprintf(
+            'Transaction #%s ("%s", "%s", "%s") has an amount of zero and has been ignored.',
+            $transaction->id,
+            $transaction->account,
+            $transaction->getDestinationName(),
+            $transaction->getDescription()
+        ));
     }
 
     public function setImportJob(ImportJob $importJob): void

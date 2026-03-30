@@ -24,9 +24,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\ImportJob;
 use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\Session\Constants;
 use App\Services\Shared\Authentication\SecretManager;
+use App\Services\Shared\Conversion\ConversionStatus;
+use App\Services\Shared\Import\Status\SubmissionStatus;
 use App\Services\Shared\State\ImportStateManager;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -92,22 +95,21 @@ class IndexController extends Controller
 
         Log::debug(sprintf('Aborting import job: %s', $identifier));
 
-        $jobPath = storage_path(sprintf('import-jobs/%s.json', $identifier));
-        if (!file_exists($jobPath)) {
+        $disk = Storage::disk('import-jobs');
+        $file = sprintf('%s.json', $identifier);
+        if (!$disk->exists($file)) {
             session()->flash('warning', 'Import job not found.');
 
             return redirect(route('index'));
         }
 
-        if (!@unlink($jobPath)) {
-            Log::error(sprintf('Failed to delete import job file: %s', $jobPath));
+        if (!$disk->delete($file)) {
+            Log::error(sprintf('Failed to delete import job file: %s', $file));
             session()->flash('warning', 'Could not delete import job file.');
 
             return redirect(route('index'));
         }
-
-        Log::info(sprintf('Deleted import job file: %s', $jobPath));
-        ImportStateManager::clearActiveImport();
+        Log::info(sprintf('Deleted import job file: %s', $file));
         session()->flash('success', 'Import job deleted.');
 
         return redirect(route('index'));
@@ -204,7 +206,7 @@ class IndexController extends Controller
             $jobIdentifier = pathinfo($file, PATHINFO_FILENAME);
 
             try {
-                $job = $repository->find($jobIdentifier);
+                $job = $repository->find($jobIdentifier, restoreAuth: false);
             } catch (\Throwable $e) {
                 Log::debug(sprintf('Could not load job "%s" for recent jobs listing: %s', $jobIdentifier, $e->getMessage()));
 
@@ -220,6 +222,7 @@ class IndexController extends Controller
                 'flow'       => $job->getFlow(),
                 'state'      => $job->getState(),
                 'step'       => ImportStateManager::getCurrentStep($job),
+                'status'     => $this->deriveJobStatus($job),
                 'created'    => date('Y-m-d H:i', $lastModified),
                 'url'        => ImportStateManager::getCorrectRouteForState($job->identifier, $job),
             ];
@@ -229,6 +232,27 @@ class IndexController extends Controller
         usort($recentJobs, static fn(array $a, array $b): int => strcmp($b['created'], $a['created']));
 
         return $recentJobs;
+    }
+
+    /**
+     * Derive a human-readable status with badge info from the job's conversion/submission state.
+     *
+     * @return array{label: string, badge: string}
+     */
+    private function deriveJobStatus(ImportJob $job): array
+    {
+        $convStatus = $job->conversionStatus->getStatus();
+        $subStatus  = $job->submissionStatus->getStatus();
+
+        return match (true) {
+            SubmissionStatus::SUBMISSION_DONE === $subStatus       => ['label' => 'Done', 'badge' => 'bg-success'],
+            SubmissionStatus::SUBMISSION_RUNNING === $subStatus    => ['label' => 'Submitting…', 'badge' => 'bg-primary'],
+            SubmissionStatus::SUBMISSION_ERRORED === $subStatus    => ['label' => 'Submit error', 'badge' => 'bg-danger'],
+            ConversionStatus::CONVERSION_DONE === $convStatus      => ['label' => 'Converted', 'badge' => 'bg-info text-dark'],
+            ConversionStatus::CONVERSION_RUNNING === $convStatus   => ['label' => 'Converting…', 'badge' => 'bg-primary'],
+            ConversionStatus::CONVERSION_ERRORED === $convStatus   => ['label' => 'Convert error', 'badge' => 'bg-danger'],
+            default                                                 => ['label' => 'In Progress', 'badge' => 'bg-secondary'],
+        };
     }
 
     private function clearOldJobs(): void

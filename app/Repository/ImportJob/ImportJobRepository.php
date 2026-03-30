@@ -27,6 +27,7 @@ namespace App\Repository\ImportJob;
 use App\Exceptions\ImporterErrorException;
 use App\Models\ImportJob;
 use App\Services\BasisBank\Authentication\SecretManager as BasisBankSecretManager;
+use App\Services\Shared\Authentication\ProviderAuthCollector;
 use App\Services\TBank\Authentication\SecretManager as TBankSecretManager;
 use App\Services\TRC20\Authentication\SecretManager as TRC20SecretManager;
 use App\Services\CSV\Mapper\TransactionCurrencies;
@@ -76,7 +77,7 @@ class ImportJobRepository
         $disk->delete($file);
     }
 
-    public function find(string $identifier): ImportJob
+    public function find(string $identifier, bool $restoreAuth = true): ImportJob
     {
         $disk    = $this->getDisk();
         $file    = sprintf('%s.json', $identifier);
@@ -109,7 +110,9 @@ class ImportJobRepository
 
             try {
                 $importJob = ImportJob::createFromJson($trimmed);
-                $this->restoreProviderAuthIfNeeded($importJob);
+                if ($restoreAuth) {
+                    $this->restoreProviderAuth($importJob);
+                }
 
                 return $importJob;
             } catch (Throwable $e) {
@@ -161,7 +164,7 @@ class ImportJobRepository
     }
 
     /**
-     * FIXME: this is starting to look like a "catch-all" function for all tiny details that need to be taken care of when a new import is started.
+     * TODO(#83): this is starting to look like a "catch-all" function for all tiny details that need to be taken care of when a new import is started.
      *
      * @throws ApiHttpException
      */
@@ -200,8 +203,8 @@ class ImportJobRepository
 
         Log::debug(sprintf('Now in flow("%s")', $importJob->getFlow()));
 
-        // FIXME this routine must also be followed when doing uploads and POST and what not.
-        // FIXME aka this should be part of the routine.
+        // TODO(#83): this routine must also be followed when doing uploads and POST and what not.
+        // TODO(#83): aka this should be part of the routine.
         // validate stuff (from simplefin etc).
         switch ($importJob->getFlow()) {
             case 'file':
@@ -246,6 +249,7 @@ class ImportJobRepository
                 $importJob     = $validator->getImportJob();
                 $configuration = $importJob->getConfiguration();
                 $configuration->setDuplicateDetectionMethod('cell');
+                $configuration->setUniqueColumnType('external_id');
 
                 break;
 
@@ -476,11 +480,11 @@ class ImportJobRepository
     }
 
     /**
-     * Restore provider auth from the import job JSON into the session if the session
-     * has lost the provider auth data (e.g., after container restart or session expiry).
-     * This is the "resume" mechanism for provider auth persistence.
+     * Restore provider auth from the import job JSON into the session.
+     * Always overwrites current session auth so each job uses its own credentials,
+     * enabling parallel imports with different provider contexts.
      */
-    private function restoreProviderAuthIfNeeded(ImportJob $importJob): void
+    private function restoreProviderAuth(ImportJob $importJob): void
     {
         $providerAuth = $importJob->getProviderAuth();
         if ([] === $providerAuth) {
@@ -502,16 +506,10 @@ class ImportJobRepository
 
     private function restoreBasisBankAuth(array $auth): void
     {
-        // Only restore if the session has lost the auth state
-        $currentAuthState = (string)session()->get(BasisBankSecretManager::AUTH_STATE, '');
-        if ('' !== $currentAuthState) {
-            return;
-        }
-
         $sessionArtifact = (string)($auth['session_artifact'] ?? '');
         $authState       = (string)($auth['auth_state'] ?? '');
-        $login           = (string)($auth['login'] ?? '');
-        $password        = (string)($auth['password'] ?? '');
+        $login           = ProviderAuthCollector::decrypt((string)($auth['login'] ?? ''));
+        $password        = ProviderAuthCollector::decrypt((string)($auth['password'] ?? ''));
         $trustDevice     = (bool)($auth['trust_device'] ?? false);
 
         if ('' === $authState) {
@@ -534,16 +532,11 @@ class ImportJobRepository
 
     private function restoreTBankAuth(array $auth): void
     {
-        $currentAuthState = (string)session()->get(TBankSecretManager::AUTH_STATE, '');
-        if ('' !== $currentAuthState) {
-            return;
-        }
-
         $sessionId    = (string)($auth['session_id'] ?? '');
         $cookieHeader = (string)($auth['cookie_header'] ?? '');
         $accessLevel  = (string)($auth['access_level'] ?? '');
         $authState    = (string)($auth['auth_state'] ?? '');
-        $devicePin    = (string)($auth['device_pin'] ?? '');
+        $devicePin    = ProviderAuthCollector::decrypt((string)($auth['device_pin'] ?? ''));
 
         if ('' === $authState) {
             return;
@@ -567,11 +560,6 @@ class ImportJobRepository
 
     private function restoreTRC20Auth(array $auth): void
     {
-        $currentApiKey = (string)session()->get(TRC20SecretManager::API_KEY, '');
-        if ('' !== $currentApiKey) {
-            return;
-        }
-
         $apiKey  = (string)($auth['api_key'] ?? '');
         $wallets = (string)($auth['wallets'] ?? '');
 
