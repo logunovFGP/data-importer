@@ -127,6 +127,25 @@ final class TransactionIdGeneratorTest extends TestCase
     }
 
     /**
+     * Repeated calls with the same array always return the same ID,
+     * even across separate invocations (no microtime / non-deterministic seed).
+     *
+     * @covers ::generateFallbackId
+     */
+    public function testGenerateFallbackIdIsDeterministicAcrossCalls(): void
+    {
+        $array = ['from' => 'TAddr1', 'to' => 'TAddr2', 'amount' => '100.5', 'ts' => '1700000000'];
+
+        $results = [];
+        for ($i = 0; $i < 5; ++$i) {
+            $results[] = TransactionIdGenerator::generateFallbackId('ff3', $array);
+        }
+
+        // All five calls must return the identical ID.
+        $this->assertCount(1, array_unique($results), 'generateFallbackId must be deterministic for the same input');
+    }
+
+    /**
      * Empty account identifier produces valid composite ID.
      *
      * @covers ::buildCompositeId

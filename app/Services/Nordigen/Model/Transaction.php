@@ -143,9 +143,13 @@ class Transaction
         // undocumented values
         $object->endToEndId                             = trim($array['endToEndId'] ?? ''); // from Rabobank NL
 
-        // overrule transaction id when empty using the internal ID:
-        // 2025-09-07: switch to using internal transaction ID, never "transactionId".
-        $object->transactionId                          = trim($array['internalTransactionId'] ?? '');
+        // Prefer internalTransactionId over transactionId, but only if it is non-empty.
+        // Previously this unconditionally overwrote transactionId, wiping a valid value
+        // when internalTransactionId was absent.
+        $internalId = trim($array['internalTransactionId'] ?? '');
+        if ('' !== $internalId) {
+            $object->transactionId = $internalId;
+        }
 
         // models:
         if (array_key_exists('balanceAfterTransaction', $array) && is_array($array['balanceAfterTransaction'])) {

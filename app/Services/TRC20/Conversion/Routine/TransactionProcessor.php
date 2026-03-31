@@ -468,7 +468,12 @@ class TransactionProcessor
 
             return null;
         }
-        $externalId = sprintf('trc20|%s|%s', $wallet, $txId);
+        // Use only the transaction hash as the external_id, not the wallet address.
+        // The on-chain txHash is globally unique, and including the wallet would cause
+        // the same transaction scanned from both sender and receiver wallets to produce
+        // two different external_ids. Legacy format was "trc20|wallet|txHash" — the
+        // TRC20 duplicate detector handles matching against old-format entries.
+        $externalId = sprintf('trc20|%s', $txId);
 
         $memo        = $this->extractMemo($row);
         $description = trim((string)($row['data'] ?? $memo));

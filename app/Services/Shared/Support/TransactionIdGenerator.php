@@ -30,8 +30,9 @@ final class TransactionIdGenerator
 
     /**
      * Generate a fallback transaction ID from an array of transaction data.
-     * Uses a sha256 hash of the JSON-encoded array, falling back to microtime if
-     * JSON encoding fails.
+     * Uses a sha256 hash of the JSON-encoded array, falling back to serialize()
+     * if JSON encoding fails. Both paths are deterministic — the same input
+     * always produces the same ID.
      *
      * @param string $prefix  Provider-specific prefix (e.g., 'ff3', 'eb')
      * @param array  $array   The raw transaction data array
@@ -40,14 +41,14 @@ final class TransactionIdGenerator
      */
     public static function generateFallbackId(string $prefix, array $array): string
     {
-        $hash = hash('sha256', (string) microtime());
-
         try {
             $encoded = json_encode($array, JSON_THROW_ON_ERROR);
-            $hash    = hash('sha256', $encoded);
         } catch (\JsonException $e) {
-            Log::error(sprintf('Could not parse array into JSON: %s', $e->getMessage()));
+            ksort($array);
+            $encoded = serialize($array);
+            Log::warning(sprintf('generateFallbackId: json_encode failed, using serialize: %s', $e->getMessage()));
         }
+        $hash = hash('sha256', $encoded);
 
         return sprintf('%s-%s', $prefix, Uuid::uuid5(config('importer.namespace'), $hash));
     }

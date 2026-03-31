@@ -85,12 +85,13 @@ class BatchApiClient
      * @param  array       $externalIds  List of external_id strings.
      * @param  string|null $startDate    Optional date filter (Y-m-d).
      * @param  string|null $endDate      Optional date filter (Y-m-d).
+     * @param  string|null $source       Optional import source name (e.g. 'trc20', 'tbank').
      *
      * @return array Decoded JSON response — keyed by external_id.
      *
      * @throws ImporterErrorException
      */
-    public function batchSearchExternalIds(array $externalIds, ?string $startDate = null, ?string $endDate = null): array
+    public function batchSearchExternalIds(array $externalIds, ?string $startDate = null, ?string $endDate = null, ?string $source = null): array
     {
         $url  = sprintf('%s/api/v1/search/external-ids', $this->baseUrl);
         $body = ['external_ids' => array_values($externalIds)];
@@ -100,6 +101,9 @@ class BatchApiClient
         }
         if (null !== $endDate && '' !== $endDate) {
             $body['end_date'] = $endDate;
+        }
+        if (null !== $source && '' !== $source) {
+            $body['source'] = $source;
         }
 
         $response = $this->http()

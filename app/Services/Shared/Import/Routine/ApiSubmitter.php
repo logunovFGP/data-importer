@@ -29,6 +29,8 @@ use App\Models\ImportJob;
 use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\Shared\Authentication\SecretManager;
 use App\Services\Shared\Configuration\Configuration;
+use App\Services\Shared\Dedup\DuplicateDetector;
+use App\Services\Shared\Dedup\DuplicateDetectorFactory;
 use App\Services\Shared\Request\PostCurrencyRequest;
 use Carbon\Carbon;
 use GrumpyDictator\FFIIIApiSupport\Exceptions\ApiHttpException;
@@ -72,6 +74,7 @@ class ApiSubmitter
     private ?BatchApiClient     $batchClient             = null;
     private int                 $importCount             = 0;
     private int                 $duplicateCount          = 0;
+    private ?DuplicateDetector  $duplicateDetector       = null;
 
     public function setImportJob(ImportJob $importJob): void
     {
@@ -106,6 +109,17 @@ class ApiSubmitter
             $this->batchEndpointsAvailable = false;
         }
         Log::info(sprintf('Batch endpoints available: %s', $this->batchEndpointsAvailable ? 'yes' : 'no'));
+
+        // V2 dedup pipeline: create the appropriate detector when enabled.
+        $pipelineVersion = (int) config('importer.dedup.pipeline_version', 1);
+        if (2 === $pipelineVersion) {
+            $this->duplicateDetector = DuplicateDetectorFactory::create(
+                $this->configuration->getFlow(),
+                $this->batchClient,
+                $this->batchEndpointsAvailable,
+            );
+            Log::info(sprintf('V2 dedup pipeline active, detector source: "%s".', $this->duplicateDetector->sourceName()));
+        }
     }
 
     public function getImportJob(): ImportJob
@@ -136,6 +150,16 @@ class ApiSubmitter
         $this->vanityURL  = SecretManager::getVanityURL();
 
         Log::debug(sprintf('Vanity URL : "%s"', $this->vanityURL));
+
+        // V2 dedup pipeline: warm the new detector index before V1 warm-up.
+        if (null !== $this->duplicateDetector) {
+            $v2WarmStartedAt = microtime(true);
+            $this->duplicateDetector->warmIndex($lines);
+            $v2WarmElapsed = (microtime(true) - $v2WarmStartedAt) * 1000.0;
+            Log::info(sprintf('[V2 dedup] Index warmed in %.1fms (source: %s).', $v2WarmElapsed, $this->duplicateDetector->sourceName()));
+            $this->importJob->submissionStatus->addPerformanceSample('v2_dedup_warmup', $v2WarmElapsed);
+        }
+
         $this->warmExternalIdDuplicateIndex($lines);
         $this->importJob->submissionStatus->setPerformanceMeta(
             'disk_saves',
@@ -194,12 +218,36 @@ class ApiSubmitter
                 'status'       => 'pending',
                 'message'      => '',
             ]);
-            // first do local duplicate transaction check (the "cell" method):
+            // V2 dedup pipeline: check before V1 path
+            if (null !== $this->duplicateDetector) {
+                $v2CheckStartedAt = microtime(true);
+                $firstTransaction = $line['transactions'][0] ?? [];
+                $v2Result         = $this->duplicateDetector->isDuplicate($firstTransaction);
+                $this->importJob->submissionStatus->addPerformanceSample('v2_dedup_checks', (microtime(true) - $v2CheckStartedAt) * 1000.0);
+                if (null !== $v2Result && $v2Result->isDuplicate) {
+                    Log::info(sprintf('[V2 dedup] Duplicate detected: %s (source: %s)', $v2Result->key->value, $v2Result->source));
+                    $this->importJob->submissionStatus->addWarning(
+                        $index,
+                        sprintf('[V2 dedup] Duplicate: %s', $v2Result->key->value)
+                    );
+                    ++$duplicateCount;
+                    ++$batchDuplicates;
+                    $this->importJob->submissionStatus->updateBoardEntryStatus($shortTxId, 'duplicate');
+                    $this->importJob->submissionStatus->setTotals($count, $importedCount, $duplicateCount);
+                    if ($this->shouldPersistProgress($position, $count)) {
+                        $this->persistImportJob();
+                    }
+
+                    continue;
+                }
+            }
+
+            // V1 dedup: local duplicate transaction check (the "cell" method):
             $duplicateCheckStartedAt = microtime(true);
             $unique    = $this->uniqueTransaction($index, $line);
             $this->importJob->submissionStatus->addPerformanceSample('duplicate_checks', (microtime(true) - $duplicateCheckStartedAt) * 1000.0);
             if (null === $unique) {
-                Log::debug(sprintf('Transaction #%d is not checked beforehand on uniqueness.', $index + 1));
+                Log::warning(sprintf('[V1 dedup] Transaction %d: uniqueTransaction returned null (no dedup check performed)', $index));
             }
             if (false === $unique) {
                 Log::debug(sprintf('Transaction #%d is NOT unique.', $index + 1));
@@ -213,6 +261,14 @@ class ApiSubmitter
 
                 continue;
             }
+
+            // V2 dedup: stamp import_source on the transaction line before submission.
+            if (null !== $this->duplicateDetector && '' !== $this->duplicateDetector->sourceName()) {
+                foreach ($line['transactions'] as $txIdx => $tx) {
+                    $line['transactions'][$txIdx]['import_source'] = $this->duplicateDetector->sourceName();
+                }
+            }
+
             $submissionStartedAt = microtime(true);
             $groupInfo = $this->processTransaction($index, $line);
             $this->importJob->submissionStatus->addPerformanceSample('firefly_submissions', (microtime(true) - $submissionStartedAt) * 1000.0);
@@ -1382,6 +1438,22 @@ class ApiSubmitter
         foreach ($lines as $index => $line) {
             ++$position;
             $this->importJob->submissionStatus->updateProgress($position, $count);
+
+            // V2 dedup pipeline in batch path
+            if (null !== $this->duplicateDetector) {
+                $v2CheckStartedAt = microtime(true);
+                $firstTransaction = $line['transactions'][0] ?? [];
+                $v2Result         = $this->duplicateDetector->isDuplicate($firstTransaction);
+                $this->importJob->submissionStatus->addPerformanceSample('v2_dedup_checks', (microtime(true) - $v2CheckStartedAt) * 1000.0);
+                if (null !== $v2Result && $v2Result->isDuplicate) {
+                    Log::info(sprintf('[V2 dedup][batch] Duplicate detected: %s (source: %s)', $v2Result->key->value, $v2Result->source));
+                    ++$this->duplicateCount;
+                    $this->importJob->submissionStatus->setTotals($count, $this->importCount, $this->duplicateCount);
+
+                    continue;
+                }
+            }
+
             $duplicateCheckStartedAt = microtime(true);
             $unique                  = $this->uniqueTransaction($index, $line);
             $this->importJob->submissionStatus->addPerformanceSample(
@@ -1413,6 +1485,12 @@ class ApiSubmitter
             $indexMap     = []; // maps batch position -> original line index
             $i            = 0;
             foreach ($chunk as $originalIndex => $line) {
+                // V2 dedup: stamp import_source on each transaction in the line.
+                if (null !== $this->duplicateDetector && '' !== $this->duplicateDetector->sourceName()) {
+                    foreach ($line['transactions'] as $txIdx => $tx) {
+                        $line['transactions'][$txIdx]['import_source'] = $this->duplicateDetector->sourceName();
+                    }
+                }
                 $batchPayload[] = $this->cleanupLine($line);
                 $indexMap[$i]   = $originalIndex;
                 ++$i;

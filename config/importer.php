@@ -200,6 +200,21 @@ return [
         'duplicate_index_page_size'   => max(10, (int)env('SUBMISSION_DUPLICATE_INDEX_PAGE_SIZE', 100)),
         'duplicate_index_max_pages'   => max(1, (int)env('SUBMISSION_DUPLICATE_INDEX_MAX_PAGES', 200)),
     ],
+    'dedup'                         => [
+        'pipeline_version' => (int) env('DEDUP_PIPELINE_VERSION', 1),
+        'source_names'     => [
+            'trc20'     => 'trc20',
+            'tbank'     => 'tbank',
+            'basisbank' => 'basisbank',
+            'nordigen'  => 'nordigen',
+            'spectre'   => 'spectre',
+            'simplefin' => 'simplefin',
+            'lunchflow' => 'lunchflow',
+            'sophtron'  => 'sophtron',
+            'eb'        => 'enablebanking',
+            'file'      => 'csv',
+        ],
+    ],
     'trusted_proxies'               => env('TRUSTED_PROXIES', ''),
     'encoding'                      => [
         'Quoted-Printable',
