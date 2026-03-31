@@ -201,7 +201,7 @@ return [
         'duplicate_index_max_pages'   => max(1, (int)env('SUBMISSION_DUPLICATE_INDEX_MAX_PAGES', 200)),
     ],
     'dedup'                         => [
-        'pipeline_version' => (int) env('DEDUP_PIPELINE_VERSION', 1),
+        'pipeline_version' => (int) env('DEDUP_PIPELINE_VERSION', 2),
         'source_names'     => [
             'trc20'     => 'trc20',
             'tbank'     => 'tbank',

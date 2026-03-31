@@ -16,6 +16,7 @@ use App\Services\Shared\Configuration\Configuration;
 use App\Services\Shared\Conversion\ConversionStatus;
 use App\Services\LunchFlow\Response\GetTransactionsResponse;
 use App\Services\Shared\Conversion\CreatesAccounts;
+use App\Services\Shared\Conversion\TransactionProcessorHelpers;
 use App\Services\Shared\Support\CurrencyCode;
 use App\Services\Shared\SyncState\SyncStateManager;
 use App\Support\Internal\CollectsAccounts;
@@ -26,6 +27,7 @@ class TransactionProcessor
 {
     use CollectsAccounts;
     use CreatesAccounts;
+    use TransactionProcessorHelpers;
 
     private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s';
 
@@ -635,61 +637,16 @@ class TransactionProcessor
         return array_values(array_unique($variants));
     }
 
-    private function buildContextFingerprint(): string
+    protected function getProviderName(): string
     {
-        $configuration = $this->importJob->getConfiguration();
-        $flow          = $this->importJob->getFlow();
-        $apiToken      = SecretManager::getApiToken($configuration);
-        $consentId     = SecretManager::getConsentId($configuration);
-        $ffBaseUrl     = SharedSecretManager::getBaseUrl();
-
-        return $this->syncStateManager->buildContextFingerprint(
-            $flow,
-            [config('importer.version'), $apiToken, $consentId, $ffBaseUrl]
-        );
+        return 'BasisBank';
     }
 
-    private function resolveIncrementalDateFromCursor(string $accountId): ?string
+    protected function getContextCredentials(): array
     {
         $configuration = $this->importJob->getConfiguration();
-        if ('' !== $configuration->getDateNotBefore()) {
-            return null;
-        }
-        if (false === $configuration->isIncrementalSyncEnabled()) {
-            return null;
-        }
 
-        $cursor = $this->syncStateManager->getLookBackDate('basisbank', $this->contextFingerprint, $accountId);
-        if (null === $cursor) {
-            Log::debug(sprintf('No BasisBank cursor found for account %s.', $accountId));
-
-            return null;
-        }
-
-        $lookbackDate = $this->syncStateManager->getIncrementalDateFromCursor($cursor, $configuration->getIncrementalLookbackDays());
-        if (null === $lookbackDate) {
-            return null;
-        }
-
-        Log::info(sprintf('Using incremental BasisBank pull date %s for account %s.', $lookbackDate, $accountId));
-
-        return $lookbackDate;
-    }
-
-    private function resolveLatestTransactionDate(array $transactions): ?string
-    {
-        $latest = null;
-        foreach ($transactions as $transaction) {
-            if (!property_exists($transaction, 'date')) {
-                continue;
-            }
-            $date = Carbon::parse((string)$transaction->date);
-            if (null === $latest || $date->gt($latest)) {
-                $latest = $date;
-            }
-        }
-
-        return null === $latest ? null : $latest->toDateString();
+        return [config('importer.version'), SecretManager::getApiToken($configuration), SecretManager::getConsentId($configuration), SharedSecretManager::getBaseUrl()];
     }
 
     private function applyPullTelemetry(string $accountId, array $payload): void
@@ -778,11 +735,6 @@ class TransactionProcessor
         }
 
         return $meta;
-    }
-
-    private function saveConversionStatus(): void
-    {
-        $this->repository->saveToDisk($this->importJob);
     }
 
     private function requiresReAuthentication(ImporterHttpException $e): bool

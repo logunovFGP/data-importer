@@ -11,6 +11,7 @@ use App\Repository\ImportJob\ImportJobRepository;
 use App\Services\Shared\Authentication\SecretManager as SharedSecretManager;
 use App\Services\Shared\Conversion\ConversionStatus;
 use App\Services\Shared\Conversion\CreatesAccounts;
+use App\Services\Shared\Conversion\TransactionProcessorHelpers;
 use App\Services\Shared\Model\ImportServiceAccount;
 use App\Services\Shared\Preflight\ProviderCurrencyPreflightService;
 use App\Services\Shared\SyncState\SyncStateManager;
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\Log;
 class TransactionProcessor
 {
     use CreatesAccounts;
+    use TransactionProcessorHelpers;
 
     private const string DATE_TIME_FORMAT = 'Y-m-d H:i:s';
 
@@ -623,70 +625,16 @@ class TransactionProcessor
         return '' === $normalized || '-' === $normalized || '-0' === $normalized ? '0' : $normalized;
     }
 
-    private function resolveLatestTransactionDate(array $transactions): ?string
+    protected function getProviderName(): string
     {
-        $latest = null;
-        foreach ($transactions as $transaction) {
-            if (!property_exists($transaction, 'date') || null === $transaction->date) {
-                continue;
-            }
-
-            $date = $transaction->date;
-            if (!($date instanceof Carbon)) {
-                $date = Carbon::parse((string)$date);
-            }
-
-            if (null === $latest || $date->gt($latest)) {
-                $latest = $date;
-            }
-        }
-
-        return null === $latest ? null : $latest->toDateString();
+        return 'TRC20';
     }
 
-    private function saveConversionStatus(): void
-    {
-        $this->repository->saveToDisk($this->importJob);
-    }
-
-    private function buildContextFingerprint(): string
+    protected function getContextCredentials(): array
     {
         $configuration = $this->importJob->getConfiguration();
-        $flow          = $this->importJob->getFlow();
-        $apiKey        = SecretManager::getApiKey($configuration);
-        $ffBaseUrl     = SharedSecretManager::getBaseUrl();
 
-        return $this->syncStateManager->buildContextFingerprint(
-            $flow,
-            [config('importer.version'), $apiKey, $ffBaseUrl]
-        );
-    }
-
-    private function resolveIncrementalDateFromCursor(string $accountId): ?string
-    {
-        $configuration = $this->importJob->getConfiguration();
-        if ('' !== $configuration->getDateNotBefore()) {
-            return null;
-        }
-        if (false === $configuration->isIncrementalSyncEnabled()) {
-            return null;
-        }
-
-        $cursor = $this->syncStateManager->getLookBackDate('trc20', $this->contextFingerprint, $accountId);
-        if (null === $cursor) {
-            Log::debug(sprintf('No TRC20 cursor found for account %s.', $accountId));
-
-            return null;
-        }
-
-        $lookbackDate = $this->syncStateManager->getIncrementalDateFromCursor($cursor, $configuration->getIncrementalLookbackDays());
-        if (null === $lookbackDate) {
-            return null;
-        }
-
-        Log::info(sprintf('Using incremental TRC20 pull date %s for account %s.', $lookbackDate, $accountId));
-
-        return $lookbackDate;
+        return [config('importer.version'), SecretManager::getApiKey($configuration), SharedSecretManager::getBaseUrl()];
     }
 
     private function loadServiceAccounts(\App\Services\Shared\Configuration\Configuration $configuration): array
