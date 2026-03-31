@@ -160,10 +160,10 @@ class TransactionProcessor
                 $return[$txAccountId][] = $tx;
             }
             $this->importJob->conversionStatus->addActivity(sprintf('Wallet %s: Fetched %d transaction(s)', $shortWallet, count($transactions)));
-            $this->importJob->conversionStatus->addPullCursorCandidate(
-                $rawWallet,
-                $this->resolveLatestTransactionDate($transactions)
-            );
+            $latestDate = $this->resolveLatestTransactionDate($transactions);
+            if (null !== $latestDate) {
+                $this->importJob->conversionStatus->addPullCursorCandidate($rawWallet, $latestDate);
+            }
             $this->importJob->conversionStatus->setPullChecklistItem(
                 $rawWallet,
                 ConversionStatus::PULL_STEP_DONE,
@@ -442,7 +442,8 @@ class TransactionProcessor
 
         // Build signed amount as plain decimal string (never scientific notation).
         // $absAmount is already a bcmath-safe string from TRC20AmountParser::parse().
-        $signedAmount = $isOutgoing ? '-' . $absAmount : $absAmount;
+        // Normalize trailing zeros so the amount string is stable for Firefly III's import_hash_v2.
+        $signedAmount = self::normalizeAmountForStableHash($isOutgoing ? '-' . $absAmount : $absAmount);
 
         $counterparty = TRC20AddressValidator::addressesMatch($fromAddress, $wallet) ? $toAddress : $fromAddress;
 
@@ -600,6 +601,21 @@ class TransactionProcessor
     private function normalizeWallet(string $wallet): string
     {
         return trim($wallet);
+    }
+
+    /**
+     * Strip trailing zeros from a decimal amount string so that Firefly III's
+     * import_hash_v2 (SHA-256 of the full payload) produces the same hash
+     * regardless of bcmath precision.  E.g. "123.450000000000" → "123.45".
+     */
+    public static function normalizeAmountForStableHash(string $amount): string
+    {
+        if (!str_contains($amount, '.')) {
+            return $amount;
+        }
+        $normalized = rtrim(rtrim($amount, '0'), '.');
+
+        return '' === $normalized || '-' === $normalized || '-0' === $normalized ? '0' : $normalized;
     }
 
     private function resolveLatestTransactionDate(array $transactions): ?string

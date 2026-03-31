@@ -316,22 +316,22 @@ class ApiSubmitter
             if ('external_id' === $field) {
                 if (true === $this->duplicateIndexReady) {
                     $indexedResult = $this->preloadedDuplicateIndex[$value] ?? null;
-                    if (null === $indexedResult) {
-                        Log::debug(sprintf('No preloaded duplicate candidate found for external_id "%s", treat as unique.', $value));
+                    if (null !== $indexedResult) {
+                        $searchResult = $this->findDuplicateMatchForAccountContext($indexedResult, $expectedAccountIds);
+                        if (null === $searchResult) {
+                            Log::debug(
+                                sprintf(
+                                    'Found external_id "%s" in duplicate index, but account context does not overlap (expected: %s). Treat as unique.',
+                                    $value,
+                                    implode(',', $expectedAccountIds)
+                                )
+                            );
 
-                        continue;
-                    }
-                    $searchResult = $this->findDuplicateMatchForAccountContext($indexedResult, $expectedAccountIds);
-                    if (null === $searchResult) {
-                        Log::debug(
-                            sprintf(
-                                'Found external_id "%s" in duplicate index, but account context does not overlap (expected: %s). Treat as unique.',
-                                $value,
-                                implode(',', $expectedAccountIds)
-                            )
-                        );
-
-                        continue;
+                            continue;
+                        }
+                    } else {
+                        // Index miss: fall through to searchField API call below.
+                        Log::debug(sprintf('No preloaded duplicate candidate found for external_id "%s", falling back to API search.', $value));
                     }
                 }
                 if (null === $searchResult) {
